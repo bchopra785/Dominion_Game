@@ -1,3 +1,3 @@
 # group-b
 COSI 103 - Software Engineering Group
-jestell@brandeis.edu 
+Jaile Estell - jestell@brandeis.edu 

@@ -1,3 +1,5 @@
 # group-b
 COSI 103 - Software Engineering Group
-Jaile Estell - jestell@brandeis.edu 
+Ananya Dalal - ananyadalal@brandeis.edu
+Chloe Wahl-Dassule - cwahldassule@brandeis.edu
+Jaile Estell - jestell@brandeis.edu

@@ -1,5 +1,6 @@
 {
     "java.project.sourcePaths": [
         "src/main/java/edu/brandeis/cosi103a/groupb"
-    ]
+    ],
+    "java.configuration.updateBuildConfiguration": "interactive"
 }

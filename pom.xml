@@ -30,6 +30,11 @@
         <version>5.10.0</version>
         <scope>test</scope>
     </dependency>
+    <dependency> 
+        <groupId>io.github.brandeis-cosi-103a</groupId>
+        <artifactId>atg-api</artifactId>
+        <version>1.5.3</version> 
+    </dependency>
   </dependencies>
 
   <build>

@@ -5,59 +5,59 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Board {
-    public Map<String, List<Card>> stockpiles;
+public class PrototypeBoard {
+    public Map<String, List<PrototypeCard>> stockpiles;
 
     // Constructor - initializes all stockpiles with the specified quantities
-    public Board() {
+    public PrototypeBoard() {
         stockpiles = new HashMap<>();
 
         // Initialize method cards (x14)
-        List<Card> methodCards = new ArrayList<>();
+        List<PrototypeCard> methodCards = new ArrayList<>();
         for (int i = 0; i < 14; i++) {
-            methodCards.add(new Card(2, 0, 1, "method"));
+            methodCards.add(new PrototypeCard(2, 0, 1, "method"));
         }
         stockpiles.put("method", methodCards);
 
         // Initialize module cards (x8)
-        List<Card> moduleCards = new ArrayList<>();
+        List<PrototypeCard> moduleCards = new ArrayList<>();
         for (int i = 0; i < 8; i++) {
-            moduleCards.add(new Card(5, 0, 3, "module"));
+            moduleCards.add(new PrototypeCard(5, 0, 3, "module"));
         }
         stockpiles.put("module", moduleCards);
 
         // Initialize framework cards (x8)
-        List<Card> frameworkCards = new ArrayList<>();
+        List<PrototypeCard> frameworkCards = new ArrayList<>();
         for (int i = 0; i < 8; i++) {
-            frameworkCards.add(new Card(8, 0, 6, "framework"));
+            frameworkCards.add(new PrototypeCard(8, 0, 6, "framework"));
         }
         stockpiles.put("framework", frameworkCards);
 
         // Initialize bitcoin cards (x60)
-        List<Card> bitcoinCards = new ArrayList<>();
+        List<PrototypeCard> bitcoinCards = new ArrayList<>();
         for (int i = 0; i < 60; i++) {
-            bitcoinCards.add(new Card(0, 1, 0, "bitcoin"));
+            bitcoinCards.add(new PrototypeCard(0, 1, 0, "bitcoin"));
         }
         stockpiles.put("bitcoin", bitcoinCards);
 
         // Initialize ethereum cards (x40)
-        List<Card> ethereumCards = new ArrayList<>();
+        List<PrototypeCard> ethereumCards = new ArrayList<>();
         for (int i = 0; i < 40; i++) {
-            ethereumCards.add(new Card(3, 2, 0, "ethereum"));
+            ethereumCards.add(new PrototypeCard(3, 2, 0, "ethereum"));
         }
         stockpiles.put("ethereum", ethereumCards);
 
         // Initialize dogecoin cards (x30)
-        List<Card> dogecoinCards = new ArrayList<>();
+        List<PrototypeCard> dogecoinCards = new ArrayList<>();
         for (int i = 0; i < 30; i++) {
-            dogecoinCards.add(new Card(6, 3, 0, "dogecoin"));
+            dogecoinCards.add(new PrototypeCard(6, 3, 0, "dogecoin"));
         }
         stockpiles.put("dogecoin", dogecoinCards);
     }
 
     // Remove and return a card from the specified stockpile
-    public Card removeCard(String cardType) {
-        List<Card> stockpile = stockpiles.get(cardType.toLowerCase());
+    public PrototypeCard removeCard(String cardType) {
+        List<PrototypeCard> stockpile = stockpiles.get(cardType.toLowerCase());
         if (stockpile != null && !stockpile.isEmpty()) {
             return stockpile.remove(stockpile.size() - 1);
         }
@@ -66,7 +66,7 @@ public class Board {
 
     // Check how many cards are left in the specified stockpile
     public int getCardsRemaining(String cardType) {
-        List<Card> stockpile = stockpiles.get(cardType.toLowerCase());
+        List<PrototypeCard> stockpile = stockpiles.get(cardType.toLowerCase());
         return stockpile != null ? stockpile.size() : 0;
     }
 
@@ -87,8 +87,8 @@ public class Board {
     }
 
     // Get all stockpiles (for debugging/inspection)
-    public Map<String, List<Card>> getAllStockpiles() {
-        Map<String, List<Card>> copy = new HashMap<>();
+    public Map<String, List<PrototypeCard>> getAllStockpiles() {
+        Map<String, List<PrototypeCard>> copy = new HashMap<>();
         for (String type : stockpiles.keySet()) {
             copy.put(type, new ArrayList<>(stockpiles.get(type)));
         }

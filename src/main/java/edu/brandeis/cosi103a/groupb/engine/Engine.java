@@ -23,4 +23,9 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
     public GameResult play() throws PlayerViolationException {
         throw new UnsupportedOperationException("Game engine not implemented yet");
     }
+
+    public void initializeBoard() throws PlayerViolationException {
+        
+        throw new UnsupportedOperationException("Initialize not implemented yet");
+    }
 }

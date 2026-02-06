@@ -5,6 +5,7 @@ import java.util.List;
 
 import edu.brandeis.cosi.atg.cards.Card;
 
+
 public class Deck {
     // Store piles of different cards that players can buy/pickup
 
@@ -14,40 +15,59 @@ public class Deck {
     public List<Card> bitcoins;
     public List<Card> ethereums;
     public List<Card> dogecoins;
+    public List<Card> refactors;
+    public List<Card> evergreens;
+    public List<Card> codereviews;
 
     // Creates a new deck with cards for ATG
     protected Deck(){
 
+        // Victory Cards
         methods = new ArrayList<>();
         for (int i = 0; i < 14; i++) {
-            methods.add(new Card(, i));
+            
+            methods.add(new Card(Card.Type.METHOD, i));
         }
 
         modules = new ArrayList<>();
         for (int i = 0; i < 8; i++) {
-            modules.add(new Card("Module", Card.Type.AUTOMATION, 5, 3));
+            modules.add(new Card(Card.Type.MODULE, i));
         }
-
+        
         frameworks = new ArrayList<>();
         for (int i = 0; i < 8; i++) {
-            frameworks.add(new Card("Framework", Card.Type.AUTOMATION, 8, 6));
+            frameworks.add(new Card(Card.Type.FRAMEWORK, i));
         }
-
+        // Currency Cards
         bitcoins = new ArrayList<>();
         for (int i = 0; i < 60; i++) {
-            bitcoins.add(new Card("Bitcoin", Card.Type.CRYPTOCURRENCY, 0, 1));
+            bitcoins.add(new Card(Card.Type.BITCOIN, i));
         }
 
         ethereums = new ArrayList<>();
         for (int i = 0; i < 40; i++) {
-            ethereums.add(new Card("Ethereum", Card.Type.CRYPTOCURRENCY, 3, 2));
+            ethereums.add(new Card(Card.Type.ETHEREUM, i));
         }
 
         dogecoins = new ArrayList<>();
         for (int i = 0; i < 30; i++) {
-            dogecoins.add(new Card("Dogecoin", Card.Type.CRYPTOCURRENCY, 6, 3));
+            dogecoins.add(new Card(Card.Type.DOGECOIN, i));
         }
-        throw new UnsupportedOperationException("Deck not implemented yet");
+        // Action cards
+        refactors = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            refactors.add(new Card(Card.Type.REFACTOR, i));
+        }
+
+        evergreens = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            evergreens.add(new Card(Card.Type.EVERGREEN_TEST, i));
+        }
+
+        codereviews = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            codereviews.add(new Card(Card.Type.CODE_REVIEW, i));
+        }
     }
 
     protected Card drawDeckCard(String description){
@@ -55,7 +75,7 @@ public class Deck {
     }
 
     protected boolean frameworksLeft(){
-        throw new UnsupportedOperationException("Frameworks left check not implemented yet");
+        return frameworks.size() > 0;
     }
 
 }

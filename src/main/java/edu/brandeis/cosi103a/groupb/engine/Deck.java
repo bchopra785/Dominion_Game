@@ -18,6 +18,7 @@ public class Deck {
     public List<Card> refactors;
     public List<Card> evergreens;
     public List<Card> codereviews;
+    public List<Card> bugs;
 
     // Creates a new deck with cards for ATG
     protected Deck(){
@@ -68,10 +69,67 @@ public class Deck {
         for (int i = 0; i < 10; i++) {
             codereviews.add(new Card(Card.Type.CODE_REVIEW, i));
         }
+
+        bugs = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            bugs.add(new Card(Card.Type.BUG, i));
+        }
     }
 
-    protected Card drawDeckCard(String description){
-        throw new UnsupportedOperationException("Draw not implemented yet");
+    protected Card drawDeckCard(Card.Type t){
+        switch (t) {
+            case Card.Type.METHOD:
+                if (!methods.isEmpty()) {
+                    return methods.remove(0);
+                }
+                break;
+            case Card.Type.MODULE:
+                if (!modules.isEmpty()) {
+                    return modules.remove(0);
+                }
+                break;
+            case Card.Type.FRAMEWORK:
+                if (!frameworks.isEmpty()) {
+                    return frameworks.remove(0);
+                }
+                break;
+            case Card.Type.BITCOIN:
+                if (!bitcoins.isEmpty()) {
+                    return bitcoins.remove(0);
+                }
+                break;
+            case Card.Type.ETHEREUM:
+                if (!ethereums.isEmpty()) {
+                    return ethereums.remove(0);
+                }
+                break;
+            case Card.Type.DOGECOIN:
+                if (!dogecoins.isEmpty()) {
+                    return dogecoins.remove(0);
+                }
+                break;
+            case Card.Type.REFACTOR:
+                if (!refactors.isEmpty()) {
+                    return refactors.remove(0);
+                }
+                break;
+            case Card.Type.EVERGREEN_TEST:
+                if (!evergreens.isEmpty()) {
+                    return evergreens.remove(0);
+                }
+                break;
+            case Card.Type.CODE_REVIEW:
+                if (!codereviews.isEmpty()) {
+                    return codereviews.remove(0);
+                }
+                break;
+            case Card.Type.BUG:
+                if (!bugs.isEmpty()) {
+                    return bugs.remove(0);
+                }
+                break;
+        }
+        return null; // No card available or invalid name
     }
 
     protected boolean frameworksLeft(){

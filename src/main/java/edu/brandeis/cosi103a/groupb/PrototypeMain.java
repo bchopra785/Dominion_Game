@@ -3,9 +3,9 @@ package edu.brandeis.cosi103a.groupb;
 import java.util.List;
 import java.util.Random;
 
-public class Main {
+public class PrototypeMain {
 
-    public static void initialCards(Player player, Board board) {
+    public static void initialCards(PrototypePlayer player, PrototypeBoard board) {
         // Each player begins with a starter deck, consisting of 7 Bitcoins and 3 Methods. These
         // cards are distributed to each player at the beginning of the game, from the supply
         for (int i = 0; i < 7; i++) {
@@ -17,24 +17,24 @@ public class Main {
         }
     }
 
-    public static void turn(Player player, Board board, int strategy, int turnCount) {
+    public static void turn(PrototypePlayer player, PrototypeBoard board, int strategy, int turnCount) {
         // At the start of each turn, the player draws 5 cards
 
-        List<Card> hand = player.getHand();
+        List<PrototypeCard> hand = player.getHand();
 
         // Display drawn cards
         System.out.println(player.name + " drew: \n" + hand);
 
         // Calculate the total value of cards in hand
         int totalValue = 0;
-        for (Card card : hand) {
+        for (PrototypeCard card : hand) {
             totalValue += card.getValue();
         }
         System.out.println("Total value of drawn cards: " + totalValue);
         //buy phase
         if (totalValue >= 8 && board.getCardsRemaining("framework") > 0) {
             System.out.println("Buying highest automation card: framework!");
-            Card boughtCard = board.removeCard("framework");
+            PrototypeCard boughtCard = board.removeCard("framework");
             player.getDeck().addToDiscard(boughtCard);
             player.addPoints(boughtCard.getPoints());
             System.out.println("Player bought: " + boughtCard);
@@ -43,7 +43,7 @@ public class Main {
             if(strategy == 1){
                 if(turnCount % 2 == 0){
                     // Purchase points
-                    Card boughtCard = buyPoints(player, board, totalValue);
+                    PrototypeCard boughtCard = buyPoints(player, board, totalValue);
                     if (boughtCard != null) {
                         System.out.println("Player bought: " + boughtCard);
                     } else {
@@ -51,7 +51,7 @@ public class Main {
                     }
                 } else {
                     // Purchase money
-                    Card boughtCard = buyMoney(player, board, totalValue);
+                    PrototypeCard boughtCard = buyMoney(player, board, totalValue);
                     if (boughtCard != null) {
                         System.out.println("Player bought: " + boughtCard);
                     } else {
@@ -64,14 +64,14 @@ public class Main {
                 int choice = random.nextInt(2) + 1; // Randomly choose 1 or 2
                 
                 if (choice == 1) {
-                    Card boughtCard = buyMoney(player, board, totalValue);
+                    PrototypeCard boughtCard = buyMoney(player, board, totalValue);
                     if (boughtCard != null) {
                         System.out.println("Player bought: " + boughtCard);
                     } else {
                         System.out.println("Player could not afford any cryptocurrency cards");
                     }
                 } else {
-                    Card boughtCard = buyPoints(player, board, totalValue);
+                    PrototypeCard boughtCard = buyPoints(player, board, totalValue);
                     if (boughtCard != null) {
                         System.out.println("Player bought: " + boughtCard);
                     } else {
@@ -81,7 +81,7 @@ public class Main {
             }    
         }else{
             // Purchase the highest value cryptocurrency card the player can afford
-            Card boughtCard = buyMoney(player, board, totalValue);
+            PrototypeCard boughtCard = buyMoney(player, board, totalValue);
             if (boughtCard != null) {
                 System.out.println("Player bought: " + boughtCard);
             } else {
@@ -94,23 +94,23 @@ public class Main {
 
     }
 
-    public static Card buyPoints(Player player, Board board, int totalValue){
+    public static PrototypeCard buyPoints(PrototypePlayer player, PrototypeBoard board, int totalValue){
         System.out.println("Buying points! (Automation cards)");
         // Buy the automation card with the highest point value the player can afford
         if (totalValue >= 8 && board.getCardsRemaining("framework") > 0) {
-            Card boughtCard = board.removeCard("framework");
+            PrototypeCard boughtCard = board.removeCard("framework");
             if (boughtCard != null) {
                 player.addPoints(player.getDeck().addToDiscard(boughtCard));
                 return boughtCard;
             }
         } else if (totalValue >= 5 && board.getCardsRemaining("module") > 0) {
-            Card boughtCard = board.removeCard("module");
+            PrototypeCard boughtCard = board.removeCard("module");
             if (boughtCard != null) {
                 player.addPoints(player.getDeck().addToDiscard(boughtCard));
                 return boughtCard;
             }
         } else if (totalValue >= 2 && board.getCardsRemaining("method") > 0) {
-            Card boughtCard = board.removeCard("method");
+            PrototypeCard boughtCard = board.removeCard("method");
             if (boughtCard != null) {
                 player.addPoints(player.getDeck().addToDiscard(boughtCard));
                 return boughtCard;
@@ -119,23 +119,23 @@ public class Main {
         return null; // No card was bought
     }
 
-    public static Card buyMoney(Player player, Board board, int totalValue){
+    public static PrototypeCard buyMoney(PrototypePlayer player, PrototypeBoard board, int totalValue){
         System.out.println("Buying money! (Cryptocurrency cards)");
         // Buy the cryptocurrency card with the highest value the player can afford
        if (totalValue >= 6 && board.getCardsRemaining("dogecoin") > 0) {
-                Card boughtCard = board.removeCard("dogecoin");
+                PrototypeCard boughtCard = board.removeCard("dogecoin");
                 if (boughtCard != null) {
                     player.addPoints(player.getDeck().addToDiscard(boughtCard));
                     return boughtCard;
                 }
             } else if (totalValue >= 3 && board.getCardsRemaining("ethereum") > 0) {
-                Card boughtCard = board.removeCard("ethereum");
+                PrototypeCard boughtCard = board.removeCard("ethereum");
                 if (boughtCard != null) {
                     player.addPoints(player.getDeck().addToDiscard(boughtCard));
                     return boughtCard;
                 }
             } else if (totalValue >= 0 && board.getCardsRemaining("bitcoin") > 0) {
-                Card boughtCard = board.removeCard("bitcoin");
+                PrototypeCard boughtCard = board.removeCard("bitcoin");
                 if (boughtCard != null) {
                     player.addPoints(player.getDeck().addToDiscard(boughtCard));
                     return boughtCard;
@@ -144,7 +144,7 @@ public class Main {
         return null; // No card was bought
     }
 
-    public static void winner(Player player1, Player player2) {
+    public static void winner(PrototypePlayer player1, PrototypePlayer player2) {
         System.out.println("Game Over!");
         System.out.println(player1.name + " has " + player1.getPoints() + " points.");
         System.out.println(player2.name + " has " + player2.getPoints() + " points.");
@@ -159,10 +159,10 @@ public class Main {
 
     public static void main(String[] args) {
         int turnCount = 0;
-        Player player1 = new Player(new Deck(), "Player 1");
-        Player player2 = new Player(new Deck(), "Player 2");
+        PrototypePlayer player1 = new PrototypePlayer(new PrototypeDeck(), "Player 1");
+        PrototypePlayer player2 = new PrototypePlayer(new PrototypeDeck(), "Player 2");
 
-        Board board = new Board();
+        PrototypeBoard board = new PrototypeBoard();
 
     // Each player begins with a starter deck, consisting of 7 Bitcoins and 3 Methods. These
     // cards are distributed to each player at the beginning of the game, from the supply

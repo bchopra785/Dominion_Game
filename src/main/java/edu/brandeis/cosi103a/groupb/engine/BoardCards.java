@@ -3,10 +3,13 @@ package edu.brandeis.cosi103a.groupb.engine;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
 import edu.brandeis.cosi.atg.cards.Card;
 
 
-public class Deck {
+public class BoardCards {
     // Store piles of different cards that players can buy/pickup
 
     public List<Card> methods;
@@ -21,7 +24,7 @@ public class Deck {
     public List<Card> bugs;
 
     // Creates a new deck with cards for ATG
-    protected Deck(){
+    protected BoardCards(){
 
         // Victory Cards
         methods = new ArrayList<>();
@@ -76,6 +79,24 @@ public class Deck {
         }
     }
 
+    // For game state tracking and for engine to know available cards
+    protected ImmutableMap<Card.Type, Integer> getCardStacks() {
+        ImmutableMap<Card.Type, Integer> map = ImmutableMap.<Card.Type, Integer>builder()
+            .put(Card.Type.METHOD, methods.size())
+            .put(Card.Type.MODULE, modules.size())
+            .put(Card.Type.FRAMEWORK, frameworks.size())
+            .put(Card.Type.BITCOIN, bitcoins.size())
+            .put(Card.Type.ETHEREUM, ethereums.size())
+            .put(Card.Type.DOGECOIN, dogecoins.size())
+            .put(Card.Type.REFACTOR, refactors.size())
+            .put(Card.Type.EVERGREEN_TEST, evergreens.size())
+            .put(Card.Type.CODE_REVIEW, codereviews.size())
+            .put(Card.Type.BUG, bugs.size())
+            .build();
+        return map;
+    }
+
+    // Draws a card, should be returned to engine
     protected Card drawDeckCard(Card.Type t){
         switch (t) {
             case Card.Type.METHOD:
@@ -134,6 +155,58 @@ public class Deck {
 
     protected boolean frameworksLeft(){
         return frameworks.size() > 0;
+    }
+
+    // To call after an action card that trashes a card from player hand and moves it back to the board
+    protected void trashCardToBoard(Card card) {
+        Card.Type type = Card.Type.valueOf(card.description());
+        switch (type) {
+            case Card.Type.METHOD:
+                methods.add(card);
+                break;
+            case Card.Type.MODULE:
+                modules.add(card);
+                break;
+            case Card.Type.FRAMEWORK:
+                frameworks.add(card);
+                break;
+            case Card.Type.BITCOIN:
+                bitcoins.add(card);
+                break;
+            case Card.Type.ETHEREUM:
+                ethereums.add(card);
+                break;
+            case Card.Type.DOGECOIN:
+                dogecoins.add(card);
+                break;
+            case Card.Type.REFACTOR:
+                refactors.add(card);
+                break;
+            case Card.Type.EVERGREEN_TEST:
+                evergreens.add(card);
+                break;
+            case Card.Type.CODE_REVIEW:
+                codereviews.add(card);
+                break;
+            case Card.Type.BUG:
+                bugs.add(card);
+                break;
+        }
+    }
+
+    protected ImmutableList<Card.Type> getPlayableCards(int costInHand) {
+        // For now, all cards in hand are playable, but this can be changed to check for action cards and other conditions
+        ImmutableMap<Card.Type, Integer> cardStacks = getCardStacks();
+
+        List<Card.Type> playableCards = new ArrayList<>();
+        
+        for(Card.Type t: cardStacks.keySet()){
+            // Need to have the card and have enough cost in hand to play it
+            if ((cardStacks.get(t) > 0) & (costInHand >= t.cost())) {
+                playableCards.add(t);
+            }
+        }
+        return ImmutableList.copyOf(playableCards);
     }
 
 }

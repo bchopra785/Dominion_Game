@@ -1,6 +1,7 @@
 package edu.brandeis.cosi103a.groupb.engine;
 
 import edu.brandeis.cosi.atg.cards.*;
+import edu.brandeis.cosi.atg.cards.Card.Type;
 import edu.brandeis.cosi.atg.decisions.*;
 import edu.brandeis.cosi.atg.engine.*;
 import edu.brandeis.cosi.atg.player.*;
@@ -11,11 +12,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 
 public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
     private final List<Player> players;
-    private GameState state;
 
     public Engine(List<Player> players) {
         if (players == null) {
@@ -31,7 +32,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
     }
 
     public GameResult play() throws PlayerViolationException {
-
+        BoardCards boardCards = new BoardCards();
     
         boolean gameOver = false;
         while (!gameOver) {
@@ -48,7 +49,9 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
                 //get decision from player
                 List<Decision> decisions = new ArrayList<>();
                 List<Card> actionCards = new ArrayList<>();
+                int actionCardAmt = 0;
                 List<Card> spendCards = new ArrayList<>();
+                int totalMoney = 0;
                 int availableBuys = 1;
 
 
@@ -57,14 +60,29 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
                     if(category.equals(Card.Type.Category.ACTION)){
                         actionCards.add(card);
+                        actionCardAmt++;
                     } else if(category.equals(Card.Type.Category.MONEY)){
+                        totalMoney += card.value();
                         spendCards.add(card);
                     }
                 }
 
-                GameState state = new GameState(player.getName(), hand, GameState.TurnPhase.ACTION, actionCards, spendCards, availableBuys, null);
+                //ACTION PHASE
+                CardStacks buyableCards = boardCards.getPlayableCards(totalMoney);
+                ImmutableList.Builder<Decision> optionsBuilder = new ImmutableList.Builder<>();
                 
-                Decision decision = player.getDecision(state);
+                // Add PlayCardDecision for each action card
+                for (int i = 0; i < actionCardAmt; i++) {
+                    optionsBuilder.add(new PlayCardDecision(actionCards.get(i)));
+                }
+                
+                // Add single EndPhaseDecision
+                optionsBuilder.add(new EndPhaseDecision(GameState.TurnPhase.ACTION));
+                
+                ImmutableList<Decision> options = optionsBuilder.build();
+                  
+                GameState state = new GameState(player.getName(), hand, GameState.TurnPhase.ACTION, actionCardAmt, totalMoney, availableBuys, buyableCards);
+                Decision decision = player.makeDecision(state, options);
                 //if refactor, gain a card costing up to 2 more than trashed card
                 //if evergreen_test, each other player gains a bug
                 

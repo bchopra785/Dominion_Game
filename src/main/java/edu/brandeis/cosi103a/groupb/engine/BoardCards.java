@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import edu.brandeis.cosi.atg.cards.Card;
+import edu.brandeis.cosi.atg.state.CardStacks;
 
 
 public class BoardCards {
@@ -194,19 +195,19 @@ public class BoardCards {
         }
     }
 
-    protected ImmutableList<Card.Type> getPlayableCards(int costInHand) {
+    protected CardStacks getPlayableCards(int costInHand) {
         // For now, all cards in hand are playable, but this can be changed to check for action cards and other conditions
         ImmutableMap<Card.Type, Integer> cardStacks = getCardStacks();
 
-        List<Card.Type> playableCards = new ArrayList<>();
+        ImmutableMap.Builder<Card.Type, Integer> playableCardsBuilder = ImmutableMap.builder();
         
         for(Card.Type t: cardStacks.keySet()){
             // Need to have the card and have enough cost in hand to play it
             if ((cardStacks.get(t) > 0) & (costInHand >= t.cost())) {
-                playableCards.add(t);
+                playableCardsBuilder.put(t, cardStacks.get(t));
             }
         }
-        return ImmutableList.copyOf(playableCards);
+        return new CardStacks(playableCardsBuilder.build());
     }
 
 }

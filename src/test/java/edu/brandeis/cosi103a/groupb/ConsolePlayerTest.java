@@ -85,4 +85,68 @@ public class ConsolePlayerTest {
         Decision chosen = p.makeDecision(null, options);
         assertSame(d0, chosen);
     }
+
+    @Test
+    public void outputContainsTurnHeader() {
+        String input = "0\n";
+        ByteArrayInputStream in = new ByteArrayInputStream(input.getBytes());
+        ByteArrayOutputStream outBuf = new ByteArrayOutputStream();
+        ConsolePlayer p = new ConsolePlayer(in, new PrintStream(outBuf));
+
+        Decision d0 = makeDecisionStub();
+        ImmutableList<Decision> options = ImmutableList.of(d0);
+
+        p.makeDecision(null, options);
+        String output = outBuf.toString();
+
+        assert output.contains("YOUR TURN") : "Output should contain 'YOUR TURN'";
+    }
+
+    @Test
+    public void outputContainsAvailableActionsHeader() {
+        String input = "0\n";
+        ByteArrayInputStream in = new ByteArrayInputStream(input.getBytes());
+        ByteArrayOutputStream outBuf = new ByteArrayOutputStream();
+        ConsolePlayer p = new ConsolePlayer(in, new PrintStream(outBuf));
+
+        Decision d0 = makeDecisionStub();
+        ImmutableList<Decision> options = ImmutableList.of(d0);
+
+        p.makeDecision(null, options);
+        String output = outBuf.toString();
+
+        assert output.contains("Available Actions") : "Output should contain 'Available Actions'";
+    }
+
+    @Test
+    public void outputContainsNumberedOptions() {
+        String input = "0\n";
+        ByteArrayInputStream in = new ByteArrayInputStream(input.getBytes());
+        ByteArrayOutputStream outBuf = new ByteArrayOutputStream();
+        ConsolePlayer p = new ConsolePlayer(in, new PrintStream(outBuf));
+
+        Decision d0 = makeDecisionStub();
+        ImmutableList<Decision> options = ImmutableList.of(d0);
+
+        p.makeDecision(null, options);
+        String output = outBuf.toString();
+
+        assert output.contains("[0]") : "Output should contain '[0]' for first option";
+    }
+
+    @Test
+    public void outputContainsEnterOptionPrompt() {
+        String input = "0\n";
+        ByteArrayInputStream in = new ByteArrayInputStream(input.getBytes());
+        ByteArrayOutputStream outBuf = new ByteArrayOutputStream();
+        ConsolePlayer p = new ConsolePlayer(in, new PrintStream(outBuf));
+
+        Decision d0 = makeDecisionStub();
+        ImmutableList<Decision> options = ImmutableList.of(d0);
+
+        p.makeDecision(null, options);
+        String output = outBuf.toString();
+
+        assert output.contains("Enter option index") : "Output should contain 'Enter option index'";
+    }
 }

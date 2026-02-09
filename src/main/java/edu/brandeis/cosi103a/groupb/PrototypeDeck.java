@@ -4,23 +4,23 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class Deck {
-    private List<Card> drawPile;
-    private List<Card> discardPile;
+public class PrototypeDeck {
+    private List<PrototypeCard> drawPile;
+    private List<PrototypeCard> discardPile;
 
     // Constructor
-    public Deck() {
+    public PrototypeDeck() {
         this.drawPile = new ArrayList<>();
         this.discardPile = new ArrayList<>();
     }
 
     // Constructor with initial cards
-    public Deck(List<Card> initialCards) {
+    public PrototypeDeck(List<PrototypeCard> initialCards) {
         this.drawPile = new ArrayList<>(initialCards);
         this.discardPile = new ArrayList<>();
     }
 
-    public Card drawCard() {
+    public PrototypeCard drawCard() {
         if (drawPile.isEmpty()) {
             System.out.println("Draw pile is empty, reshuffling from discard pile.");
             reshuffleFromDiscard();
@@ -30,12 +30,12 @@ public class Deck {
     }
 
     // Add a card to the draw pile
-    public void addToDrawPile(Card card) {
+    public void addToDrawPile(PrototypeCard card) {
         drawPile.add(card);
     }
 
     // Add a card to the discard pile
-    public int addToDiscard(Card card) {
+    public int addToDiscard(PrototypeCard card) {
         discardPile.add(card);
         return card.getPoints();
     }
@@ -54,11 +54,11 @@ public class Deck {
     }
 
     // Getters
-    public List<Card> getDrawPile() {
+    public List<PrototypeCard> getDrawPile() {
         return new ArrayList<>(drawPile); // return a copy to prevent external modification
     }
 
-    public List<Card> getDiscardPile() {
+    public List<PrototypeCard> getDiscardPile() {
         return new ArrayList<>(discardPile); // return a copy to prevent external modification
     }
 

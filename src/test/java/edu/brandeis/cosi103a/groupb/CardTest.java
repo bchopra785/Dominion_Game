@@ -1,6 +1,9 @@
 package edu.brandeis.cosi103a.groupb;
 
 import org.junit.jupiter.api.Test;
+
+import edu.brandeis.cosi103a.groupb.Prototypes.PrototypeCard;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class CardTest {

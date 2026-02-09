@@ -1,6 +1,9 @@
 package edu.brandeis.cosi103a.groupb;
 import org.junit.Test;
 
+import edu.brandeis.cosi103a.groupb.Prototypes.PrototypeBoard;
+import edu.brandeis.cosi103a.groupb.Prototypes.PrototypeCard;
+
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 import java.util.Map;

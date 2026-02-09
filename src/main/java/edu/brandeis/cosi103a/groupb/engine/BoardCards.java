@@ -98,7 +98,7 @@ public class BoardCards {
     }
 
     // Draws a card, should be returned to engine
-    protected Card drawDeckCard(Card.Type t){
+    public Card drawDeckCard(Card.Type t){
         switch (t) {
             case Card.Type.METHOD:
                 if (!methods.isEmpty()) {
@@ -195,7 +195,8 @@ public class BoardCards {
         }
     }
 
-    protected CardStacks getPlayableCards(int costInHand) {
+    //shouldn't this be called buyablecards?
+    public CardStacks getPlayableCards(int costInHand) {
         // For now, all cards in hand are playable, but this can be changed to check for action cards and other conditions
         ImmutableMap<Card.Type, Integer> cardStacks = getCardStacks();
 

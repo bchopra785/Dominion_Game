@@ -1,4 +1,4 @@
-package edu.brandeis.cosi103a.groupb;
+package edu.brandeis.cosi103a.groupb.Prototypes;
 
 import java.util.ArrayList;
 import java.util.HashMap;

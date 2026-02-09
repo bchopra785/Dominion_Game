@@ -3,6 +3,7 @@ package edu.brandeis.cosi103a.groupb.engine.CardFunctions;
 import java.util.List;
 
 import edu.brandeis.cosi.atg.cards.Card;
+import edu.brandeis.cosi.atg.state.CardStacks;
 import edu.brandeis.cosi.atg.state.GameState;
 import edu.brandeis.cosi.atg.state.Hand;
 import edu.brandeis.cosi103a.groupb.ConsolePlayer;
@@ -18,11 +19,22 @@ public class EvergreenTest {
     
     public GameState play(GameState state, ConsolePlayer player, List<ConsolePlayer> players, BoardCards boardCards) {
         PlayerCards playerCards = player.getPlayerCards();
+
+        String playerName = state.currentPlayerName();
+        Hand handObject = state.currentPlayerHand();
+        GameState.TurnPhase phase = GameState.TurnPhase.ACTION;
+        int actionAmt = state.availableActions();
+        int totalMoney = state.spendableMoney();
+        int availableBuys = state.availableBuys();
+        CardStacks buyableCards = state.buyableCards();
         
         // Draw 2 cards
         playerCards.drawToHand();
         playerCards.drawToHand();
-        Hand currentHand = playerCards.getHand();    //create new record class hand
+        handObject = playerCards.getHand();    //create new record class hand
+
+        totalMoney = player.getPlayerCards().getCostInHand();
+        buyableCards = boardCards.getPlayableCards(player.getPlayerCards().getCostInHand()); //buyable cards
 
         // Give all other players a BUG card
         for (ConsolePlayer otherPlayer : players) {
@@ -35,13 +47,13 @@ public class EvergreenTest {
         }
 
         GameState newState = new GameState(
-            state.currentPlayerName(),
-            currentHand,
-            state.phase(),
-            state.availableActions(),
-            state.spendableMoney(),
-            state.availableBuys(),
-            state.buyableCards()
+            playerName,
+            handObject,
+            phase,
+            actionAmt,
+            totalMoney,
+            availableBuys,
+            buyableCards
         );
 
         return newState;

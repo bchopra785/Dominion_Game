@@ -1,4 +1,4 @@
-package edu.brandeis.cosi103a.groupb;
+
 import org.junit.Test;
 
 import edu.brandeis.cosi103a.groupb.Prototypes.PrototypeBoard;

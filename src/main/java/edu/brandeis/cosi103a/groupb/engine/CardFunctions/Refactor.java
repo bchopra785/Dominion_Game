@@ -20,14 +20,23 @@ public class Refactor {
     }
     
     public GameState play(GameState state, ConsolePlayer player, BoardCards boardCards) {
+
+        String playerName = state.currentPlayerName();
+        Hand handObject = state.currentPlayerHand();
+        GameState.TurnPhase phase = GameState.TurnPhase.ACTION;
+        int actionAmt = state.availableActions();
+        int totalMoney = state.spendableMoney();
+        int availableBuys = state.availableBuys();
+        CardStacks buyableCards = state.buyableCards();
+
         PlayerCards playerCards = player.getPlayerCards();
-        Hand currentHand = playerCards.getHand();
+        handObject = playerCards.getHand();
 
         // Create a list of TrashCardDecision for each card in hand
         ImmutableList.Builder<TrashCardDecision> trashOptionsBuilder = new ImmutableList.Builder<>();
 
         //go through all cards in hand and create a trash option for each one to present to the player as a decision
-        for (Card card : currentHand.unplayedCards()) {
+        for (Card card : handObject.unplayedCards()) {
             trashOptionsBuilder.add(new TrashCardDecision(card));
         }
 
@@ -42,15 +51,18 @@ public class Refactor {
 
         // Trash the card
         playerCards.trashCard(cardToTrash);
+        handObject = playerCards.getHand();    //create new record class hand
+        totalMoney = player.getPlayerCards().getCostInHand();
+        buyableCards = boardCards.getPlayableCards(player.getPlayerCards().getCostInHand()); 
 
         GameState newState = new GameState(
-            state.currentPlayerName(),
-            playerCards.getHand(),
-            state.phase(),
-            state.availableActions(),
-            state.spendableMoney(),
-            state.availableBuys(),
-            state.buyableCards()
+            playerName,
+            handObject,
+            phase,
+            actionAmt,
+            totalMoney,
+            availableBuys,
+            buyableCards
         );
 
         CardStacks newBuyableCards = boardCards.getPlayableCards(trashedValue);

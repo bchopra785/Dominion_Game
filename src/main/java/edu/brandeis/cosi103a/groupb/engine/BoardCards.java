@@ -25,7 +25,7 @@ public class BoardCards {
     public List<Card> bugs;
 
     // Creates a new deck with cards for ATG
-    protected BoardCards(){
+    public BoardCards(){
 
         // Victory Cards
         methods = new ArrayList<>();
@@ -160,7 +160,7 @@ public class BoardCards {
 
     // To call after an action card that trashes a card from player hand and moves it back to the board
     protected void trashCardToBoard(Card card) {
-        Card.Type type = Card.Type.valueOf(card.description());
+        Card.Type type = card.type();
         switch (type) {
             case Card.Type.METHOD:
                 methods.add(card);

@@ -3,14 +3,12 @@ package edu.brandeis.cosi103a.groupb.engine;
 import edu.brandeis.cosi.atg.cards.*;
 import edu.brandeis.cosi.atg.decisions.*;
 import edu.brandeis.cosi.atg.engine.*;
-import edu.brandeis.cosi.atg.player.*;
 import edu.brandeis.cosi.atg.state.*;
 import edu.brandeis.cosi103a.groupb.ConsolePlayer;
 import edu.brandeis.cosi103a.groupb.engine.CardFunctions.CodeReview;
 import edu.brandeis.cosi103a.groupb.engine.CardFunctions.EvergreenTest;
 import edu.brandeis.cosi103a.groupb.engine.CardFunctions.Refactor;
 
-import java.sql.Ref;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -78,18 +76,22 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
             gameOver = !boardCards.frameworksLeft(); //placeholder
         }   
 
-        ImmutableList.Builder<PlayerResult> resultsBuilder = new ImmutableList.Builder<>();
+        List<PlayerResult> resultsList = new ArrayList<>();
         for (ConsolePlayer player : players) {
             ImmutableCollection<Card> allCards = player.getPlayerCards().getDiscardPile();
             PlayerResult result = new PlayerResult(player.getName(), player.getPlayerCards().getScore(), allCards);
-            resultsBuilder.add(result);
+            resultsList.add(result);
         }
-        ImmutableList<PlayerResult> playerResults = resultsBuilder.build();
+        
+        // Sort in descending order by score
+        resultsList.sort((a, b) -> Integer.compare(b.score(), a.score()));
+        
+        ImmutableList<PlayerResult> playerResults = ImmutableList.copyOf(resultsList);
         return new GameResult(playerResults); //placeholder
     }
 
     public GameState cleanupPhase(ConsolePlayer currentPlayer){
-        currentPlayer.getPlayerCards().refreshHand();
+        currentPlayer.getPlayerCards().refreshHand();       
 
         GameState newState = new GameState(
                 currentPlayer.getName(),
@@ -124,9 +126,21 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
             }
         }
 
+        
         optionsBuilder.add(new EndPhaseDecision(GameState.TurnPhase.BUY));
         ImmutableList<Decision> options = optionsBuilder.build();
-        return currentPlayer.makeDecision(oldState, options);
+
+        GameState newState = new GameState(
+            playerName,
+            handObject,
+            GameState.TurnPhase.BUY,
+            actionAmt,
+            totalMoney,
+            availableBuys,
+            buyableCards
+        );
+
+        return currentPlayer.makeDecision(newState, options);
     }
 
     public GameState buyPhase(GameState oldState, Decision decision) {
@@ -145,27 +159,29 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         if (decision instanceof BuyDecision) {
             cardTypeToBuy = ((BuyDecision) decision).cardType();
         }
-
-        GameState newState = null;
         if (cardTypeToBuy != null) {
             // Gain the card
             Card gainedCard = boardCards.drawDeckCard(cardTypeToBuy);
             currentPlayer.getPlayerCards().gainCard(gainedCard);
 
-            newState = new GameState(
-                oldState.currentPlayerName(),
-                handObject,
-                GameState.TurnPhase.BUY,
-                oldState.availableActions(),
-                oldState.spendableMoney() - gainedCard.cost(), // Subtract the cost of the bought card from spendable money
-                oldState.availableBuys() - 1, // Decrease available buys by 1
-                boardCards.getPlayableCards(oldState.spendableMoney() - gainedCard.cost()) // Update buyable cards based on new spendable money
-            );
+            totalMoney -= gainedCard.cost();
+            availableBuys -= 1;
+            buyableCards = boardCards.getPlayableCards(totalMoney);
+
+
+            
         }
 
-        if (newState == null) {
-            throw new IllegalStateException("Invalid buy decision: " + decision);
-        }
+        GameState newState = new GameState(
+            playerName,
+            handObject,
+            phase,
+            actionAmt,
+            totalMoney,
+            availableBuys,
+            buyableCards
+        );
+
         return newState;
     }
     
@@ -183,12 +199,12 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         ConsolePlayer currentPlayer = getPlayerByName(playerName);
 
         //get all cards from hand and create options list
-        ImmutableCollection<Card> hand = handObject.getAllCards();
+        ImmutableCollection<Card> unplayedCards = currentPlayer.getPlayerCards().getUnplayedCards();
         ImmutableList.Builder<Decision> optionsBuilder = new ImmutableList.Builder<>();
 
         //determine actionDecisions if actions available
         if (actionAmt > 0) {
-            for (Card card : hand) {
+            for (Card card : unplayedCards) {
                 Card.Type.Category category = getCardCategory(card);
                 if (category.equals(Card.Type.Category.ACTION)) {
                     optionsBuilder.add(new PlayCardDecision(card));
@@ -199,8 +215,18 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         //add option to end action phase
         optionsBuilder.add(new EndPhaseDecision(GameState.TurnPhase.ACTION));
 
+        GameState newState = new GameState(
+            playerName,
+            handObject,
+            phase,
+            actionAmt,
+            totalMoney,
+            availableBuys,
+            buyableCards
+        );
+
         ImmutableList<Decision> options = optionsBuilder.build();
-        return currentPlayer.makeDecision(oldState, options);
+        return currentPlayer.makeDecision(newState, options);
     }
 
 
@@ -214,7 +240,6 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         CardStacks buyableCards = oldState.buyableCards();
 
         ConsolePlayer currentPlayer = getPlayerByName(playerName);
-        ImmutableCollection<Card> hand = handObject.getAllCards();
 
         actionAmt--; //action has been played
 
@@ -223,20 +248,31 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
             playedCard = ((PlayCardDecision) decision).card();
             currentPlayer.getPlayerCards().playCard(playedCard); //move card from hand to play area
         }
+        handObject = currentPlayer.getPlayerCards().getHand(); //create new record class hand after playing card
+
+        GameState state = new GameState(
+                playerName,
+                handObject,
+                phase,
+                actionAmt,
+                totalMoney,
+                availableBuys,
+                buyableCards
+        );
 
         GameState newState = null;
         if (playedCard != null) {
             if (getCardType(playedCard).equals(Card.Type.CODE_REVIEW)) {
                 CodeReview codeReview = new CodeReview();
-                newState = codeReview.play(oldState, currentPlayer);
+                newState = codeReview.play(state, currentPlayer, boardCards);
 
             } else if (getCardType(playedCard).equals(Card.Type.EVERGREEN_TEST)) {
                 EvergreenTest evergreenTest = new EvergreenTest();
-                newState = evergreenTest.play(oldState, currentPlayer, players, boardCards);
+                newState = evergreenTest.play(state, currentPlayer, players, boardCards);
                 
             } else if (getCardType(playedCard).equals(Card.Type.REFACTOR)) {
                 Refactor refactor = new Refactor();
-                newState = refactor.play(oldState, currentPlayer, boardCards);
+                newState = refactor.play(state, currentPlayer, boardCards);
                 
             }
         }
@@ -244,6 +280,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         if (newState == null) {
             throw new IllegalStateException("Card function not implemented for card: " + playedCard);
         }
+        
         return newState;
     }
 
@@ -259,19 +296,46 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
 
     public Card.Type getCardType(Card card) {
-        Card.Type type = Card.Type.valueOf(card.description());
-        return type;
+        return card.type();
     }
 
 
     public Card.Type.Category getCardCategory(Card card) {
-        Card.Type.Category category = Card.Type.Category.valueOf(card.description());
-        return category;
+           return card.type().category();
     }
 
 
     public static void main(String[] args) {
-        //Card card = new Card(Card.Type.BITCOIN, 2);
+        Card card = new Card(Card.Type.BUG, 1);
+        System.out.println(card + " " + card.value() + " " + card.cost());
+
+        Card card1 = new Card(Card.Type.METHOD, 1);
+        System.out.println(card1 + " " + card1.value() + " " + card1.cost());
+
+        Card card2 = new Card(Card.Type.MODULE, 1);
+        System.out.println(card2 + " " + card2.value() + " " + card2.cost());
+
+        Card card3 = new Card(Card.Type.FRAMEWORK, 1);
+        System.out.println(card3 + " " + card3.value() + " " + card3.cost());
+
+        Card card4 = new Card(Card.Type.BITCOIN, 1);
+        System.out.println(card4 + " " + card4.value() + " " + card4.cost());
+
+        Card card5 = new Card(Card.Type.ETHEREUM, 1);
+        System.out.println(card5 + " " + card5.value() + " " +card5.cost());
+
+        Card card6 = new Card(Card.Type.DOGECOIN, 1);
+        System.out.println(card6 + " " + card6.value() + " " + card6.cost());
+
+        Card card7 = new Card(Card.Type.REFACTOR , 1);
+        System.out.println(card7 + " " + card7.value() + " " + card7.cost());
+        
+        Card card8 = new Card(Card.Type.CODE_REVIEW , 1);
+        System.out.println(card8 + " " + card8.value() + " " + card8.cost());
+
+        Card card9 = new Card(Card.Type.EVERGREEN_TEST , 1);
+        System.out.println(card9 + " " + card9.value() + " " + card9.cost());
+
         //TO DO: instantiate players
         ConsolePlayer player1 = new ConsolePlayer();
         ConsolePlayer player2 = new ConsolePlayer();

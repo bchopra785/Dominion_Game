@@ -26,7 +26,7 @@ public class PlayerCards {
         this.unplayedCards = new ArrayList<>();
 
         for(int i = 0; i < 7; i++) {
-            this.discard.add(new Card(Card.Type.BITCOIN, i)); //doesnt this need to come from board cards?
+            this.discard.add(new Card(Card.Type.DOGECOIN, i)); //doesnt this need to come from board cards?
         }
         for(int i = 0; i < 3; i++) {
             this.discard.add(new Card(Card.Type.METHOD, i));
@@ -113,11 +113,11 @@ public class PlayerCards {
     }
 
     // Get cost of currency cards in hand for checking if player can play a card
-    protected int getCostInHand() {
+    public int getCostInHand() {
         int costInHand = 0;
         for (Card c: this.unplayedCards) {
             if (c.type() == Card.Type.BITCOIN || c.type() == Card.Type.ETHEREUM || c.type() == Card.Type.DOGECOIN) {
-                costInHand += c.cost(); //fixed value being counted twice
+                costInHand += c.value(); //cahnged to value and removed the second count
             }
         }
     return costInHand;
@@ -140,6 +140,11 @@ public class PlayerCards {
     protected ImmutableCollection<Card> getDiscardPile() {
         returnAllToDeck();
         return ImmutableList.copyOf(this.discard);
+    }
+
+    // Get all unplayed cards in hand as an immutable collection
+    protected ImmutableCollection<Card> getUnplayedCards() {
+        return ImmutableList.copyOf(this.unplayedCards);
     }
 
 }

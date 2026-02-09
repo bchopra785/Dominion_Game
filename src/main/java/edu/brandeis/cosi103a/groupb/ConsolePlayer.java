@@ -58,6 +58,10 @@ public class ConsolePlayer implements Player {
                 return null;
             }
 
+            out.println("------------------------------");
+            out.println(state);
+            out.println(" ");
+            out.println("Player " + name + ", it's your turn!");
             out.println("Choose one of the following options:");
             for (int i = 0; i < options.size(); i++) {
                 out.printf("[%d] %s%n", i, String.valueOf(options.get(i)));

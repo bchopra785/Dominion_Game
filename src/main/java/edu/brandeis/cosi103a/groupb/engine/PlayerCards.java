@@ -26,7 +26,7 @@ public class PlayerCards {
         this.unplayedCards = new ArrayList<>();
 
         for(int i = 0; i < 7; i++) {
-            this.discard.add(new Card(Card.Type.DOGECOIN, i)); //doesnt this need to come from board cards?
+            this.discard.add(new Card(Card.Type.BITCOIN, i)); //doesnt this need to come from board cards?
         }
         for(int i = 0; i < 3; i++) {
             this.discard.add(new Card(Card.Type.METHOD, i));

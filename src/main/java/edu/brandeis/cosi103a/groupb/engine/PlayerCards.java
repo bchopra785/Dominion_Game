@@ -26,10 +26,12 @@ public class PlayerCards {
         this.unplayedCards = new ArrayList<>();
 
         for(int i = 0; i < 7; i++) {
-            this.discard.add(new Card(Card.Type.BITCOIN, i)); //doesnt this need to come from board cards?
+            Card c = board.drawDeckCard(Card.Type.BITCOIN);
+            this.discard.add(c);
         }
         for(int i = 0; i < 3; i++) {
-            this.discard.add(new Card(Card.Type.METHOD, i));
+            Card c = board.drawDeckCard(Card.Type.METHOD);
+            this.discard.add(c);
         }
     }
     // Get record of cards in hand for game state

@@ -111,7 +111,7 @@ public class ConsolePlayer implements Player {
         out.println("Available Buys: " + state.availableBuys());
         out.println("Actions Remaining: " + state.availableActions());
 }
-    }
+    
 
     /**
      * Displays all available decision options in a numbered list.

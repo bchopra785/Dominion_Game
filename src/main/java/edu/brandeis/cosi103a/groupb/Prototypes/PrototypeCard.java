@@ -1,13 +1,13 @@
-package edu.brandeis.cosi103a.groupb;
+package edu.brandeis.cosi103a.groupb.Prototypes;
 
-public class Card {
+public class PrototypeCard {
     private int cost;
     private int value;
     private String type;
     private int points; //victory points
 
     // Constructor
-    public Card(int cost, int value, int points, String type) {
+    public PrototypeCard(int cost, int value, int points, String type) {
         this.cost = cost; //money cost
         this.value = value; //money value
         this.type = type;

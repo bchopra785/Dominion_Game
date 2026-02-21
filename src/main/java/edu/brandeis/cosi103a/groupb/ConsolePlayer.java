@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import edu.brandeis.cosi.atg.decisions.Decision;
 import edu.brandeis.cosi.atg.player.Player;
 import edu.brandeis.cosi.atg.state.GameState;
+import edu.brandeis.cosi103a.groupb.engine.PlayerCards;
 
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -23,6 +24,7 @@ public class ConsolePlayer implements Player {
     private final String name;
     private final Scanner scanner;
     private final PrintStream out;
+    private PlayerCards playerCards;
 
     // Constructor accepting a shared Scanner
     public ConsolePlayer(Scanner scanner, PrintStream out) {
@@ -35,6 +37,14 @@ public class ConsolePlayer implements Player {
         this.scanner = scanner;
         this.out = out;
         this.name = "ConsolePlayer-" + COUNTER.getAndIncrement();
+    }
+    
+    public PlayerCards getPlayerCards() {
+        return playerCards;
+    }
+    
+    public void setPlayerCards(PlayerCards playerCards) {
+        this.playerCards = playerCards;
     }
 
     // Package-private constructor for tests (inject streams, creates Scanner internally for testing)

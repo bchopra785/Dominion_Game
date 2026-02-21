@@ -1,16 +1,16 @@
-package edu.brandeis.cosi103a.groupb;
+package edu.brandeis.cosi103a.groupb.Prototypes;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class Player {
-    private Deck deck;
+public class PrototypePlayer {
+    private PrototypeDeck deck;
     private int points;
-    private List<Card> hand;
+    private List<PrototypeCard> hand;
     public String name;
 
     // Constructor
-    public Player(Deck deck, String name) {
+    public PrototypePlayer(PrototypeDeck deck, String name) {
         this.deck = deck;
         this.points = 0;
         this.hand = new ArrayList<>();
@@ -18,9 +18,9 @@ public class Player {
     }
 
     // Draw 5 cards for a new turn (can be called at the start of each turn)
-    public List<Card> drawTurnHand() {
+    public List<PrototypeCard> drawTurnHand() {
         for (int i = 0; i < 5; i++) {
-            Card drawnCard = deck.drawCard();
+            PrototypeCard drawnCard = deck.drawCard();
             if (drawnCard != null) {
                 hand.add(drawnCard);
             }
@@ -29,7 +29,7 @@ public class Player {
     }
 
     public void clearHand() {
-        for (Card card : hand) {
+        for (PrototypeCard card : hand) {
             if (card != null) {
                 deck.addToDiscard(card);
             }
@@ -43,7 +43,7 @@ public class Player {
     }
 
     // Getters
-    public Deck getDeck() {
+    public PrototypeDeck getDeck() {
         return deck;
     }
 
@@ -51,7 +51,7 @@ public class Player {
         return points;
     }
 
-    public List<Card> getHand() {
+    public List<PrototypeCard> getHand() {
         return new ArrayList<>(hand); // return a copy to prevent external modification
     }
 

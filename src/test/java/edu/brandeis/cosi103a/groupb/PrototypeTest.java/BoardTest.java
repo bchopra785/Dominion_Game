@@ -1,5 +1,8 @@
-package edu.brandeis.cosi103a.groupb;
+
 import org.junit.Test;
+
+import edu.brandeis.cosi103a.groupb.Prototypes.PrototypeBoard;
+import edu.brandeis.cosi103a.groupb.Prototypes.PrototypeCard;
 
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
@@ -16,8 +19,8 @@ public class BoardTest {
     @Test
     public void stockpilesAreInitializedCorrectly()
     {
-        Board board = new Board();
-        Map<String, List<Card>> stockpiles = board.stockpiles;
+        PrototypeBoard board = new PrototypeBoard();
+        Map<String, List<PrototypeCard>> stockpiles = board.stockpiles;
 
     
         assertNotNull(stockpiles, "stockpiles map should not be null");
@@ -39,11 +42,11 @@ public class BoardTest {
 
     @Test
     public void testRemoveCard(){
-        Board board = new Board();
-        Map<String, List<Card>> stockpiles = board.stockpiles;
+        PrototypeBoard board = new PrototypeBoard();
+        Map<String, List<PrototypeCard>> stockpiles = board.stockpiles;
 
         assertEquals(14, stockpiles.get("method").size(), "method pile size");
-        Card removedCard = board.removeCard("method");
+        PrototypeCard removedCard = board.removeCard("method");
         assertNotNull(removedCard, "removed card should not be null");
         assertEquals(13, stockpiles.get("method").size(), "method pile size after removal");
     }
@@ -51,7 +54,7 @@ public class BoardTest {
 
     @Test
     public void testGetCardsRemaining(){
-        Board board = new Board();
+        PrototypeBoard board = new PrototypeBoard();
 
         assertEquals(14, board.getCardsRemaining("method"), "method pile size");
         assertEquals(8, board.getCardsRemaining("module"), "module pile size");
@@ -69,7 +72,7 @@ public class BoardTest {
 
     @Test
     public void testGetAvailableCardTypes(){
-        Board board = new Board();
+        PrototypeBoard board = new PrototypeBoard();
         List<String> availableTypes = board.getAvailableCardTypes();
 
         assertEquals(6, availableTypes.size(), "all card types should be available initially");
@@ -90,7 +93,7 @@ public class BoardTest {
 
     @Test
     public void testIsCardTypeAvailable(){
-        Board board = new Board();
+        PrototypeBoard board = new PrototypeBoard();
         assertTrue(board.isCardTypeAvailable("method"), "'method' should be available initially");
         for (int i = 0; i < 14; i++) {
             board.removeCard("method");
@@ -100,8 +103,8 @@ public class BoardTest {
 
     @Test
     public void testGetAllStockpiles() {
-        Board board = new Board();
-        Map<String, List<Card>> stockpiles = board.getAllStockpiles();
+        PrototypeBoard board = new PrototypeBoard();
+        Map<String, List<PrototypeCard>> stockpiles = board.getAllStockpiles();
         assertNotNull(stockpiles, "getAllStockpiles should not return null");
         assertTrue(stockpiles.containsKey("method"), "should contain 'method'");
         assertTrue(stockpiles.containsKey("bitcoin"), "should contain 'bitcoin'");
@@ -109,7 +112,7 @@ public class BoardTest {
 
     @Test
     public void testToString() {
-        Board board = new Board();
+        PrototypeBoard board = new PrototypeBoard();
         String str = board.toString();
         assertNotNull(str, "toString should not return null");
         assertTrue(str.contains("method"), "toString should mention 'method'");

@@ -23,19 +23,10 @@ public class ConsolePlayer implements Player {
     private final String name;
     private final Scanner scanner;
     private final PrintStream out;
-    private PlayerCards playerCards;
 
     // Zero-arg constructor required by Engine
     public ConsolePlayer() {
         this(System.in, System.out);
-    }
-    
-    public PlayerCards getPlayerCards() {
-        return playerCards;
-    }
-    
-    public void setPlayerCards(PlayerCards playerCards) {
-        this.playerCards = playerCards;
     }
 
     // Package-private constructor for tests (inject streams)

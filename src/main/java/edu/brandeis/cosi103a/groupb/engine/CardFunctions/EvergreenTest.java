@@ -1,6 +1,7 @@
 package edu.brandeis.cosi103a.groupb.engine.CardFunctions;
 
 import java.util.List;
+import java.util.Map;
 
 import edu.brandeis.cosi.atg.cards.Card;
 import edu.brandeis.cosi.atg.state.CardStacks;
@@ -17,8 +18,7 @@ public class EvergreenTest {
         
     }
     
-    public GameState play(GameState state, ConsolePlayer player, List<ConsolePlayer> players, BoardCards boardCards) {
-        PlayerCards playerCards = player.getPlayerCards();
+    public GameState play(GameState state, ConsolePlayer player, List<ConsolePlayer> players, Map<ConsolePlayer, PlayerCards> playerCardsMap, BoardCards boardCards) {
 
         String playerName = state.currentPlayerName();
         Hand handObject = state.currentPlayerHand();
@@ -29,19 +29,20 @@ public class EvergreenTest {
         CardStacks buyableCards = state.buyableCards();
         
         // Draw 2 cards
+        PlayerCards playerCards = playerCardsMap.get(player);
         playerCards.drawToHand();
         playerCards.drawToHand();
         handObject = playerCards.getHand();    //create new record class hand
 
-        totalMoney = player.getPlayerCards().getCostInHand();
-        buyableCards = boardCards.getPlayableCards(player.getPlayerCards().getCostInHand()); //buyable cards
+        totalMoney = playerCards.getCostInHand();
+        buyableCards = boardCards.getPlayableCards(playerCards.getCostInHand()); //buyable cards
 
         // Give all other players a BUG card
         for (ConsolePlayer otherPlayer : players) {
             if (!otherPlayer.getName().equals(player.getName())) {
                 Card bugCard = boardCards.drawDeckCard(Card.Type.BUG); //draw a bug card from the board
                 if (bugCard != null) {
-                    otherPlayer.getPlayerCards().gainCard(bugCard);
+                    playerCardsMap.get(otherPlayer).gainCard(bugCard);
                 }
             }
         }

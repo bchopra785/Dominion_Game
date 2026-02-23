@@ -16,6 +16,7 @@ import java.util.Map;
 
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 
 
@@ -58,12 +59,12 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
         //insert placeholder values for game state (will be updated in play method)
         this.playerName = "placeholder";
-        this.handObject = null;
-        this.phase = null;
+        this.handObject = new Hand(ImmutableList.of(), ImmutableList.of());
+        this.phase = GameState.TurnPhase.ACTION;
         this.availableActions = -1;
         this.spendableMoney = -1;
         this.availableBuys = -1;
-        this.buyableCards = null;
+        this.buyableCards = new CardStacks(ImmutableMap.of());
 
     }
 
@@ -97,15 +98,13 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
             //loop through each player
             for (ConsolePlayer player : players) {
                 this.playerName = player.getName();
+                this.handObject = playerCardsMap.get(player).getHand();
 
-                //CLEANUP PHASE
-                this.phase = GameState.TurnPhase.CLEANUP;
-                GameState startState = cleanupPhase(player);
-
+                
                 //ACTION PHASE
                 this.phase = GameState.TurnPhase.ACTION;
-                GameState actionState = startState;
-                Decision actionDecision = actionDecision(startState);
+                GameState actionState = getState();
+                Decision actionDecision = actionDecision(actionState);
                 while (!(actionDecision instanceof EndPhaseDecision && ((EndPhaseDecision) actionDecision).phase().equals(GameState.TurnPhase.ACTION))) {
                     actionState = actionPhase(actionState, actionDecision);
                     actionDecision = actionDecision(actionState);
@@ -118,7 +117,12 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
                 while (!(buyDecision instanceof EndPhaseDecision && ((EndPhaseDecision) buyDecision).phase().equals(GameState.TurnPhase.BUY))) {
                     buyState = buyPhase(buyState, buyDecision);
                     buyDecision = buyDecision(buyState);
+
                 }
+
+                //CLEANUP PHASE
+                this.phase = GameState.TurnPhase.CLEANUP;
+                GameState cleanup = cleanupPhase(player);
 
             }   
 
@@ -139,6 +143,8 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         ImmutableList<PlayerResult> playerResults = ImmutableList.copyOf(resultsList);
         return new GameResult(playerResults); //placeholder
     }
+
+   
 
     private GameState cleanupPhase(ConsolePlayer currentPlayer){
         PlayerCards playerCards = playerCardsMap.get(currentPlayer);
@@ -167,7 +173,15 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         optionsBuilder.add(new EndPhaseDecision(GameState.TurnPhase.BUY));
         ImmutableList<Decision> options = optionsBuilder.build();
 
-        return currentPlayer.makeDecision(getState(), options);
+        //continue prompting until valid decision is made
+        while(true) {
+            Decision decision = currentPlayer.makeDecision(getState(), options);
+            if (checkDecision(decision, options)) {
+                return decision;
+            } else {
+                System.out.println("Invalid decision. Please choose a valid option.");
+            }
+        }
     }
 
 
@@ -216,7 +230,16 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         optionsBuilder.add(new EndPhaseDecision(GameState.TurnPhase.ACTION));
 
         ImmutableList<Decision> options = optionsBuilder.build();
-        return currentPlayer.makeDecision(getState(), options);
+
+        //continue prompting until valid decision is made
+        while(true) {
+            Decision decision = currentPlayer.makeDecision(getState(), options);
+            if (checkDecision(decision, options)) {
+                return decision;
+            } else {
+                System.out.println("Invalid decision. Please choose a valid option.");
+            }
+        }
     }
 
 
@@ -254,6 +277,16 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         }
         
         return getState();
+    }
+
+    private boolean checkDecision(Decision decision, ImmutableList<Decision> options) {
+        for (Decision option : options) {
+            if (option.equals(decision)) {
+                return true;
+            }
+        }
+        return false;
+
     }
 
 

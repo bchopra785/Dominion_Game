@@ -14,16 +14,7 @@ import edu.brandeis.cosi.atg.state.CardStacks;
 public class BoardCards {
     // Store piles of different cards that players can buy/pickup
 
-    public List<Card> methods;
-    public List<Card> modules;
-    public List<Card> frameworks;
-    public List<Card> bitcoins;
-    public List<Card> ethereums;
-    public List<Card> dogecoins;
-    public List<Card> refactors;
-    public List<Card> evergreens;
-    public List<Card> codereviews;
-    public List<Card> bugs;
+
 
     public Map<Card.Type, List<Card>> cardMap; // for easier access to card piles by type
     public Map<Card.Type, Integer> cardsLeft; // for tracking number of cards left
@@ -45,17 +36,6 @@ public class BoardCards {
         cardMap.put(Card.Type.CODE_REVIEW, createStack(Card.Type.CODE_REVIEW, 10));
         cardMap.put(Card.Type.BUG, createStack(Card.Type.BUG, 10));
 
-        // keep the old references for backwards compatibility/tests
-        methods = cardMap.get(Card.Type.METHOD);
-        modules = cardMap.get(Card.Type.MODULE);
-        frameworks = cardMap.get(Card.Type.FRAMEWORK);
-        bitcoins = cardMap.get(Card.Type.BITCOIN);
-        ethereums = cardMap.get(Card.Type.ETHEREUM);
-        dogecoins = cardMap.get(Card.Type.DOGECOIN);
-        refactors = cardMap.get(Card.Type.REFACTOR);
-        evergreens = cardMap.get(Card.Type.EVERGREEN_TEST);
-        codereviews = cardMap.get(Card.Type.CODE_REVIEW);
-        bugs = cardMap.get(Card.Type.BUG);
     }
 
     // Only method that should create cards
@@ -67,7 +47,8 @@ public class BoardCards {
         return stack;
     }
     // For game state tracking and for engine to know available cards
-    protected ImmutableMap<Card.Type, Integer> getCardStacks() {
+    // Made public to allow external callers (e.g. tests) to inspect counts
+    public ImmutableMap<Card.Type, Integer> getCardStacks() {
         ImmutableMap.Builder<Card.Type, Integer> builder = ImmutableMap.builder();
         for (Map.Entry<Card.Type, List<Card>> entry : cardMap.entrySet()) {
             builder.put(entry.getKey(), entry.getValue().size());
@@ -89,14 +70,6 @@ public class BoardCards {
         return stack != null && stack.size() > 0;
     }
 
-    // To call after an action card that trashes a card from player hand and moves it back to the board
-    protected void trashCardToBoard(Card card) {
-        Card.Type type = card.type();
-        List<Card> stack = cardMap.get(type);
-        if (stack != null) {
-            stack.add(card);
-        }
-    }
 
     //shouldn't this be called buyablecards?
     public CardStacks getPlayableCards(int costInHand) {

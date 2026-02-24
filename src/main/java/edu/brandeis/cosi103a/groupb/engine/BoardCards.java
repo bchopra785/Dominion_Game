@@ -2,8 +2,9 @@ package edu.brandeis.cosi103a.groupb.engine;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import edu.brandeis.cosi.atg.cards.Card;
@@ -13,187 +14,62 @@ import edu.brandeis.cosi.atg.state.CardStacks;
 public class BoardCards {
     // Store piles of different cards that players can buy/pickup
 
-    public List<Card> methods;
-    public List<Card> modules;
-    public List<Card> frameworks;
-    public List<Card> bitcoins;
-    public List<Card> ethereums;
-    public List<Card> dogecoins;
-    public List<Card> refactors;
-    public List<Card> evergreens;
-    public List<Card> codereviews;
-    public List<Card> bugs;
+
+
+    public Map<Card.Type, List<Card>> cardMap; // for easier access to card piles by type
+    public Map<Card.Type, Integer> cardsLeft; // for tracking number of cards left
 
     // Creates a new deck with cards for ATG
     public BoardCards(){
+        // build each pile via the helper and stash in a single map
+        cardMap = new HashMap<>();
+        cardMap.put(Card.Type.METHOD, createStack(Card.Type.METHOD, 14));
+        cardMap.put(Card.Type.MODULE, createStack(Card.Type.MODULE, 8));
+        cardMap.put(Card.Type.FRAMEWORK, createStack(Card.Type.FRAMEWORK, 8));
 
-        // Victory Cards
-        methods = new ArrayList<>();
-        for (int i = 0; i < 14; i++) {
-            
-            methods.add(new Card(Card.Type.METHOD, i));
-        }
+        cardMap.put(Card.Type.BITCOIN, createStack(Card.Type.BITCOIN, 60));
+        cardMap.put(Card.Type.ETHEREUM, createStack(Card.Type.ETHEREUM, 40));
+        cardMap.put(Card.Type.DOGECOIN, createStack(Card.Type.DOGECOIN, 30));
 
-        modules = new ArrayList<>();
-        for (int i = 0; i < 8; i++) {
-            modules.add(new Card(Card.Type.MODULE, i));
-        }
-        
-        frameworks = new ArrayList<>();
-        for (int i = 0; i < 8; i++) {
-            frameworks.add(new Card(Card.Type.FRAMEWORK, i));
-        }
-        // Currency Cards
-        bitcoins = new ArrayList<>();
-        for (int i = 0; i < 60; i++) {
-            bitcoins.add(new Card(Card.Type.BITCOIN, i));
-        }
+        cardMap.put(Card.Type.REFACTOR, createStack(Card.Type.REFACTOR, 10));
+        cardMap.put(Card.Type.EVERGREEN_TEST, createStack(Card.Type.EVERGREEN_TEST, 10));
+        cardMap.put(Card.Type.CODE_REVIEW, createStack(Card.Type.CODE_REVIEW, 10));
+        cardMap.put(Card.Type.BUG, createStack(Card.Type.BUG, 10));
 
-        ethereums = new ArrayList<>();
-        for (int i = 0; i < 40; i++) {
-            ethereums.add(new Card(Card.Type.ETHEREUM, i));
-        }
-
-        dogecoins = new ArrayList<>();
-        for (int i = 0; i < 30; i++) {
-            dogecoins.add(new Card(Card.Type.DOGECOIN, i));
-        }
-        // Action cards
-        refactors = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
-            refactors.add(new Card(Card.Type.REFACTOR, i));
-        }
-
-        evergreens = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
-            evergreens.add(new Card(Card.Type.EVERGREEN_TEST, i));
-        }
-
-        codereviews = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
-            codereviews.add(new Card(Card.Type.CODE_REVIEW, i));
-        }
-
-        bugs = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
-            bugs.add(new Card(Card.Type.BUG, i));
-        }
     }
 
+    // Only method that should create cards
+    private List<Card> createStack(Card.Type type, int count) {
+        List<Card> stack = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            stack.add(new Card(type, i));
+        }
+        return stack;
+    }
     // For game state tracking and for engine to know available cards
-    protected ImmutableMap<Card.Type, Integer> getCardStacks() {
-        ImmutableMap<Card.Type, Integer> map = ImmutableMap.<Card.Type, Integer>builder()
-            .put(Card.Type.METHOD, methods.size())
-            .put(Card.Type.MODULE, modules.size())
-            .put(Card.Type.FRAMEWORK, frameworks.size())
-            .put(Card.Type.BITCOIN, bitcoins.size())
-            .put(Card.Type.ETHEREUM, ethereums.size())
-            .put(Card.Type.DOGECOIN, dogecoins.size())
-            .put(Card.Type.REFACTOR, refactors.size())
-            .put(Card.Type.EVERGREEN_TEST, evergreens.size())
-            .put(Card.Type.CODE_REVIEW, codereviews.size())
-            .put(Card.Type.BUG, bugs.size())
-            .build();
-        return map;
+    // Made public to allow external callers (e.g. tests) to inspect counts
+    public ImmutableMap<Card.Type, Integer> getCardStacks() {
+        ImmutableMap.Builder<Card.Type, Integer> builder = ImmutableMap.builder();
+        for (Map.Entry<Card.Type, List<Card>> entry : cardMap.entrySet()) {
+            builder.put(entry.getKey(), entry.getValue().size());
+        }
+        return builder.build();
     }
 
     // Draws a card, should be returned to engine
     public Card drawDeckCard(Card.Type t){
-        switch (t) {
-            case Card.Type.METHOD:
-                if (!methods.isEmpty()) {
-                    return methods.remove(0);
-                }
-                break;
-            case Card.Type.MODULE:
-                if (!modules.isEmpty()) {
-                    return modules.remove(0);
-                }
-                break;
-            case Card.Type.FRAMEWORK:
-                if (!frameworks.isEmpty()) {
-                    return frameworks.remove(0);
-                }
-                break;
-            case Card.Type.BITCOIN:
-                if (!bitcoins.isEmpty()) {
-                    return bitcoins.remove(0);
-                }
-                break;
-            case Card.Type.ETHEREUM:
-                if (!ethereums.isEmpty()) {
-                    return ethereums.remove(0);
-                }
-                break;
-            case Card.Type.DOGECOIN:
-                if (!dogecoins.isEmpty()) {
-                    return dogecoins.remove(0);
-                }
-                break;
-            case Card.Type.REFACTOR:
-                if (!refactors.isEmpty()) {
-                    return refactors.remove(0);
-                }
-                break;
-            case Card.Type.EVERGREEN_TEST:
-                if (!evergreens.isEmpty()) {
-                    return evergreens.remove(0);
-                }
-                break;
-            case Card.Type.CODE_REVIEW:
-                if (!codereviews.isEmpty()) {
-                    return codereviews.remove(0);
-                }
-                break;
-            case Card.Type.BUG:
-                if (!bugs.isEmpty()) {
-                    return bugs.remove(0);
-                }
-                break;
+        List<Card> stack = cardMap.get(t);
+        if (stack != null && !stack.isEmpty()) {
+            return stack.remove(0);
         }
         return null; // No card available or invalid name
     }
 
     protected boolean frameworksLeft(){
-        return frameworks.size() > 0;
+        List<Card> stack = cardMap.get(Card.Type.FRAMEWORK);
+        return stack != null && stack.size() > 0;
     }
 
-    // To call after an action card that trashes a card from player hand and moves it back to the board
-    protected void trashCardToBoard(Card card) {
-        Card.Type type = card.type();
-        switch (type) {
-            case Card.Type.METHOD:
-                methods.add(card);
-                break;
-            case Card.Type.MODULE:
-                modules.add(card);
-                break;
-            case Card.Type.FRAMEWORK:
-                frameworks.add(card);
-                break;
-            case Card.Type.BITCOIN:
-                bitcoins.add(card);
-                break;
-            case Card.Type.ETHEREUM:
-                ethereums.add(card);
-                break;
-            case Card.Type.DOGECOIN:
-                dogecoins.add(card);
-                break;
-            case Card.Type.REFACTOR:
-                refactors.add(card);
-                break;
-            case Card.Type.EVERGREEN_TEST:
-                evergreens.add(card);
-                break;
-            case Card.Type.CODE_REVIEW:
-                codereviews.add(card);
-                break;
-            case Card.Type.BUG:
-                bugs.add(card);
-                break;
-        }
-    }
 
     //shouldn't this be called buyablecards?
     public CardStacks getPlayableCards(int costInHand) {

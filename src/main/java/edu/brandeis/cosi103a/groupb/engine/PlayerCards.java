@@ -15,7 +15,7 @@ public class PlayerCards {
     //private List<Card> hand;
     private List<Card> discard;
     private List<Card> deck;
-    private BoardCards board; // needed for case of trashing card action to the board
+    private BoardCards board;
     private List<Card> playedCards; // for tracking cards played in the current turn
     private List<Card> unplayedCards; // for tracking cards in hand that have not been
 
@@ -27,20 +27,16 @@ public class PlayerCards {
         this.unplayedCards = new ArrayList<>();
 
         for(int i = 0; i < 7; i++) {
-            Card c = board.drawDeckCard(Card.Type.BITCOIN);
+            Card c = this.board.drawDeckCard(Card.Type.BITCOIN);
             this.deck.add(c);
         }
         for(int i = 0; i < 3; i++) {
-            Card c = board.drawDeckCard(Card.Type.METHOD);
+            Card c = this.board.drawDeckCard(Card.Type.METHOD);
             this.deck.add(c);
         }
+
+        shuffleCards(); // need to shuffle cards at the beginning
     }
-    // Get record of cards in hand for game state
-    // protected ImmutableList<Card> getHand() {
-        
-    //     ImmutableList<Card> h = ImmutableList.copyOf(hand);
-    //     return h;
-    // }
 
     //Get record class Hand
     public Hand getHand() {
@@ -67,30 +63,22 @@ public class PlayerCards {
         Collections.shuffle(this.deck);
     }
 
-    // Moves cards from hand to discard to deck, called internally
-    private void returnAllToDeck() {
-        // discard.addAll(playedCards); added to discard when played
+    // Moves cards from hand to discard to deck
+    protected void refreshHand() {
+        discard.addAll(playedCards); 
         discard.addAll(unplayedCards);
         playedCards.clear();
         unplayedCards.clear();
-        deck.addAll(discard);
-        discard.clear();
-        // discard.addAll(hand);
-        // hand.clear();
-    }
 
-    // Refresh deck and draw 5 new cards
-    protected void refreshHand() {
-        returnAllToDeck();
-        shuffleCards();
-
-        // Draw back 5 cards to hand
         while (unplayedCards.size() < 5) {
             if (!drawToHand()) {
-                break; // No more cards to draw
+                deck.addAll(discard); // No more cards to draw, move discard to deck and shuffle
+                discard.clear();
+                shuffleCards();
             }
         }
     }
+
     // ACTIONS
     // Should be called by engine for gaining a card
     public void gainCard(Card card) {
@@ -100,8 +88,7 @@ public class PlayerCards {
     // Trash card (action) moves a card from player deck back to the Board
     public void trashCard(Card card) throws IllegalArgumentException{
         if(unplayedCards.contains(card)) {
-            unplayedCards.remove(card);
-            this.board.trashCardToBoard(card);
+            unplayedCards.remove(card); // card is just trashed and removed from the game 
         }else{
             throw new IllegalArgumentException("Card not in hand");
         }
@@ -110,8 +97,7 @@ public class PlayerCards {
     public void playCard(Card card) throws IllegalArgumentException {
         if(unplayedCards.contains(card)) {
             unplayedCards.remove(card);
-            playedCards.add(card); // Static ref for game state
-            discard.add(card); // Dynamic ref for gameplay
+            playedCards.add(card);
         }else{
             throw new IllegalArgumentException("Card not in hand");
         }
@@ -129,8 +115,16 @@ public class PlayerCards {
     }
 
     // Get total value of victory cards (METHOD, MODULE, FRAMEWORK)
+    // Moves all cards to discard for end game cleanup
     protected int getScore() {
-        returnAllToDeck();
+        discard.addAll(playedCards); 
+        discard.addAll(unplayedCards);
+        playedCards.clear();
+        unplayedCards.clear();
+
+        deck.addAll(discard);
+        discard.clear();
+
         int victoryPoints = 0;
         // Check all cards in deck for victory cards and sum their values
         for (Card c : this.deck) {
@@ -141,10 +135,9 @@ public class PlayerCards {
         return victoryPoints;
     }
 
-    // Get all cards in the discard pile as an immutable collection
-    // Why do we need a getter for discard pile? Do we need a getter for played cards or the deck instead?
+    // Used only for endgame to present all cards
     protected ImmutableCollection<Card> getDiscardPile() {
-        returnAllToDeck();// shouldn't be any cards in discard pile after this point? 
+
         return ImmutableList.copyOf(this.discard);
     }
 

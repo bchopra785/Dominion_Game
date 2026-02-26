@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.Map;
 import edu.brandeis.cosi.atg.cards.Card;
 import edu.brandeis.cosi.atg.state.CardStacks;
 import edu.brandeis.cosi103a.groupb.engine.BoardCards;
@@ -99,9 +100,11 @@ public class BoardCardsTest {
 
     @Test
     public void testGetPlayableCardsExcludesEmptyPiles() {
-        // Empty piles should not be included
-        while (!boardCards.bitcoins.isEmpty()) {
-            boardCards.bitcoins.remove(0);
+        // Empty a pile using API rather than internal list
+        Map<Card.Type,Integer> stacks = boardCards.getCardStacks();
+        while (stacks.get(Card.Type.BITCOIN) > 0) {
+            boardCards.drawDeckCard(Card.Type.BITCOIN);
+            stacks = boardCards.getCardStacks();
         }
         CardStacks playableCards = boardCards.getPlayableCards(8);
         assertFalse(playableCards.getCardTypes().contains(Card.Type.BITCOIN));
@@ -112,8 +115,34 @@ public class BoardCardsTest {
         // No cards with cost > budget should be returned
         CardStacks playableCards = boardCards.getPlayableCards(3);
         for (Card.Type cardType : playableCards.getCardTypes()) {
-            assertTrue(cardType.cost() <= 3, 
+            assertTrue(cardType.cost() <= 3,
                       "Card " + cardType + " costs " + cardType.cost() + " exceeds budget of 3");
         }
+    }
+
+    @Test
+    public void testInitialCardStacksReflectConstructor() {
+        // verify getCardStacks reports the expected starting counts
+        Map<Card.Type,Integer> stacks = boardCards.getCardStacks();
+        assertEquals(14, stacks.get(Card.Type.METHOD));
+        assertEquals(8, stacks.get(Card.Type.MODULE));
+        assertEquals(8, stacks.get(Card.Type.FRAMEWORK));
+        assertEquals(60, stacks.get(Card.Type.BITCOIN));
+        assertEquals(40, stacks.get(Card.Type.ETHEREUM));
+        assertEquals(30, stacks.get(Card.Type.DOGECOIN));
+        assertEquals(10, stacks.get(Card.Type.REFACTOR));
+        assertEquals(10, stacks.get(Card.Type.EVERGREEN_TEST));
+        assertEquals(10, stacks.get(Card.Type.CODE_REVIEW));
+        assertEquals(10, stacks.get(Card.Type.BUG));
+    }
+
+    @Test
+    public void testDrawDeckCardUpdatesStacks() {
+        Map<Card.Type,Integer> stacks = boardCards.getCardStacks();
+        int before = stacks.get(Card.Type.METHOD);
+        Card drawn = boardCards.drawDeckCard(Card.Type.METHOD);
+        assertNotNull(drawn);
+        int after = boardCards.getCardStacks().get(Card.Type.METHOD);
+        assertEquals(before - 1, after);
     }
 }

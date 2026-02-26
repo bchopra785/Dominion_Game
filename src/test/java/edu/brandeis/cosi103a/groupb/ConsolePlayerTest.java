@@ -1,9 +1,11 @@
 package edu.brandeis.cosi103a.groupb;
 
 import com.google.common.collect.ImmutableList;
+
 import edu.brandeis.cosi.atg.decisions.Decision;
 import edu.brandeis.cosi.atg.decisions.EndPhaseDecision;
 import edu.brandeis.cosi.atg.state.GameState;
+
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;

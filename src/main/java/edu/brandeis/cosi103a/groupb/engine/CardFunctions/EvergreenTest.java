@@ -1,0 +1,61 @@
+package edu.brandeis.cosi103a.groupb.engine.CardFunctions;
+
+import java.util.List;
+
+import edu.brandeis.cosi.atg.cards.Card;
+import edu.brandeis.cosi.atg.state.CardStacks;
+import edu.brandeis.cosi.atg.state.GameState;
+import edu.brandeis.cosi.atg.state.Hand;
+import edu.brandeis.cosi103a.groupb.ConsolePlayer;
+import edu.brandeis.cosi103a.groupb.engine.BoardCards;
+import edu.brandeis.cosi103a.groupb.engine.PlayerCards;
+
+
+public class EvergreenTest {
+    
+    public EvergreenTest() {
+        
+    }
+    
+    public GameState play(GameState state, ConsolePlayer player, List<ConsolePlayer> players, BoardCards boardCards) {
+        PlayerCards playerCards = player.getPlayerCards();
+
+        String playerName = state.currentPlayerName();
+        Hand handObject = state.currentPlayerHand();
+        GameState.TurnPhase phase = GameState.TurnPhase.ACTION;
+        int actionAmt = state.availableActions();
+        int totalMoney = state.spendableMoney();
+        int availableBuys = state.availableBuys();
+        CardStacks buyableCards = state.buyableCards();
+        
+        // Draw 2 cards
+        playerCards.drawToHand();
+        playerCards.drawToHand();
+        handObject = playerCards.getHand();    //create new record class hand
+
+        totalMoney = player.getPlayerCards().getCostInHand();
+        buyableCards = boardCards.getPlayableCards(player.getPlayerCards().getCostInHand()); //buyable cards
+
+        // Give all other players a BUG card
+        for (ConsolePlayer otherPlayer : players) {
+            if (!otherPlayer.getName().equals(player.getName())) {
+                Card bugCard = boardCards.drawDeckCard(Card.Type.BUG); //draw a bug card from the board
+                if (bugCard != null) {
+                    otherPlayer.getPlayerCards().gainCard(bugCard);
+                }
+            }
+        }
+
+        GameState newState = new GameState(
+            playerName,
+            handObject,
+            phase,
+            actionAmt,
+            totalMoney,
+            availableBuys,
+            buyableCards
+        );
+
+        return newState;
+    }
+}

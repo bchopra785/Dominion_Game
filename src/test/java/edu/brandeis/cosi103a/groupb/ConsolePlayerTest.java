@@ -13,7 +13,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SuppressWarnings("null")
 public class ConsolePlayerTest {
 
     // Use concrete Decision implementations from the ATG API (EndPhaseDecision)
@@ -38,7 +40,7 @@ public class ConsolePlayerTest {
 
         Decision d0 = makeDecisionStub();
         Decision d1 = makeDecisionStub();
-        ImmutableList<Decision> options = ImmutableList.of(d0, d1);
+        ImmutableList<Decision> options = ImmutableList.<Decision>of(d0, d1);
 
         Decision chosen = p.makeDecision(null, options);
         assertSame(d1, chosen);
@@ -53,7 +55,7 @@ public class ConsolePlayerTest {
 
         Decision d0 = makeDecisionStub();
         Decision d1 = makeDecisionStub();
-        ImmutableList<Decision> options = ImmutableList.of(d0, d1);
+        ImmutableList<Decision> options = ImmutableList.<Decision>of(d0, d1);
 
         Decision chosen = p.makeDecision(null, options);
         assertSame(d0, chosen);
@@ -68,7 +70,7 @@ public class ConsolePlayerTest {
 
         Decision d0 = makeDecisionStub();
         Decision d1 = makeDecisionStub();
-        ImmutableList<Decision> options = ImmutableList.of(d0, d1);
+        ImmutableList<Decision> options = ImmutableList.<Decision>of(d0, d1);
 
         Decision chosen = p.makeDecision(null, options);
         assertSame(d0, chosen);
@@ -82,9 +84,33 @@ public class ConsolePlayerTest {
 
         Decision d0 = makeDecisionStub();
         Decision d1 = makeDecisionStub();
-        ImmutableList<Decision> options = ImmutableList.of(d0, d1);
+        ImmutableList<Decision> options = ImmutableList.<Decision>of(d0, d1);
 
         Decision chosen = p.makeDecision(null, options);
         assertSame(d0, chosen);
+    }
+
+    @Test
+    public void gameStateFieldsShown() {
+        String input = "0\n";
+        ByteArrayInputStream in = new ByteArrayInputStream(input.getBytes());
+        ByteArrayOutputStream outBuf = new ByteArrayOutputStream();
+        ConsolePlayer p = new ConsolePlayer(in, new PrintStream(outBuf));
+
+        GameState state = new GameState(
+            "Bob",
+            null,
+            GameState.TurnPhase.BUY,
+            2,
+            5,
+            1,
+            null
+        );
+        ImmutableList<Decision> options = ImmutableList.<Decision>of(makeDecisionStub());
+
+        p.makeDecision(state, options);
+        String output = outBuf.toString();
+        assertTrue(output.contains("currentPlayerName: Bob"));
+        assertTrue(output.contains("phase: BUY"));
     }
 }

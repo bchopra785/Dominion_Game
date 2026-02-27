@@ -27,11 +27,25 @@ public class BigMoneyPlayer extends ParentPlayer {
 
     @Override
     public Decision makeDecision(GameState state, ImmutableList<Decision> options) {
-        if (options == null || options.isEmpty()) {
+        if (options == null || options.isEmpty() || state == null) {
             return null;
         }
 
-        // Pick best money card among BuyDecision or GainCardDecision options.
+        // FRAMEWORK-FIRST: if a BuyDecision for FRAMEWORK is available and affordable, take it.
+        for (Decision opt : options) {
+            if (opt instanceof BuyDecision) {
+                BuyDecision bd = (BuyDecision) opt;
+                Card.Type ct = bd.cardType();
+                if (ct == Card.Type.FRAMEWORK) {
+                    // affordability check using card type's cost
+                    if (ct.cost() <= state.spendableMoney()) {
+                        return opt;
+                    }
+                }
+            }
+        }
+
+        // Existing fallback: Pick best money card among BuyDecision or GainCardDecision options.
         Decision best = null;
         int bestValue = Integer.MIN_VALUE;
 

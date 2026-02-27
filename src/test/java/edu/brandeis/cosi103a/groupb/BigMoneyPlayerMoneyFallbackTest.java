@@ -50,4 +50,59 @@ public class BigMoneyPlayerMoneyFallbackTest {
         Decision chosen = p.makeDecision(null, options);
         assertTrue(chosen instanceof EndPhaseDecision);
     }
+
+    // --- Framework-first tests moved here ---
+
+    @Test
+    public void frameworkAvailableAndAffordable() {
+        BigMoneyPlayer p = new BigMoneyPlayer("Mika");
+
+        GameState state = new GameState(
+            "Mika",
+            null,
+            GameState.TurnPhase.BUY,
+            1,
+            5,
+            1,
+            null
+        );
+
+        Decision frameworkDecision = new BuyDecision(Card.Type.FRAMEWORK);
+        Decision end = new EndPhaseDecision(GameState.TurnPhase.BUY);
+
+        ImmutableList<Decision> options = ImmutableList.of(frameworkDecision, end);
+
+        Decision chosen = p.makeDecision(state, options);
+        assertSame(frameworkDecision, chosen);
+    }
+
+    @Test
+    public void frameworkChosenWhenMultipleAffordableOptions() {
+        BigMoneyPlayer p = new BigMoneyPlayer("Mika");
+
+        GameState state = new GameState(
+            "Mika",
+            null,
+            GameState.TurnPhase.BUY,
+            1,
+            6,
+            1,
+            null
+        );
+
+        Decision bitcoinDecision = new BuyDecision(Card.Type.BITCOIN);
+        Decision frameworkDecision = new BuyDecision(Card.Type.FRAMEWORK);
+        Decision ethereumDecision = new BuyDecision(Card.Type.ETHEREUM);
+        Decision end = new EndPhaseDecision(GameState.TurnPhase.BUY);
+
+        ImmutableList<Decision> options = ImmutableList.of(
+            bitcoinDecision,
+            frameworkDecision,
+            ethereumDecision,
+            end
+        );
+
+        Decision chosen = p.makeDecision(state, options);
+        assertSame(frameworkDecision, chosen);
+    }
 }

@@ -104,7 +104,7 @@ public class ConsolePlayerTest {
             2,
             5,
             1,
-            null
+            new edu.brandeis.cosi.atg.state.CardStacks(com.google.common.collect.ImmutableMap.of())
         );
         ImmutableList<Decision> options = ImmutableList.<Decision>of(makeDecisionStub());
 

@@ -29,14 +29,19 @@ public class ConsolePlayer extends ParentPlayer {
 
     // Package-private constructor for tests (inject streams)
     public ConsolePlayer(InputStream in, PrintStream out) {
+        this(new Scanner(in), out);
+    }
+
+    // Shared Scanner constructor (allows multiple players to share an input Scanner)
+    public ConsolePlayer(Scanner scanner, PrintStream out) {
         super("ConsolePlayer-" + COUNTER.getAndIncrement());
-      if (in == null) {
-        throw new IllegalArgumentException("InputStream cannot be null");
-       }
-      if (out == null) {
-        throw new IllegalArgumentException("PrintStream cannot be null");
-       }
-        this.scanner = new Scanner(in);
+        if (scanner == null) {
+            throw new IllegalArgumentException("Scanner cannot be null");
+        }
+        if (out == null) {
+            throw new IllegalArgumentException("PrintStream cannot be null");
+        }
+        this.scanner = scanner;
         this.out = out;
     }
 
@@ -74,9 +79,6 @@ public class ConsolePlayer extends ParentPlayer {
             } catch (NumberFormatException ignored) {
                 out.print("Invalid input. Enter a valid index: ");
             }
-        } catch (Exception e) {
-            out.println("Error reading input; selecting default option 0");
-            return (options == null || options.isEmpty()) ? null : options.get(0);
         }
     }
 }

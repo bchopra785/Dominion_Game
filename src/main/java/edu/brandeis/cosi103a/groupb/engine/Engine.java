@@ -99,6 +99,10 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
             for (ConsolePlayer player : players) {
                 this.playerName = player.getName();
                 this.handObject = playerCardsMap.get(player).getHand();
+                this.availableActions = 1;
+                this.spendableMoney = playerCardsMap.get(player).getCostInHand();
+                this.availableBuys = 1;
+                this.buyableCards = boardCards.getPlayableCards(playerCardsMap.get(player).getCostInHand());
 
                 
                 //ACTION PHASE
@@ -311,53 +315,53 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
     }
 
 
-    public static void main(String[] args) {
-        Card card = new Card(Card.Type.BUG, 1);
-        System.out.println(card + " " + card.value() + " " + card.cost());
+    // public static void main(String[] args) {
+    //     Card card = new Card(Card.Type.BUG, 1);
+    //     System.out.println(card + " " + card.value() + " " + card.cost());
 
-        Card card1 = new Card(Card.Type.METHOD, 1);
-        System.out.println(card1 + " " + card1.value() + " " + card1.cost());
+    //     Card card1 = new Card(Card.Type.METHOD, 1);
+    //     System.out.println(card1 + " " + card1.value() + " " + card1.cost());
 
-        Card card2 = new Card(Card.Type.MODULE, 1);
-        System.out.println(card2 + " " + card2.value() + " " + card2.cost());
+    //     Card card2 = new Card(Card.Type.MODULE, 1);
+    //     System.out.println(card2 + " " + card2.value() + " " + card2.cost());
 
-        Card card3 = new Card(Card.Type.FRAMEWORK, 1);
-        System.out.println(card3 + " " + card3.value() + " " + card3.cost());
+    //     Card card3 = new Card(Card.Type.FRAMEWORK, 1);
+    //     System.out.println(card3 + " " + card3.value() + " " + card3.cost());
 
-        Card card4 = new Card(Card.Type.BITCOIN, 1);
-        System.out.println(card4 + " " + card4.value() + " " + card4.cost());
+    //     Card card4 = new Card(Card.Type.BITCOIN, 1);
+    //     System.out.println(card4 + " " + card4.value() + " " + card4.cost());
 
-        Card card5 = new Card(Card.Type.ETHEREUM, 1);
-        System.out.println(card5 + " " + card5.value() + " " +card5.cost());
+    //     Card card5 = new Card(Card.Type.ETHEREUM, 1);
+    //     System.out.println(card5 + " " + card5.value() + " " +card5.cost());
 
-        Card card6 = new Card(Card.Type.DOGECOIN, 1);
-        System.out.println(card6 + " " + card6.value() + " " + card6.cost());
+    //     Card card6 = new Card(Card.Type.DOGECOIN, 1);
+    //     System.out.println(card6 + " " + card6.value() + " " + card6.cost());
 
-        Card card7 = new Card(Card.Type.REFACTOR , 1);
-        System.out.println(card7 + " " + card7.value() + " " + card7.cost());
+    //     Card card7 = new Card(Card.Type.REFACTOR , 1);
+    //     System.out.println(card7 + " " + card7.value() + " " + card7.cost());
         
-        Card card8 = new Card(Card.Type.CODE_REVIEW , 1);
-        System.out.println(card8 + " " + card8.value() + " " + card8.cost());
+    //     Card card8 = new Card(Card.Type.CODE_REVIEW , 1);
+    //     System.out.println(card8 + " " + card8.value() + " " + card8.cost());
 
-        Card card9 = new Card(Card.Type.EVERGREEN_TEST , 1);
-        System.out.println(card9 + " " + card9.value() + " " + card9.cost());
+    //     Card card9 = new Card(Card.Type.EVERGREEN_TEST , 1);
+    //     System.out.println(card9 + " " + card9.value() + " " + card9.cost());
 
-        //TO DO: instantiate players
-        ConsolePlayer player1 = new ConsolePlayer();
-        ConsolePlayer player2 = new ConsolePlayer();
-        ConsolePlayer player3 = new ConsolePlayer();
-        ConsolePlayer player4 = new ConsolePlayer();
+    //     //TO DO: instantiate players
+    //     ConsolePlayer player1 = new ConsolePlayer();
+    //     ConsolePlayer player2 = new ConsolePlayer();
+    //     ConsolePlayer player3 = new ConsolePlayer();
+    //     ConsolePlayer player4 = new ConsolePlayer();
 
-        List<ConsolePlayer> players = List.of(player1, player2, player3, player4);
+    //     List<ConsolePlayer> players = List.of(player1, player2, player3, player4);
         
-        Engine engine = new Engine(players);
-        GameResult result = null;
-        try {
-            result = engine.play();
-        } catch (PlayerViolationException e) {
-            e.printStackTrace();
-        }
-        System.out.println(result);
-    }     
+    //     Engine engine = new Engine(players);
+    //     GameResult result = null;
+    //     try {
+    //         result = engine.play();
+    //     } catch (PlayerViolationException e) {
+    //         e.printStackTrace();
+    //     }
+    //     System.out.println(result);
+    // }     
     
 }

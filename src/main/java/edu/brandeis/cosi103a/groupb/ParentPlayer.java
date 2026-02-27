@@ -1,8 +1,15 @@
 package edu.brandeis.cosi103a.groupb;
 
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+
+import edu.brandeis.cosi.atg.cards.Card;
 import edu.brandeis.cosi.atg.decisions.Decision;
+import edu.brandeis.cosi.atg.decisions.EndPhaseDecision;
+import edu.brandeis.cosi.atg.state.CardStacks;
 import edu.brandeis.cosi.atg.state.GameState;
+import edu.brandeis.cosi.atg.state.Hand;
 import edu.brandeis.cosi103a.groupb.engine.PlayerCards;
 
 /**
@@ -70,13 +77,45 @@ public abstract class ParentPlayer implements edu.brandeis.cosi.atg.player.Playe
             return "<no game state>";
         }
         StringBuilder sb = new StringBuilder();
-        sb.append("currentPlayerName: ").append(state.currentPlayerName()).append('\n');
-        sb.append("currentPlayerHand: ").append(state.currentPlayerHand()).append('\n');
-        sb.append("phase: ").append(state.phase()).append('\n');
-        sb.append("availableActions: ").append(state.availableActions()).append('\n');
-        sb.append("spendableMoney: ").append(state.spendableMoney()).append('\n');
-        sb.append("availableBuys: ").append(state.availableBuys()).append('\n');
-        sb.append("buyableCards: ").append(state.buyableCards()).append('\n');
+        sb.append("Current Player: ").append(state.currentPlayerName()).append('\n');
+        sb.append("Hand: ").append(formatHand(state.currentPlayerHand())).append('\n');
+        sb.append("Phase: ").append(state.phase()).append('\n');
+        sb.append("Actions Left: ").append(state.availableActions()).append('\n');
+        sb.append("Money Left: ").append(state.spendableMoney()).append('\n');
+        sb.append("Buys Left: ").append(state.availableBuys()).append('\n');
+        sb.append("Buyable Cards: ").append(formatBuyableCards(state.buyableCards())).append('\n');
+        return sb.toString();
+    }
+
+    private String formatHand(Hand hand) {
+        ImmutableCollection<Card> playedCards = hand.playedCards();
+        ImmutableCollection<Card> unplayedCards = hand.unplayedCards();
+        if(playedCards.isEmpty() && unplayedCards.isEmpty()) {
+            return "<empty hand>";
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("  PLAYED: ");
+        for (Card card : playedCards) {
+            sb.append(card.description()).append(", ");
+        }
+        sb.append("\n\tUNPLAYED: ");
+        for (Card card : unplayedCards) {
+            sb.append(card.description()).append(", ");
+        }
+        return sb.toString();
+    }
+
+    private String formatBuyableCards(CardStacks buyableCards) {
+        ImmutableSet<Card.Type> types = buyableCards.getCardTypes();
+
+        if (types == null || types.isEmpty()) {
+            return "<no buyable cards>";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (Card.Type type : types) {
+            sb.append(type.name()).append(": ").append(buyableCards.getNumAvailable(type)).append(", ");
+        }
         return sb.toString();
     }
 }

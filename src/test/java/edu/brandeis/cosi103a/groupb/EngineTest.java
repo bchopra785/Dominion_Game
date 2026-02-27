@@ -5,6 +5,9 @@ import edu.brandeis.cosi103a.groupb.engine.Engine;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mock;
 
 
 import java.io.ByteArrayInputStream;
@@ -15,12 +18,17 @@ import java.util.List;
 import java.util.Scanner;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 public class EngineTest {
     
     private List<ConsolePlayer> players;
     private ByteArrayOutputStream outBuf;
     private Scanner scanner;
+    
+    @Mock
+    private ConsolePlayer mockPlayer;
 
     @BeforeEach
     public void setUp() {
@@ -170,4 +178,24 @@ public class EngineTest {
         assertEquals(3, players.size());
         assertDoesNotThrow(() -> new Engine(players));
     }
+
+    @Test
+    public void testEngineWithMockedPlayer() {
+        // Example Mockito test: use a mocked player
+        when(mockPlayer.getName()).thenReturn("MockedPlayer");
+        
+        // Create a list with the mocked player
+        List<ConsolePlayer> mockPlayers = new ArrayList<>();
+        mockPlayers.add(mockPlayer);
+        
+        // Create engine with mocked player
+        Engine engine = new Engine(mockPlayers);
+        
+        // Verify the mock was used
+        assertNotNull(engine);
+        // Verify that getName was called (if needed in future implementation)
+        verify(mockPlayer, atLeastOnce()).getName();
+    }
+
+    
 }

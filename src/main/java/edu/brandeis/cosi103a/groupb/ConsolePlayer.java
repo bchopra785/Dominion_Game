@@ -53,13 +53,13 @@ public class ConsolePlayer extends ParentPlayer {
             return null;
         }
 
-            out.println("------------------------------");
+            out.println("\n\n------------------------------");
             out.print(describeGameState(state));
             out.println();
-            out.println("Player " + getName() + ", it's your turn!");
+            out.println(getName() + ", it's your turn!");
             out.println("Choose one of the following options:");
             for (int i = 0; i < options.size(); i++) {
-                out.printf("[%d] %s%n", i, String.valueOf(options.get(i)));
+                out.println("[" + i + "] " + options.get(i).getDescription());
             }
             out.print("Enter option index: ");
 

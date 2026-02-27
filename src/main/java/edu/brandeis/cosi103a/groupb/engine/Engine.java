@@ -57,14 +57,14 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
             playerCardsMap.put(player, playerCards);
         }
 
-        //insert placeholder values for game state (will be updated in play method)
+        //should never see these values
         this.playerName = "placeholder";
-        this.handObject = new Hand(ImmutableList.of(), ImmutableList.of());
+        this.handObject = null;
         this.phase = GameState.TurnPhase.ACTION;
         this.availableActions = -1;
         this.spendableMoney = -1;
         this.availableBuys = -1;
-        this.buyableCards = new CardStacks(ImmutableMap.of());
+        this.buyableCards = null;
 
     }
 

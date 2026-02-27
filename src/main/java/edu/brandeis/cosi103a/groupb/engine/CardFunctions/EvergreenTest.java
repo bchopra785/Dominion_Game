@@ -7,7 +7,7 @@ import edu.brandeis.cosi.atg.cards.Card;
 import edu.brandeis.cosi.atg.state.CardStacks;
 import edu.brandeis.cosi.atg.state.GameState;
 import edu.brandeis.cosi.atg.state.Hand;
-import edu.brandeis.cosi103a.groupb.ConsolePlayer;
+import edu.brandeis.cosi103a.groupb.ParentPlayer;
 import edu.brandeis.cosi103a.groupb.engine.BoardCards;
 import edu.brandeis.cosi103a.groupb.engine.PlayerCards;
 
@@ -18,7 +18,7 @@ public class EvergreenTest {
         
     }
     
-    public GameState play(GameState state, ConsolePlayer player, List<ConsolePlayer> players, Map<ConsolePlayer, PlayerCards> playerCardsMap, BoardCards boardCards) {
+    public GameState play(GameState state, ParentPlayer player, List<ParentPlayer> players, Map<ParentPlayer, PlayerCards> playerCardsMap, BoardCards boardCards) {
 
         String playerName = state.currentPlayerName();
         Hand handObject = state.currentPlayerHand();
@@ -38,7 +38,7 @@ public class EvergreenTest {
         buyableCards = boardCards.getPlayableCards(playerCards.getCostInHand()); //buyable cards
 
         // Give all other players a BUG card
-        for (ConsolePlayer otherPlayer : players) {
+        for (ParentPlayer otherPlayer : players) {
             if (!otherPlayer.getName().equals(player.getName())) {
                 Card bugCard = boardCards.drawDeckCard(Card.Type.BUG); //draw a bug card from the board
                 if (bugCard != null) {

@@ -4,7 +4,7 @@ import edu.brandeis.cosi.atg.cards.*;
 import edu.brandeis.cosi.atg.decisions.*;
 import edu.brandeis.cosi.atg.engine.*;
 import edu.brandeis.cosi.atg.state.*;
-import edu.brandeis.cosi103a.groupb.ConsolePlayer;
+import edu.brandeis.cosi103a.groupb.ParentPlayer;
 import edu.brandeis.cosi103a.groupb.engine.CardFunctions.CodeReview;
 import edu.brandeis.cosi103a.groupb.engine.CardFunctions.EvergreenTest;
 import edu.brandeis.cosi103a.groupb.engine.CardFunctions.Refactor;
@@ -23,9 +23,9 @@ import com.google.common.collect.ImmutableMap;
 public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
     //initialize players and board cards
-    private final List<ConsolePlayer> players;
+    private final List<ParentPlayer> players;
     private final BoardCards boardCards;
-    private final Map<ConsolePlayer, PlayerCards> playerCardsMap;
+    private final Map<ParentPlayer, PlayerCards> playerCardsMap;
 
     //initialize values for game state
     private String playerName;
@@ -36,7 +36,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
     private int availableBuys;
     private CardStacks buyableCards;
 
-    public Engine(List<ConsolePlayer> players) {
+    public Engine(List<ParentPlayer> players) {
         
         //check for valid number of players
         if (players == null) {
@@ -51,7 +51,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         this.boardCards = new BoardCards();
         this.playerCardsMap = new HashMap<>();
 
-        for (ConsolePlayer player : players) {
+        for (ParentPlayer player : players) {
             PlayerCards playerCards = new PlayerCards(boardCards);
             //player.setPlayerCards(playerCards);
             playerCardsMap.put(player, playerCards);
@@ -96,8 +96,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         while (!gameOver) {
 
             //loop through each player
-            for (ConsolePlayer player : players) {
-                //make sure the state is updated for the current player at the beginning of their turn
+            for (ParentPlayer player : players) {
                 this.playerName = player.getName();
                 this.handObject = playerCardsMap.get(player).getHand();
                 this.availableActions = 1;
@@ -135,7 +134,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         }   
 
         List<PlayerResult> resultsList = new ArrayList<>();
-        for (ConsolePlayer player : players) {
+        for (ParentPlayer player : players) {
             PlayerCards playerCards = playerCardsMap.get(player);
             ImmutableCollection<Card> allCards = playerCards.getDiscardPile();
             PlayerResult result = new PlayerResult(player.getName(), playerCards.getScore(), allCards);
@@ -151,7 +150,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
    
 
-    private GameState cleanupPhase(ConsolePlayer currentPlayer){
+    private GameState cleanupPhase(ParentPlayer currentPlayer){
         PlayerCards playerCards = playerCardsMap.get(currentPlayer);
         playerCards.refreshHand(); 
         this.handObject = playerCards.getHand();  
@@ -165,7 +164,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
     private Decision buyDecision(GameState oldState) {
 
-        ConsolePlayer currentPlayer = getPlayerByName(this.playerName);
+        ParentPlayer currentPlayer = getPlayerByName(this.playerName);
 
         // Create a list of BuyDecision for each card type available
         ImmutableList.Builder<Decision> optionsBuilder = new ImmutableList.Builder<>();
@@ -192,7 +191,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
     private GameState buyPhase(GameState oldState, Decision decision) {
 
-        ConsolePlayer currentPlayer = getPlayerByName(this.playerName);
+        ParentPlayer currentPlayer = getPlayerByName(this.playerName);
 
         Card.Type cardTypeToBuy = null;
         if (decision instanceof BuyDecision) {
@@ -215,7 +214,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
     
     private Decision actionDecision(GameState oldState){
 
-        ConsolePlayer currentPlayer = getPlayerByName(this.playerName);
+        ParentPlayer currentPlayer = getPlayerByName(this.playerName);
 
         //get all cards from hand and create options list
         ImmutableCollection<Card> unplayedCards = playerCardsMap.get(currentPlayer).getUnplayedCards();
@@ -250,7 +249,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
     private GameState actionPhase(GameState oldState, Decision decision){
 
-        ConsolePlayer currentPlayer = getPlayerByName(this.playerName);
+        ParentPlayer currentPlayer = getPlayerByName(this.playerName);
 
         this.availableActions--; //action has been played
 
@@ -296,8 +295,8 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
 
 
-    private ConsolePlayer getPlayerByName(String playerName) {
-        for (ConsolePlayer player : players) {
+    private ParentPlayer getPlayerByName(String playerName) {
+        for (ParentPlayer player : players) {
             if (player.getName().equals(playerName)) {
                 return player;
             }

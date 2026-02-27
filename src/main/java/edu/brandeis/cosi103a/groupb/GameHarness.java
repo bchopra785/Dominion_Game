@@ -14,21 +14,39 @@ public class GameHarness {
         Scanner scanner = new Scanner(System.in);
         
         // Create players
-        List<ConsolePlayer> players = new ArrayList<>();
-        System.out.println("How many players? (1-4)");
-        int numPlayers = scanner.nextInt();
-        scanner.nextLine(); // consume newline
-        
-        if (numPlayers < 1 || numPlayers > 4) {
-            System.out.println("Invalid number of players. Must be between 1 and 4.");
-            scanner.close();
-            return;
+        List<ParentPlayer> players = new ArrayList<>();
+        // Prompt for valid number of console players
+        int numPlayers = 0;
+        while(numPlayers < 1 || numPlayers > 4) {
+                System.out.println("How many console players? (1-4)");
+                numPlayers = scanner.nextInt();
+                scanner.nextLine(); // consume newline
+                if(numPlayers < 1 || numPlayers > 4) {
+                    System.out.println("Invalid number of players. Must be between 1 and 4.");
+                }
         }
-        
+
+        // Add console players
         for (int i = 0; i < numPlayers; i++) {
             players.add(new ConsolePlayer(scanner, System.out));
         }
-        
+        int maxRemainingPlayers = 4 - numPlayers;
+        int numAutoPlayers = -1; // invalid initial amount
+        // Add automated players if desired (optional)
+        while(numAutoPlayers < 0 || numAutoPlayers > maxRemainingPlayers) {
+                System.out.println("How many automated players? (0-" + maxRemainingPlayers + ")");
+                numAutoPlayers = scanner.nextInt();
+                scanner.nextLine(); // consume newline
+                if(numAutoPlayers < 0 || numAutoPlayers > maxRemainingPlayers) {
+                    System.out.println("Invalid number of automated players. Must be between 0 and " + maxRemainingPlayers + ".");
+                }
+        }
+
+        // Add automated big money players (optional)
+        for (int i = 0; i < numAutoPlayers; i++) {
+            players.add(new BigMoneyPlayer());
+        }
+
         // Create and run game
         Engine engine = new Engine(players);
         engine.play();

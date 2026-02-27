@@ -23,7 +23,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class EngineTest {
     
-    private List<ConsolePlayer> players;
+    private List<ParentPlayer> players;
     private ByteArrayOutputStream outBuf;
     private Scanner scanner;
     
@@ -53,7 +53,7 @@ public class EngineTest {
     @Test
     public void testConstructorWithOnePlayer() {
         // Test with just one player
-        List<ConsolePlayer> onePlayer = new ArrayList<>();
+        List<ParentPlayer> onePlayer = new ArrayList<>();
         onePlayer.add(players.get(0));
         assertDoesNotThrow(() -> new Engine(onePlayer));
     }
@@ -125,7 +125,7 @@ public class EngineTest {
         // Test that multiple engines are independent
         Engine engine1 = new Engine(players);
         
-        List<ConsolePlayer> players2 = new ArrayList<>();
+        List<ParentPlayer> players2 = new ArrayList<>();
         players2.add(new ConsolePlayer(scanner, new PrintStream(outBuf)));
         players2.add(new ConsolePlayer(scanner, new PrintStream(outBuf)));
         Engine engine2 = new Engine(players2);
@@ -143,7 +143,7 @@ public class EngineTest {
     @Test
     public void testEngineWithEmptyPlayersList() {
         // Test that engine works with empty players list (edge case)
-        List<ConsolePlayer> emptyPlayers = new ArrayList<>();
+        List<ParentPlayer> emptyPlayers = new ArrayList<>();
         assertDoesNotThrow(() -> new Engine(emptyPlayers));
     }
 
@@ -185,7 +185,7 @@ public class EngineTest {
         when(mockPlayer.getName()).thenReturn("MockedPlayer");
         
         // Create a list with the mocked player
-        List<ConsolePlayer> mockPlayers = new ArrayList<>();
+        List<ParentPlayer> mockPlayers = new ArrayList<>();
         mockPlayers.add(mockPlayer);
         
         // Create engine with mocked player

@@ -8,7 +8,7 @@ import edu.brandeis.cosi.atg.decisions.TrashCardDecision;
 import edu.brandeis.cosi.atg.state.CardStacks;
 import edu.brandeis.cosi.atg.state.GameState;
 import edu.brandeis.cosi.atg.state.Hand;
-import edu.brandeis.cosi103a.groupb.ConsolePlayer;
+import edu.brandeis.cosi103a.groupb.ParentPlayer;
 import edu.brandeis.cosi103a.groupb.engine.BoardCards;
 import edu.brandeis.cosi103a.groupb.engine.PlayerCards;
 import com.google.common.collect.ImmutableList;
@@ -20,7 +20,7 @@ public class Refactor {
         
     }
     
-    public GameState play(GameState state, ConsolePlayer player, PlayerCards playerCards, BoardCards boardCards) {
+    public GameState play(GameState state, ParentPlayer player, PlayerCards playerCards, BoardCards boardCards) {
 
         String playerName = state.currentPlayerName();
         Hand handObject = state.currentPlayerHand();

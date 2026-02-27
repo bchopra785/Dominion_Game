@@ -10,9 +10,10 @@ import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Console-based Player that reads choices from an input stream and writes prompts to a print stream.
+ * Console-based Player that reads choices from a shared Scanner and writes prompts to a print stream.
  *
- * Zero-arg constructor required by the Engine delegates to System.in/System.out.
+ * Accepts a shared Scanner to allow multiple console players to read from the same input.
+ * The caller (Engine/harness) is responsible for creating and managing the Scanner.
  */
 public class ConsolePlayer extends ParentPlayer {
 
@@ -29,17 +30,22 @@ public class ConsolePlayer extends ParentPlayer {
     // Package-private constructor for tests (inject streams)
     public ConsolePlayer(InputStream in, PrintStream out) {
         super("ConsolePlayer-" + COUNTER.getAndIncrement());
+      if (in == null) {
+        throw new IllegalArgumentException("InputStream cannot be null");
+       }
+      if (out == null) {
+        throw new IllegalArgumentException("PrintStream cannot be null");
+       }
         this.scanner = new Scanner(in);
         this.out = out;
     }
 
     @Override
     public Decision makeDecision(GameState state, ImmutableList<Decision> options) {
-        try {
-            if (options == null || options.isEmpty()) {
-                out.println("No available options; returning null");
-                return null;
-            }
+        if (options == null || options.isEmpty()) {
+            out.println("No available options; returning null");
+            return null;
+        }
 
             out.println("------------------------------");
             out.print(describeGameState(state));
@@ -51,20 +57,21 @@ public class ConsolePlayer extends ParentPlayer {
             }
             out.print("Enter option index: ");
 
-            while (true) {
-                if (!scanner.hasNextLine()) {
-                    out.println();
-                    out.println("Input closed; selecting default option 0");
-                    return options.get(0);
+        while (true) {
+            if (!scanner.hasNextLine()) {
+                out.println();
+                out.println("Input closed; selecting default option 0");
+                return options.get(0);
+            }
+            String line = scanner.nextLine().trim();
+            try {
+                int idx = Integer.parseInt(line);
+                if (idx >= 0 && idx < options.size()) {
+                    return options.get(idx);
+                } else {
+                    out.print("Invalid input. Enter a valid index: ");
                 }
-                String line = scanner.nextLine().trim();
-                try {
-                    int idx = Integer.parseInt(line);
-                    if (idx >= 0 && idx < options.size()) {
-                        return options.get(idx);
-                    }
-                } catch (NumberFormatException ignored) {
-                }
+            } catch (NumberFormatException ignored) {
                 out.print("Invalid input. Enter a valid index: ");
             }
         } catch (Exception e) {

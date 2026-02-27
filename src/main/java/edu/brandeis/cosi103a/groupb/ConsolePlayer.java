@@ -2,9 +2,7 @@ package edu.brandeis.cosi103a.groupb;
 
 import com.google.common.collect.ImmutableList;
 import edu.brandeis.cosi.atg.decisions.Decision;
-import edu.brandeis.cosi.atg.player.Player;
 import edu.brandeis.cosi.atg.state.GameState;
-import edu.brandeis.cosi103a.groupb.engine.PlayerCards;
 
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -16,38 +14,23 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * Zero-arg constructor required by the Engine delegates to System.in/System.out.
  */
-public class ConsolePlayer implements Player {
+public class ConsolePlayer extends ParentPlayer {
 
     private static final AtomicInteger COUNTER = new AtomicInteger(1);
 
-    private final String name;
     private final Scanner scanner;
     private final PrintStream out;
-    private PlayerCards playerCards;
 
     // Zero-arg constructor required by Engine
     public ConsolePlayer() {
         this(System.in, System.out);
     }
-    
-    public PlayerCards getPlayerCards() {
-        return playerCards;
-    }
-    
-    public void setPlayerCards(PlayerCards playerCards) {
-        this.playerCards = playerCards;
-    }
 
     // Package-private constructor for tests (inject streams)
     public ConsolePlayer(InputStream in, PrintStream out) {
+        super("ConsolePlayer-" + COUNTER.getAndIncrement());
         this.scanner = new Scanner(in);
         this.out = out;
-        this.name = "ConsolePlayer-" + COUNTER.getAndIncrement();
-    }
-
-    @Override
-    public String getName() {
-        return name;
     }
 
     @Override
@@ -59,9 +42,9 @@ public class ConsolePlayer implements Player {
             }
 
             out.println("------------------------------");
-            out.println(state);
-            out.println(" ");
-            out.println("Player " + name + ", it's your turn!");
+            out.print(describeGameState(state));
+            out.println();
+            out.println("Player " + getName() + ", it's your turn!");
             out.println("Choose one of the following options:");
             for (int i = 0; i < options.size(); i++) {
                 out.printf("[%d] %s%n", i, String.valueOf(options.get(i)));
@@ -86,7 +69,7 @@ public class ConsolePlayer implements Player {
             }
         } catch (Exception e) {
             out.println("Error reading input; selecting default option 0");
-            return options.isEmpty() ? null : options.get(0);
+            return (options == null || options.isEmpty()) ? null : options.get(0);
         }
     }
 }

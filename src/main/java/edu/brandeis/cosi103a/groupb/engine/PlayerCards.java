@@ -19,7 +19,8 @@ public class PlayerCards {
     private List<Card> playedCards; // for tracking cards played in the current turn
     private List<Card> unplayedCards; // for tracking cards in hand that have not been
 
-    protected PlayerCards(BoardCards board) {
+    public PlayerCards(BoardCards board) { //It's really hard to test with protected, should ask TA's about this
+                                           //the internet says not to use reflection and subclasses for testing so idk
         this.discard = new ArrayList<>();
         this.deck = new ArrayList<>();
         this.board = board;

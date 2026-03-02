@@ -130,7 +130,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
             }   
 
-            gameOver = !boardCards.frameworksLeft(); //placeholder
+            gameOver = !boardCards.frameworksLeft();
         }   
 
         List<PlayerResult> resultsList = new ArrayList<>();
@@ -145,7 +145,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         resultsList.sort((a, b) -> Integer.compare(b.score(), a.score()));
         
         ImmutableList<PlayerResult> playerResults = ImmutableList.copyOf(resultsList);
-        return new GameResult(playerResults); //placeholder
+        return new GameResult(playerResults);
     }
 
    

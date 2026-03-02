@@ -51,13 +51,7 @@ public class GameHarness {
 
         // Create and run game
         Engine engine = new Engine(players);
-        GameResult result = engine.play();
-        System.out.println("\n\n\n\n------------------------------");
-        System.out.println("Game Results:");
-        for (PlayerResult playerResult : result.playerResults()) {
-            //System.out.println(playerResult);
-            System.out.println(playerResult.playerName() + ": " + playerResult.score() + " points");
-        }
+        engine.play();
         
         scanner.close();
     }

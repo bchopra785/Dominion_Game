@@ -57,14 +57,20 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
             playerCardsMap.put(player, playerCards);
         }
 
-        //should never see these values
-        this.playerName = "placeholder";
-        this.handObject = null;
-        this.phase = GameState.TurnPhase.ACTION;
-        this.availableActions = -1;
-        this.spendableMoney = -1;
-        this.availableBuys = -1;
-        this.buyableCards = null;
+        //should never see these values (initialized before play() starts)
+        // if (!players.isEmpty()) {
+        //     ParentPlayer firstPlayer = players.get(0);
+        //     this.playerName = firstPlayer.getName();
+        //     this.handObject = playerCardsMap.get(firstPlayer).getHand();
+        // } else {
+        //     this.playerName = "placeholder";
+        //     this.handObject = new Hand(ImmutableList.of(), ImmutableList.of());
+        // }
+        // this.phase = GameState.TurnPhase.ACTION;
+        // this.availableActions = -1;
+        // this.spendableMoney = -1;
+        // this.availableBuys = -1;
+        // this.buyableCards = boardCards.getPlayableCards(-1);
 
     }
 

@@ -37,7 +37,6 @@ public class PlayerCards {
         }
 
         shuffleCards(); // need to shuffle cards at the beginning
-        refreshHand(); // draw initial hand of 5 cards
     }
 
     //Get record class Hand

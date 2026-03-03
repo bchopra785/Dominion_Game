@@ -2,6 +2,8 @@ package edu.brandeis.cosi103a.groupb;
 
 
 import edu.brandeis.cosi.atg.engine.PlayerViolationException;
+import edu.brandeis.cosi.atg.state.GameResult;
+import edu.brandeis.cosi.atg.state.PlayerResult;
 import edu.brandeis.cosi103a.groupb.engine.Engine;
 
 import java.util.ArrayList;
@@ -49,7 +51,13 @@ public class GameHarness {
 
         // Create and run game
         Engine engine = new Engine(players);
-        engine.play();
+        GameResult result = engine.play();
+        System.out.println("\n\n\n\n------------------------------");
+        System.out.println("Game Results:");
+        for (PlayerResult playerResult : result.playerResults()) {
+            //System.out.println(playerResult);
+            System.out.println(playerResult.playerName() + ": " + playerResult.score() + " points");
+        }
         
         scanner.close();
     }

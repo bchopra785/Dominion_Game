@@ -64,10 +64,11 @@ public class ConsolePlayer extends ParentPlayer {
             out.print("Enter option index: ");
 
         while (true) {
-            if (!scanner.hasNextLine()) {
-                out.println();
-                out.println("Input closed; selecting default option 0");
-                return options.get(0);
+            if (!scanner.hasNextLine()) { //stop the program if there is no more input
+                // out.println();
+                // out.println("Input closed; selecting default option 0");
+                // return options.get(0);
+                throw new IllegalStateException("Input closed - no more decisions available");
             }
             String line = scanner.nextLine().trim();
             try {

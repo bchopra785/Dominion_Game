@@ -54,6 +54,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         for (ParentPlayer player : players) {
             PlayerCards playerCards = new PlayerCards(boardCards);
             //player.setPlayerCards(playerCards);
+            playerCards.refreshHand(); // draw initial hand of 5 cards
             playerCardsMap.put(player, playerCards);
         }
 

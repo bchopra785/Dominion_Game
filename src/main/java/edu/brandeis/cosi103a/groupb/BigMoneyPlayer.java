@@ -8,6 +8,7 @@ import edu.brandeis.cosi.atg.decisions.EndPhaseDecision;
 import edu.brandeis.cosi.atg.state.GameState;
 import edu.brandeis.cosi.atg.cards.Card;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.io.PrintStream;
 
 /**
  * Automated "Big Money" player implementing the money-fallback path only.
@@ -19,17 +20,28 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class BigMoneyPlayer extends ParentPlayer {
 
     private static final AtomicInteger COUNTER = new AtomicInteger(1);
+    private PrintStream out;
 
     public BigMoneyPlayer() {
         super("BigMoneyPlayer-" + COUNTER.getAndIncrement());
+        this.out = System.out;
     }
 
     public BigMoneyPlayer(String name) {
         super(name);
+        this.out = System.out;
+    }
+
+    public BigMoneyPlayer(String name, PrintStream out) {
+        super(name);
+        this.out = out;
     }
 
     @Override
     public Decision makeDecision(GameState state, ImmutableList<Decision> options) {
+
+        out.print(describeGameState(state));
+        out.println(getName() + " is making a decision...");
         if (options == null || options.isEmpty() || state == null) {
             return null;
         }
@@ -42,6 +54,7 @@ public class BigMoneyPlayer extends ParentPlayer {
                 if (ct == Card.Type.FRAMEWORK) {
                     // affordability check using card type's cost
                     if (ct.cost() <= state.spendableMoney()) {
+                        out.println(getName() + " chose FRAMEWORK");
                         return opt;
                     }
                 }
@@ -73,17 +86,26 @@ public class BigMoneyPlayer extends ParentPlayer {
         }
 
         if (best != null) {
+            Card.Type bestType = null;
+            if (best instanceof BuyDecision) {
+                bestType = ((BuyDecision) best).cardType();
+            } else if (best instanceof GainCardDecision) {
+                bestType = ((GainCardDecision) best).cardType();
+            }
+            out.println(getName() + " chose " + (bestType != null ? bestType : "unknown"));
             return best;
         }
 
         // If no money card was found, pick an EndPhaseDecision if present
         for (Decision opt : options) {
             if (opt instanceof EndPhaseDecision) {
+                out.println(getName() + " chose EndPhaseDecision");
                 return opt;
             }
         }
 
         // Fallback: return first option
+        out.println(getName() + " chose fallback first option");
         return options.get(0);
     }
 

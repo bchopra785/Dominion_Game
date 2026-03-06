@@ -4,13 +4,29 @@ import com.google.common.collect.ImmutableList;
 import edu.brandeis.cosi.atg.decisions.BuyDecision;
 import edu.brandeis.cosi.atg.decisions.Decision;
 import edu.brandeis.cosi.atg.decisions.EndPhaseDecision;
+import edu.brandeis.cosi.atg.state.CardStacks;
 import edu.brandeis.cosi.atg.state.GameState;
+import edu.brandeis.cosi.atg.state.Hand;
 import edu.brandeis.cosi.atg.cards.Card;
 import org.junit.jupiter.api.Test;
+
+import com.google.common.collect.ImmutableMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class BigMoneyPlayerMoneyFallbackTest {
+
+    private GameState makeStateWithMoney(int spendableMoney) {
+        return new GameState(
+            "Mika",
+            new Hand(ImmutableList.of(), ImmutableList.of()),
+            GameState.TurnPhase.BUY,
+            1,
+            spendableMoney,
+            1,
+            new CardStacks(ImmutableMap.of())
+        );
+    }
 
     @Test
     public void choosesBestAffordableMoneyCard() {
@@ -23,7 +39,7 @@ public class BigMoneyPlayerMoneyFallbackTest {
 
         ImmutableList<Decision> options = ImmutableList.of(dBitcoin, dEthereum, dDogecoin, end);
 
-        Decision chosen = p.makeDecision(null, options);
+        Decision chosen = p.makeDecision(makeStateWithMoney(10), options);
         assertSame(dDogecoin, chosen);
     }
 
@@ -36,7 +52,7 @@ public class BigMoneyPlayerMoneyFallbackTest {
 
         ImmutableList<Decision> options = ImmutableList.of(dBitcoin, end);
 
-        Decision chosen = p.makeDecision(null, options);
+        Decision chosen = p.makeDecision(makeStateWithMoney(10), options);
         assertSame(dBitcoin, chosen);
     }
 
@@ -47,7 +63,7 @@ public class BigMoneyPlayerMoneyFallbackTest {
         Decision end = new EndPhaseDecision(GameState.TurnPhase.BUY);
         ImmutableList<Decision> options = ImmutableList.of(end);
 
-        Decision chosen = p.makeDecision(null, options);
+        Decision chosen = p.makeDecision(makeStateWithMoney(10), options);
         assertTrue(chosen instanceof EndPhaseDecision);
     }
 
@@ -57,15 +73,7 @@ public class BigMoneyPlayerMoneyFallbackTest {
     public void frameworkAvailableAndAffordable() {
         BigMoneyPlayer p = new BigMoneyPlayer("Mika");
 
-        GameState state = new GameState(
-            "Mika",
-            null,
-            GameState.TurnPhase.BUY,
-            1,
-            5,
-            1,
-            null
-        );
+        GameState state = makeStateWithMoney(8);
 
         Decision frameworkDecision = new BuyDecision(Card.Type.FRAMEWORK);
         Decision end = new EndPhaseDecision(GameState.TurnPhase.BUY);
@@ -77,18 +85,10 @@ public class BigMoneyPlayerMoneyFallbackTest {
     }
 
     @Test
-    public void frameworkChosenWhenMultipleAffordableOptions() {
+    public void frameworkSkippedWhenNotAffordable() {
         BigMoneyPlayer p = new BigMoneyPlayer("Mika");
 
-        GameState state = new GameState(
-            "Mika",
-            null,
-            GameState.TurnPhase.BUY,
-            1,
-            6,
-            1,
-            null
-        );
+        GameState state = makeStateWithMoney(6);
 
         Decision bitcoinDecision = new BuyDecision(Card.Type.BITCOIN);
         Decision frameworkDecision = new BuyDecision(Card.Type.FRAMEWORK);
@@ -103,6 +103,53 @@ public class BigMoneyPlayerMoneyFallbackTest {
         );
 
         Decision chosen = p.makeDecision(state, options);
+        assertSame(ethereumDecision, chosen);
+    }
+
+    @Test
+    public void frameworkPreferredOverMoneyWhenAffordable() {
+        BigMoneyPlayer p = new BigMoneyPlayer("Mika");
+
+        GameState state = makeStateWithMoney(8);
+
+        Decision frameworkDecision = new BuyDecision(Card.Type.FRAMEWORK);
+        Decision dogecoinDecision = new BuyDecision(Card.Type.DOGECOIN);
+        Decision end = new EndPhaseDecision(GameState.TurnPhase.BUY);
+
+        ImmutableList<Decision> options = ImmutableList.of(dogecoinDecision, frameworkDecision, end);
+
+        Decision chosen = p.makeDecision(state, options);
         assertSame(frameworkDecision, chosen);
+    }
+
+    @Test
+    public void returnsNullWhenStateIsNull() {
+        BigMoneyPlayer p = new BigMoneyPlayer("Mika");
+
+        Decision dBitcoin = new BuyDecision(Card.Type.BITCOIN);
+        ImmutableList<Decision> options = ImmutableList.of(dBitcoin);
+
+        Decision chosen = p.makeDecision(null, options);
+        assertNull(chosen);
+    }
+
+    @Test
+    public void returnsNullWhenOptionsAreEmpty() {
+        BigMoneyPlayer p = new BigMoneyPlayer("Mika");
+
+        Decision chosen = p.makeDecision(makeStateWithMoney(5), ImmutableList.of());
+        assertNull(chosen);
+    }
+
+    @Test
+    public void fallsBackToFirstOptionWhenNoMoneyAndNoEndPhase() {
+        BigMoneyPlayer p = new BigMoneyPlayer("Mika");
+
+        Decision methodDecision = new BuyDecision(Card.Type.METHOD);
+        Decision moduleDecision = new BuyDecision(Card.Type.MODULE);
+        ImmutableList<Decision> options = ImmutableList.of(methodDecision, moduleDecision);
+
+        Decision chosen = p.makeDecision(makeStateWithMoney(10), options);
+        assertSame(methodDecision, chosen);
     }
 }

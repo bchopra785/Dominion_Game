@@ -1,7 +1,37 @@
 package edu.brandeis.cosi103a.groupb;
 
-//testing
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import edu.brandeis.cosi.atg.decisions.Decision;
+import edu.brandeis.cosi.atg.engine.Engine;
+import edu.brandeis.cosi.atg.event.Event;
+import edu.brandeis.cosi.atg.state.GameState;
+import edu.brandeis.cosi103a.groupb.network.DecisionRequest;
+import edu.brandeis.cosi103a.groupb.network.DecisionResponse;
+
+@RestController
 public class PlayerServer {
+    //returns RespondEntity<DecisionResponse>
+    //DecisionResponse is the Custom Java class that contains chosen decision
+    //decide is the name of the function
+    //it takes in @RequestBody DecisionRequest request as input, where DecisionRequest is the Custom Java class that contains the game state and possible decisions
+    //@RequestBody converts the JSON body of the HTTP reqyest into Java object "request" of type DecisionRequest
+    @PostMapping("/decide") 
+    public ResponseEntity<DecisionResponse> decide(@RequestBody DecisionRequest request) {
+        GameState state = request.getState();
+        List<Decision> options = request.getOptions();
+        Event reason = request.getReason();
+        String playerUuid = request.getPlayerUuid();
+
+        //make decision and return ResponseEntity<DecisionResponse>
+        
+    }
+
     
 }
 

@@ -1,22 +1,54 @@
 package edu.brandeis.cosi103a.groupb;
 
+import java.util.Optional;
+
 import com.google.common.collect.ImmutableList;
 
 import edu.brandeis.cosi.atg.decisions.Decision;
+import edu.brandeis.cosi.atg.event.Event;
+import edu.brandeis.cosi.atg.event.GameObserver;
 import edu.brandeis.cosi.atg.player.Player;
 import edu.brandeis.cosi.atg.state.GameState;
+import edu.brandeis.cosi103a.groupb.network.DecisionRequest;
 
-public class PlayerClient extends ParentPlayer {
+public class PlayerClient implements Player {
 
     public PlayerClient(String name) {
         super(name);
         //TODO Auto-generated constructor stub
     }
 
+    // @Override
+    // public Decision makeDecision(GameState state, ImmutableList<Decision> options) {
+    //     // TODO Auto-generated method stub
+    //     throw new UnsupportedOperationException("Unimplemented method 'makeDecision'");
+    // }
+
+    public Decision decide(DecisionRequest request) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'decide'");
+    }
+
     @Override
-    public Decision makeDecision(GameState state, ImmutableList<Decision> options) {
+    public void logEvent(LogEventRequest request) {
+        // Similar logic: Send a POST to /log-event, but don't worry about the return value
+    }
+
+    public String getName() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getName'");
+    }
+
+
+    public Decision makeDecision(GameState state, ImmutableList<Decision> options, Optional<Event> reason) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'makeDecision'");
+    }
+
+    @Override
+    public Optional<GameObserver> getObserver() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getObserver'");
     }
 
     

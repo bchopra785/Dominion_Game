@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -26,6 +27,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
     private final List<ParentPlayer> players;
     private final BoardCards boardCards;
     private final Map<ParentPlayer, PlayerCards> playerCardsMap;
+    private final Map<String, ParentPlayer> UUIDMap; // for quick lookup of player by UUID
 
     //initialize values for game state
     private String playerName;
@@ -51,12 +53,21 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         this.boardCards = new BoardCards();
         this.playerCardsMap = new HashMap<>();
 
+        Map<String, ParentPlayer> builder = new HashMap<>();
+
         for (ParentPlayer player : players) {
             PlayerCards playerCards = new PlayerCards(boardCards);
-            //player.setPlayerCards(playerCards);
+            
+            String myUuid = UUID.randomUUID().toString();
+            if (builder.putIfAbsent(myUuid, player) != null) {
+                System.out.println("This was literally impossible. Go buy a lottery ticket.");
+                throw new IllegalStateException("Duplicate UUID generated: " + myUuid);
+            }
             playerCards.refreshHand(); // draw initial hand of 5 cards
             playerCardsMap.put(player, playerCards);
         }
+
+        UUIDMap = Map.copyOf(builder); //build immutable map for UUID lookup
 
         //should never see these values (initialized before play() starts)
         // if (!players.isEmpty()) {
@@ -321,54 +332,11 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
            return card.type().category();
     }
 
-
-    // public static void main(String[] args) {
-    //     Card card = new Card(Card.Type.BUG, 1);
-    //     System.out.println(card + " " + card.value() + " " + card.cost());
-
-    //     Card card1 = new Card(Card.Type.METHOD, 1);
-    //     System.out.println(card1 + " " + card1.value() + " " + card1.cost());
-
-    //     Card card2 = new Card(Card.Type.MODULE, 1);
-    //     System.out.println(card2 + " " + card2.value() + " " + card2.cost());
-
-    //     Card card3 = new Card(Card.Type.FRAMEWORK, 1);
-    //     System.out.println(card3 + " " + card3.value() + " " + card3.cost());
-
-    //     Card card4 = new Card(Card.Type.BITCOIN, 1);
-    //     System.out.println(card4 + " " + card4.value() + " " + card4.cost());
-
-    //     Card card5 = new Card(Card.Type.ETHEREUM, 1);
-    //     System.out.println(card5 + " " + card5.value() + " " +card5.cost());
-
-    //     Card card6 = new Card(Card.Type.DOGECOIN, 1);
-    //     System.out.println(card6 + " " + card6.value() + " " + card6.cost());
-
-    //     Card card7 = new Card(Card.Type.REFACTOR , 1);
-    //     System.out.println(card7 + " " + card7.value() + " " + card7.cost());
-        
-    //     Card card8 = new Card(Card.Type.CODE_REVIEW , 1);
-    //     System.out.println(card8 + " " + card8.value() + " " + card8.cost());
-
-    //     Card card9 = new Card(Card.Type.EVERGREEN_TEST , 1);
-    //     System.out.println(card9 + " " + card9.value() + " " + card9.cost());
-
-    //     //TO DO: instantiate players
-    //     ConsolePlayer player1 = new ConsolePlayer();
-    //     ConsolePlayer player2 = new ConsolePlayer();
-    //     ConsolePlayer player3 = new ConsolePlayer();
-    //     ConsolePlayer player4 = new ConsolePlayer();
-
-    //     List<ConsolePlayer> players = List.of(player1, player2, player3, player4);
-        
-    //     Engine engine = new Engine(players);
-    //     GameResult result = null;
-    //     try {
-    //         result = engine.play();
-    //     } catch (PlayerViolationException e) {
-    //         e.printStackTrace();
-    //     }
-    //     System.out.println(result);
-    // }     
-    
+    public ParentPlayer getPlayerbyUuid(String uuid) {
+        ParentPlayer player = UUIDMap.get(uuid);
+        if (player == null) {
+            throw new IllegalArgumentException("No player found with UUID: " + uuid);
+        }
+        return player;
+    }
 }

@@ -4,9 +4,13 @@ import com.google.common.collect.ImmutableList;
 import edu.brandeis.cosi.atg.decisions.BuyDecision;
 import edu.brandeis.cosi.atg.decisions.Decision;
 import edu.brandeis.cosi.atg.decisions.GainCardDecision;
+import edu.brandeis.cosi.atg.event.Event;
+import edu.brandeis.cosi.atg.event.GameObserver;
 import edu.brandeis.cosi.atg.decisions.EndPhaseDecision;
 import edu.brandeis.cosi.atg.state.GameState;
 import edu.brandeis.cosi.atg.cards.Card;
+
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.io.PrintStream;
 
@@ -121,5 +125,17 @@ public class BigMoneyPlayer extends ParentPlayer {
             default:
                 return Integer.MIN_VALUE;
         }
+    }
+
+    @Override
+    public Optional<GameObserver> getObserver() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getObserver'");
+    }
+
+    @Override
+    public Decision makeDecision(GameState arg0, ImmutableList<Decision> arg1, Optional<Event> arg2) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'makeDecision'");
     }
 }

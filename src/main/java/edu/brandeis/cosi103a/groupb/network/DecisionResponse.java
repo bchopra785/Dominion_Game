@@ -21,8 +21,10 @@ public class DecisionResponse {
 
     // Getters and Setters (so Spring can read the data)
     public Decision getDecision() { return decision; }
+
     public void setDecision(Decision decision) { this.decision = decision; }
     
     public String getMetadata() { return metadata; }
+    
     public void setMetadata(String metadata) { this.metadata = metadata; }
 }

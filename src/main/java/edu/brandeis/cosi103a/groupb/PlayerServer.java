@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import edu.brandeis.cosi.atg.decisions.Decision;
-import edu.brandeis.cosi.atg.engine.Engine;
 import edu.brandeis.cosi.atg.event.Event;
 import edu.brandeis.cosi.atg.state.GameState;
 import edu.brandeis.cosi103a.groupb.network.DecisionRequest;
@@ -21,18 +20,26 @@ public class PlayerServer {
     //decide is the name of the function
     //it takes in @RequestBody DecisionRequest request as input, where DecisionRequest is the Custom Java class that contains the game state and possible decisions
     //@RequestBody converts the JSON body of the HTTP reqyest into Java object "request" of type DecisionRequest
-    @PostMapping("/decide") 
+    @PostMapping(value = "/decide", consumes = "application/json", produces = "application/json") 
     public ResponseEntity<DecisionResponse> decide(@RequestBody DecisionRequest request) {
         GameState state = request.getState();
         List<Decision> options = request.getOptions();
         Event reason = request.getReason();
-        String playerUuid = request.getPlayerUuid();
+        String player_uuid = request.getplayer_uuid();
 
         //make decision and return ResponseEntity<DecisionResponse>
+        //TODO: change to actual logic
+        Decision chosenDecision = options.get(0);
+        DecisionResponse responseBody = new DecisionResponse(chosenDecision, "Chose the first option as a placeholder");
+        return ResponseEntity.ok(responseBody);
         
     }
 
-    
+    //TODO: implement logEvent endpoint
+    // @PostMapping(value = "/log-event", consumes = "application/json")
+    // public ResponseEntity<Void> logEvent(@RequestBody LogEventRequest request) {
+      
+    // }
 }
 
 // The "player server" will be an HTTP server. It will use an "RPC" (remote procedure call) API

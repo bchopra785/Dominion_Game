@@ -27,8 +27,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
     private final List<ParentPlayer> players;
     private final BoardCards boardCards;
     private final Map<ParentPlayer, PlayerCards> playerCardsMap;
-    private final Map<String, ParentPlayer> UUIDMap; // for quick lookup of player by UUID
-
+    
     //initialize values for game state
     private String playerName;
     private Hand handObject;
@@ -57,17 +56,10 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
         for (ParentPlayer player : players) {
             PlayerCards playerCards = new PlayerCards(boardCards);
-            
-            String myUuid = UUID.randomUUID().toString();
-            if (builder.putIfAbsent(myUuid, player) != null) {
-                System.out.println("This was literally impossible. Go buy a lottery ticket.");
-                throw new IllegalStateException("Duplicate UUID generated: " + myUuid);
-            }
             playerCards.refreshHand(); // draw initial hand of 5 cards
             playerCardsMap.put(player, playerCards);
         }
 
-        UUIDMap = Map.copyOf(builder); //build immutable map for UUID lookup
 
         //should never see these values (initialized before play() starts)
         // if (!players.isEmpty()) {
@@ -330,13 +322,5 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
     private Card.Type.Category getCardCategory(Card card) {
            return card.type().category();
-    }
-
-    public ParentPlayer getPlayerbyUuid(String uuid) {
-        ParentPlayer player = UUIDMap.get(uuid);
-        if (player == null) {
-            throw new IllegalArgumentException("No player found with UUID: " + uuid);
-        }
-        return player;
     }
 }

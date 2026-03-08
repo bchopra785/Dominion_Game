@@ -2,56 +2,73 @@ package edu.brandeis.cosi103a.groupb;
 
 import java.util.Optional;
 
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.web.client.RestTemplate;
 import com.google.common.collect.ImmutableList;
 
 import edu.brandeis.cosi.atg.decisions.Decision;
 import edu.brandeis.cosi.atg.event.Event;
 import edu.brandeis.cosi.atg.event.GameObserver;
-import edu.brandeis.cosi.atg.player.Player;
 import edu.brandeis.cosi.atg.state.GameState;
 import edu.brandeis.cosi103a.groupb.network.DecisionRequest;
+import edu.brandeis.cosi103a.groupb.network.DecisionResponse;
 
-public class PlayerClient implements Player {
+public class PlayerClient extends ParentPlayer {
+    
+    private String serverUrl;
+    private String Uuid;
+    private final RestTemplate restTemplate;
 
-    public PlayerClient(String name) {
+    public PlayerClient(String name, String Uuid, String serverUrl) {
         super(name);
-        //TODO Auto-generated constructor stub
+        this.serverUrl = serverUrl;
+        this.Uuid = Uuid;
+        this.restTemplate = new RestTemplate();
     }
 
-    // @Override
-    // public Decision makeDecision(GameState state, ImmutableList<Decision> options) {
-    //     // TODO Auto-generated method stub
-    //     throw new UnsupportedOperationException("Unimplemented method 'makeDecision'");
-    // }
-
-    public Decision decide(DecisionRequest request) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'decide'");
-    }
+    //TODO:defensive programming: 
+    //          check that serverUrl is valid URL, and that name and Uuid are not null/empty. 
+    //          Throw IllegalArgumentException if any checks fail.
 
     @Override
-    public void logEvent(LogEventRequest request) {
-        // Similar logic: Send a POST to /log-event, but don't worry about the return value
-    }
-
-    public String getName() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getName'");
-    }
-
-
     public Decision makeDecision(GameState state, ImmutableList<Decision> options, Optional<Event> reason) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'makeDecision'");
+        
+        //set headers for POST request
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        
+        //create the object to send to the server
+        DecisionRequest request = new DecisionRequest();
+        request.setState(state);
+        request.setOptions(options);
+        request.setReason(reason.orElse(null));
+        request.setplayer_uuid(Uuid);
+
+        HttpEntity<DecisionRequest> entity = new HttpEntity<>(request, headers);
+
+        //send POST request to server and get response
+        DecisionResponse responseBody = restTemplate.postForObject(
+            serverUrl + "/decide", 
+            entity, 
+            DecisionResponse.class
+        );
+
+        return responseBody.getDecision();
     }
 
     @Override
     public Optional<GameObserver> getObserver() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getObserver'");
+        // Remote players don't provide observers
+        return Optional.empty();
     }
 
-    
+    @Override
+    public Decision makeDecision(GameState state, ImmutableList<Decision> options) {
+        //this feels like a terrible idea but I don't know a way around at present
+        return this.makeDecision(state, options, Optional.empty());
+    }
 }
 
 // The "player client" will implement the Player interface from the ATG API, and be used directly

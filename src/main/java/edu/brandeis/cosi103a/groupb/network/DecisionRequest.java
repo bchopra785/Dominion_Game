@@ -2,6 +2,7 @@ package edu.brandeis.cosi103a.groupb.network;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import edu.brandeis.cosi.atg.decisions.Decision;
@@ -12,9 +13,20 @@ public class DecisionRequest {
     private GameState state;
     private List<Decision> options;
     private Event reason;
+    private String player_uuid;
     
-    @JsonProperty("player_uuid") // Maps "player_uuid" in JSON to "playerUuid" in Java
-    private String playerUuid;
+    // @JsonProperty("player_uuid") // Maps "player_uuid" in JSON to "playerUuid" in Java
+    // @JsonAlias("PlayerUuid")
+    
+
+    public DecisionRequest() {}
+
+    public DecisionRequest(GameState state, List<Decision> options, Event reason, String player_uuid) {
+        this.state = state;
+        this.options = options;
+        this.reason = reason;
+        this.player_uuid = player_uuid;
+    }
 
     // Standard Getters and Setters
     public GameState getState() { return state; }
@@ -26,6 +38,6 @@ public class DecisionRequest {
     public Event getReason() { return reason; }
     public void setReason(Event reason) { this.reason = reason; }
 
-    public String getPlayerUuid() { return playerUuid; }
-    public void setPlayerUuid(String playerUuid) { this.playerUuid = playerUuid; }
+    public String getplayer_uuid() { return player_uuid; }
+    public void setplayer_uuid(String player_uuid) { this.player_uuid = player_uuid; }
 }

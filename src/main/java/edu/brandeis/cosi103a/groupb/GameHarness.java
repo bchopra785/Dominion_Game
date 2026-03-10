@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Scanner;
 
 //RUN  [mvn spring-boot:run]before running this method to start server
+//run game harness in another terminal to start the game and connect remote players
 public class GameHarness {
 
     public static void main(String[] args) throws PlayerViolationException {

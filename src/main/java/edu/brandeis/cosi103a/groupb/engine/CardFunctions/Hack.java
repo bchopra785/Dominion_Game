@@ -1,5 +1,6 @@
 package edu.brandeis.cosi103a.groupb.engine.CardFunctions;
 
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import edu.brandeis.cosi.atg.cards.Card;
@@ -44,7 +45,7 @@ public class Hack {
 
                 while (otherCards.getUnplayedCards().size() > 3) {
 
-                    ImmutableList<Card> unplayed = otherCards.getUnplayedCards();
+                     ImmutableCollection<Card> unplayed = playerCards.getUnplayedCards();
 
                     ImmutableList.Builder<Decision> optionsBuilder = ImmutableList.builder();
 

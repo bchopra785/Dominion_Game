@@ -143,7 +143,7 @@ public class PlayerCards {
     }
 
     // Get all unplayed cards in hand as an immutable collection
-    protected ImmutableCollection<Card> getUnplayedCards() {
+    public ImmutableCollection<Card> getUnplayedCards() {
         return ImmutableList.copyOf(this.unplayedCards);
     }
 

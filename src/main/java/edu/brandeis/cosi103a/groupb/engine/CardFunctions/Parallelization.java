@@ -1,5 +1,6 @@
 package edu.brandeis.cosi103a.groupb.engine.CardFunctions;
 
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import edu.brandeis.cosi.atg.cards.Card;
@@ -29,7 +30,7 @@ public class Parallelization {
 
         // Prompt to choose an Action card from hand to play twice
 
-        ImmutableList<Card> unplayed = playerCards.getUnplayedCards();
+         ImmutableCollection<Card> unplayed = playerCards.getUnplayedCards();
 
         ImmutableList.Builder<Decision> optionsBuilder = ImmutableList.builder();
 

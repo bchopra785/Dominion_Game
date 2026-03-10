@@ -1,5 +1,6 @@
 package edu.brandeis.cosi103a.groupb.engine.CardFunctions;
 
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import edu.brandeis.cosi.atg.cards.Card;
@@ -36,8 +37,8 @@ public class Backlog {
 
         while (true) {
 
-            ImmutableList<Card> unplayed = playerCards.getUnplayedCards();
-
+             ImmutableCollection<Card> unplayed = playerCards.getUnplayedCards();
+             
             ImmutableList.Builder<Decision> optionsBuilder = ImmutableList.builder();
 
             for (Card card : unplayed) {

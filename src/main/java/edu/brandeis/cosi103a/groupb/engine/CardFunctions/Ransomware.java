@@ -1,5 +1,6 @@
 package edu.brandeis.cosi103a.groupb.engine.CardFunctions;
 
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import edu.brandeis.cosi.atg.cards.Card;
@@ -55,7 +56,7 @@ public class Ransomware {
 
                 PlayerCards otherCards = playerCardsMap.get(other);
 
-                ImmutableList<Card> unplayed = otherCards.getUnplayedCards();
+                ImmutableCollection<Card> unplayed = otherCards.getUnplayedCards();
 
                 // For simplicity, if they have 2 or more cards, discard 2, else gain bug
 

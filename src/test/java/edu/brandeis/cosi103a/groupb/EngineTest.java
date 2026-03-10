@@ -1,5 +1,6 @@
 package edu.brandeis.cosi103a.groupb;
 
+import edu.brandeis.cosi.atg.engine.PlayerViolationException;
 import edu.brandeis.cosi.atg.state.GameState;
 import edu.brandeis.cosi103a.groupb.engine.Engine;
 
@@ -15,7 +16,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
+import java.lang.reflect.Field;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -23,7 +26,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class EngineTest {
     
-    private List<ConsolePlayer> players;
+    private List<ParentPlayer> players;
     private ByteArrayOutputStream outBuf;
     private Scanner scanner;
     
@@ -53,7 +56,7 @@ public class EngineTest {
     @Test
     public void testConstructorWithOnePlayer() {
         // Test with just one player
-        List<ConsolePlayer> onePlayer = new ArrayList<>();
+        List<ParentPlayer> onePlayer = new ArrayList<>();
         onePlayer.add(players.get(0));
         assertDoesNotThrow(() -> new Engine(onePlayer));
     }
@@ -88,62 +91,26 @@ public class EngineTest {
         assertEquals("Engine supports at most 4 players", exception.getMessage());
     }
 
-    @Test
-    public void testInitialState() {
-        // Test that the initial state has expected placeholder values
-        Engine engine = new Engine(players);
-        GameState state = engine.getState();
-        
-        assertNotNull(state);
-        assertEquals("placeholder", state.currentPlayerName());
-        assertNotNull(state.currentPlayerHand());
-        assertEquals(GameState.TurnPhase.ACTION, state.phase());
-        assertEquals(-1, state.availableActions());
-        assertEquals(-1, state.spendableMoney());
-        assertEquals(-1, state.availableBuys());
-        assertNotNull(state.buyableCards());
-    }
+    // @Test
+    // public void testEngineInitializesPlayerCardsMap() {
+    //     // Test that engine properly initializes player cards for each player
+    //     Scanner scanner = new Scanner(System.in);
+    //     List<ParentPlayer> players = new ArrayList<>();
+    //     players.add(new ConsolePlayer(scanner, System.out));
+    //     players.add(new ConsolePlayer(scanner, System.out));
+    //     players.add(new BigMoneyPlayer());
+    //     players.add(new BigMoneyPlayer());
+    //     Engine engine = new Engine(players);
+    //     GameState state = engine.getState(); // trigger initialization
+    //     assertNotNull(state.currentPlayerName());
+    //     assertNotNull(state.currentPlayerHand()); // trigger player cards map access
+    // }
 
-    @Test
-    public void testGetStateReturnsNonNullGameState() {
-        // Test that getState returns a non-null GameState object
-        Engine engine = new Engine(players);
-        GameState state = engine.getState();
-        assertNotNull(state);
-    }
-
-    @Test
-    public void testEngineInitializesPlayerCardsMap() {
-        // Test that engine properly initializes player cards for each player
-        Engine engine = new Engine(players);
-        // This will be implicitly tested through the play method or state
-        assertDoesNotThrow(() -> engine.getState());
-    }
-
-    @Test
-    public void testMultipleEnginesIndependence() {
-        // Test that multiple engines are independent
-        Engine engine1 = new Engine(players);
-        
-        List<ConsolePlayer> players2 = new ArrayList<>();
-        players2.add(new ConsolePlayer(scanner, new PrintStream(outBuf)));
-        players2.add(new ConsolePlayer(scanner, new PrintStream(outBuf)));
-        Engine engine2 = new Engine(players2);
-        
-        GameState state1 = engine1.getState();
-        GameState state2 = engine2.getState();
-        
-        assertNotNull(state1);
-        assertNotNull(state2);
-        // Both should have placeholder values but be independent objects
-        assertEquals("placeholder", state1.currentPlayerName());
-        assertEquals("placeholder", state2.currentPlayerName());
-    }
 
     @Test
     public void testEngineWithEmptyPlayersList() {
         // Test that engine works with empty players list (edge case)
-        List<ConsolePlayer> emptyPlayers = new ArrayList<>();
+        List<ParentPlayer> emptyPlayers = new ArrayList<>();
         assertDoesNotThrow(() -> new Engine(emptyPlayers));
     }
 
@@ -161,7 +128,23 @@ public class EngineTest {
     @Test
     public void testEngineStateConsistency() {
         // Test that calling getState multiple times returns consistent data
+        String input = ""; // only 2 inputs, will run out during game
+        ByteArrayInputStream in = new ByteArrayInputStream(input.getBytes());
+        Scanner scanner = new Scanner(in);
+        
+        List<ParentPlayer> players = new ArrayList<>();
+        players.add(new ConsolePlayer(scanner, System.out));
+        players.add(new ConsolePlayer(scanner, System.out));
+        players.add(new BigMoneyPlayer());
+        players.add(new BigMoneyPlayer());
+
         Engine engine = new Engine(players);
+        
+        // Expect IllegalStateException when input runs out
+        assertThrows(IllegalStateException.class, () -> {
+            engine.play();
+        });
+        
         GameState state1 = engine.getState();
         GameState state2 = engine.getState();
         
@@ -180,21 +163,116 @@ public class EngineTest {
     }
 
     @Test
-    public void testEngineWithMockedPlayer() {
-        // Example Mockito test: use a mocked player
-        when(mockPlayer.getName()).thenReturn("MockedPlayer");
+    public void testEnginePlayBigMoney(){
+        // Test that engine can run a game without throwing exceptions
+        List<ParentPlayer> testPlayers = new ArrayList<>();
+        testPlayers.add(new BigMoneyPlayer());
+        testPlayers.add(new BigMoneyPlayer());
+        Engine engine = new Engine(testPlayers);
         
-        // Create a list with the mocked player
-        List<ConsolePlayer> mockPlayers = new ArrayList<>();
-        mockPlayers.add(mockPlayer);
+        assertDoesNotThrow(() -> {
+            engine.play();
+        });
+        GameState state = engine.getState();
+        assertNotNull(state);
+        assertNotNull(state.currentPlayerName());
+        assertNotNull(state.currentPlayerHand());
+        assertEquals(GameState.TurnPhase.CLEANUP, state.phase());
+        assertEquals(1, state.availableActions());
+        assertTrue(state.spendableMoney() > 0);
+        assertEquals(1, state.availableBuys());
+        assertNotNull(state.buyableCards());
+
+    }
+
+    @Test
+    public void testEnginePlayMix1(){
+        // Test that engine throws exception when input runs out after 2 decisions
+        String input = ""; // only 2 inputs, will run out during game
+        ByteArrayInputStream in = new ByteArrayInputStream(input.getBytes());
+        Scanner scanner = new Scanner(in);
         
-        // Create engine with mocked player
-        Engine engine = new Engine(mockPlayers);
+        List<ParentPlayer> players = new ArrayList<>();
+        players.add(new ConsolePlayer(scanner, System.out));
+        players.add(new ConsolePlayer(scanner, System.out));
+        players.add(new BigMoneyPlayer());
+        players.add(new BigMoneyPlayer());
+        Engine engine = new Engine(players);
         
-        // Verify the mock was used
-        assertNotNull(engine);
-        // Verify that getName was called (if needed in future implementation)
-        verify(mockPlayer, atLeastOnce()).getName();
+        // Expect IllegalStateException when input runs out
+        assertThrows(IllegalStateException.class, () -> {
+            engine.play();
+        });
+
+        GameState state = engine.getState();
+        assertNotNull(state);
+        assertNotNull(state.currentPlayerName());
+        assertNotNull(state.currentPlayerHand());
+        assertEquals(GameState.TurnPhase.ACTION, state.phase());
+        assertEquals(1, state.availableActions());
+        assertEquals(1,state.availableBuys());
+        assertNotNull(state.buyableCards());
+
+    }
+
+    @Test
+    public void testEnginePlayMix2(){
+        // Test that engine throws exception when input runs out after 2 decisions
+        String input = "0\n"; // only 2 inputs, will run out during game
+        ByteArrayInputStream in = new ByteArrayInputStream(input.getBytes());
+        Scanner scanner = new Scanner(in);
+        
+        List<ParentPlayer> players = new ArrayList<>();
+        players.add(new ConsolePlayer(scanner, System.out));
+        players.add(new ConsolePlayer(scanner, System.out));
+        players.add(new BigMoneyPlayer());
+        players.add(new BigMoneyPlayer());
+        Engine engine = new Engine(players);
+        
+        // Expect IllegalStateException when input runs out
+        assertThrows(IllegalStateException.class, () -> {
+            engine.play();
+        });
+
+        GameState state = engine.getState();
+        assertNotNull(state);
+        assertNotNull(state.currentPlayerName());
+        assertNotNull(state.currentPlayerHand());
+        assertEquals(GameState.TurnPhase.BUY, state.phase());
+        assertEquals(1, state.availableActions());
+        assertEquals(1,state.availableBuys());
+        assertNotNull(state.buyableCards());
+
+    }
+
+    @Test
+    public void testEnginePlayMix3(){
+        // Test that engine throws exception when input runs out after 2 decisions
+        String input = "0\n0\n"; // only 2 inputs, will run out during game
+        ByteArrayInputStream in = new ByteArrayInputStream(input.getBytes());
+        Scanner scanner = new Scanner(in);
+        
+        List<ParentPlayer> players = new ArrayList<>();
+        players.add(new ConsolePlayer(scanner, System.out));
+        players.add(new ConsolePlayer(scanner, System.out));
+        players.add(new BigMoneyPlayer());
+        players.add(new BigMoneyPlayer());
+        Engine engine = new Engine(players);
+        
+        // Expect IllegalStateException when input runs out
+        assertThrows(IllegalStateException.class, () -> {
+            engine.play();
+        });
+
+        GameState state = engine.getState();
+        assertNotNull(state);
+        assertNotNull(state.currentPlayerName());
+        assertNotNull(state.currentPlayerHand());
+        assertEquals(GameState.TurnPhase.BUY, state.phase());
+        assertEquals(1, state.availableActions());
+        assertEquals(0,state.availableBuys());
+        assertNotNull(state.buyableCards());
+
     }
 
     

@@ -1,14 +1,18 @@
 package edu.brandeis.cosi103a.groupb;
 
 import com.google.common.collect.ImmutableList;
+import edu.brandeis.cosi.atg.decisions.BuyDecision;
 import edu.brandeis.cosi.atg.decisions.Decision;
+import edu.brandeis.cosi.atg.event.Event;
+import edu.brandeis.cosi.atg.event.GameObserver;
 import edu.brandeis.cosi.atg.state.GameState;
 
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicInteger;
-
+/**PULL BEFORE MERGIN */
 /**
  * Console-based Player that reads choices from a shared Scanner and writes prompts to a print stream.
  *
@@ -29,14 +33,19 @@ public class ConsolePlayer extends ParentPlayer {
 
     // Package-private constructor for tests (inject streams)
     public ConsolePlayer(InputStream in, PrintStream out) {
+        this(new Scanner(in), out);
+    }
+
+    // Shared Scanner constructor (allows multiple players to share an input Scanner)
+    public ConsolePlayer(Scanner scanner, PrintStream out) {
         super("ConsolePlayer-" + COUNTER.getAndIncrement());
-      if (in == null) {
-        throw new IllegalArgumentException("InputStream cannot be null");
-       }
-      if (out == null) {
-        throw new IllegalArgumentException("PrintStream cannot be null");
-       }
-        this.scanner = new Scanner(in);
+        if (scanner == null) {
+            throw new IllegalArgumentException("Scanner cannot be null");
+        }
+        if (out == null) {
+            throw new IllegalArgumentException("PrintStream cannot be null");
+        }
+        this.scanner = scanner;
         this.out = out;
     }
 
@@ -47,21 +56,22 @@ public class ConsolePlayer extends ParentPlayer {
             return null;
         }
 
-            out.println("------------------------------");
+            out.println("\n\n------------------------------");
             out.print(describeGameState(state));
             out.println();
-            out.println("Player " + getName() + ", it's your turn!");
+            out.println(getName() + ", it's your turn!");
             out.println("Choose one of the following options:");
             for (int i = 0; i < options.size(); i++) {
-                out.printf("[%d] %s%n", i, String.valueOf(options.get(i)));
+                out.println("[" + i + "] " + options.get(i).getDescription());
             }
             out.print("Enter option index: ");
 
         while (true) {
-            if (!scanner.hasNextLine()) {
-                out.println();
-                out.println("Input closed; selecting default option 0");
-                return options.get(0);
+            if (!scanner.hasNextLine()) { //stop the program if there is no more input
+                // out.println();
+                // out.println("Input closed; selecting default option 0");
+                // return options.get(0);
+                throw new IllegalStateException("Input closed - no more decisions available");
             }
             String line = scanner.nextLine().trim();
             try {
@@ -74,9 +84,18 @@ public class ConsolePlayer extends ParentPlayer {
             } catch (NumberFormatException ignored) {
                 out.print("Invalid input. Enter a valid index: ");
             }
-        } catch (Exception e) {
-            out.println("Error reading input; selecting default option 0");
-            return (options == null || options.isEmpty()) ? null : options.get(0);
         }
+    }
+
+    @Override
+    public Optional<GameObserver> getObserver() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getObserver'");
+    }
+
+    @Override
+    public Decision makeDecision(GameState arg0, ImmutableList<Decision> arg1, Optional<Event> arg2) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'makeDecision'");
     }
 }

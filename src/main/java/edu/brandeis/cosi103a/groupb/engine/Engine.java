@@ -4,7 +4,7 @@ import edu.brandeis.cosi.atg.cards.*;
 import edu.brandeis.cosi.atg.decisions.*;
 import edu.brandeis.cosi.atg.engine.*;
 import edu.brandeis.cosi.atg.state.*;
-import edu.brandeis.cosi103a.groupb.ConsolePlayer;
+import edu.brandeis.cosi103a.groupb.ParentPlayer;
 import edu.brandeis.cosi103a.groupb.engine.CardFunctions.CodeReview;
 import edu.brandeis.cosi103a.groupb.engine.CardFunctions.EvergreenTest;
 import edu.brandeis.cosi103a.groupb.engine.CardFunctions.Refactor;
@@ -13,20 +13,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 
-
+//client
 public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
     //initialize players and board cards
-    private final List<ConsolePlayer> players;
+    private final List<ParentPlayer> players;
     private final BoardCards boardCards;
-    private final Map<ConsolePlayer, PlayerCards> playerCardsMap;
-
+    private final Map<ParentPlayer, PlayerCards> playerCardsMap;
+    
     //initialize values for game state
     private String playerName;
     private Hand handObject;
@@ -36,7 +37,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
     private int availableBuys;
     private CardStacks buyableCards;
 
-    public Engine(List<ConsolePlayer> players) {
+    public Engine(List<ParentPlayer> players) {
         
         //check for valid number of players
         if (players == null) {
@@ -51,20 +52,29 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         this.boardCards = new BoardCards();
         this.playerCardsMap = new HashMap<>();
 
-        for (ConsolePlayer player : players) {
+        Map<String, ParentPlayer> builder = new HashMap<>();
+
+        for (ParentPlayer player : players) {
             PlayerCards playerCards = new PlayerCards(boardCards);
-            //player.setPlayerCards(playerCards);
+            playerCards.refreshHand(); // draw initial hand of 5 cards
             playerCardsMap.put(player, playerCards);
         }
 
-        //insert placeholder values for game state (will be updated in play method)
-        this.playerName = "placeholder";
-        this.handObject = new Hand(ImmutableList.of(), ImmutableList.of());
-        this.phase = GameState.TurnPhase.ACTION;
-        this.availableActions = -1;
-        this.spendableMoney = -1;
-        this.availableBuys = -1;
-        this.buyableCards = new CardStacks(ImmutableMap.of());
+
+        //should never see these values (initialized before play() starts)
+        // if (!players.isEmpty()) {
+        //     ParentPlayer firstPlayer = players.get(0);
+        //     this.playerName = firstPlayer.getName();
+        //     this.handObject = playerCardsMap.get(firstPlayer).getHand();
+        // } else {
+        //     this.playerName = "placeholder";
+        //     this.handObject = new Hand(ImmutableList.of(), ImmutableList.of());
+        // }
+        // this.phase = GameState.TurnPhase.ACTION;
+        // this.availableActions = -1;
+        // this.spendableMoney = -1;
+        // this.availableBuys = -1;
+        // this.buyableCards = boardCards.getPlayableCards(-1);
 
     }
 
@@ -96,7 +106,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         while (!gameOver) {
 
             //loop through each player
-            for (ConsolePlayer player : players) {
+            for (ParentPlayer player : players) {
                 this.playerName = player.getName();
                 this.handObject = playerCardsMap.get(player).getHand();
                 this.availableActions = 1;
@@ -130,11 +140,11 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
             }   
 
-            gameOver = !boardCards.frameworksLeft(); //placeholder
+            gameOver = !boardCards.frameworksLeft();
         }   
 
         List<PlayerResult> resultsList = new ArrayList<>();
-        for (ConsolePlayer player : players) {
+        for (ParentPlayer player : players) {
             PlayerCards playerCards = playerCardsMap.get(player);
             ImmutableCollection<Card> allCards = playerCards.getDiscardPile();
             PlayerResult result = new PlayerResult(player.getName(), playerCards.getScore(), allCards);
@@ -145,12 +155,12 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         resultsList.sort((a, b) -> Integer.compare(b.score(), a.score()));
         
         ImmutableList<PlayerResult> playerResults = ImmutableList.copyOf(resultsList);
-        return new GameResult(playerResults); //placeholder
+        return new GameResult(playerResults);
     }
 
    
 
-    private GameState cleanupPhase(ConsolePlayer currentPlayer){
+    private GameState cleanupPhase(ParentPlayer currentPlayer){
         PlayerCards playerCards = playerCardsMap.get(currentPlayer);
         playerCards.refreshHand(); 
         this.handObject = playerCards.getHand();  
@@ -164,7 +174,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
     private Decision buyDecision(GameState oldState) {
 
-        ConsolePlayer currentPlayer = getPlayerByName(this.playerName);
+        ParentPlayer currentPlayer = getPlayerByName(this.playerName);
 
         // Create a list of BuyDecision for each card type available
         ImmutableList.Builder<Decision> optionsBuilder = new ImmutableList.Builder<>();
@@ -191,7 +201,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
     private GameState buyPhase(GameState oldState, Decision decision) {
 
-        ConsolePlayer currentPlayer = getPlayerByName(this.playerName);
+        ParentPlayer currentPlayer = getPlayerByName(this.playerName);
 
         Card.Type cardTypeToBuy = null;
         if (decision instanceof BuyDecision) {
@@ -214,7 +224,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
     
     private Decision actionDecision(GameState oldState){
 
-        ConsolePlayer currentPlayer = getPlayerByName(this.playerName);
+        ParentPlayer currentPlayer = getPlayerByName(this.playerName);
 
         //get all cards from hand and create options list
         ImmutableCollection<Card> unplayedCards = playerCardsMap.get(currentPlayer).getUnplayedCards();
@@ -249,7 +259,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
     private GameState actionPhase(GameState oldState, Decision decision){
 
-        ConsolePlayer currentPlayer = getPlayerByName(this.playerName);
+        ParentPlayer currentPlayer = getPlayerByName(this.playerName);
 
         this.availableActions--; //action has been played
 
@@ -295,8 +305,8 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
 
 
-    private ConsolePlayer getPlayerByName(String playerName) {
-        for (ConsolePlayer player : players) {
+    private ParentPlayer getPlayerByName(String playerName) {
+        for (ParentPlayer player : players) {
             if (player.getName().equals(playerName)) {
                 return player;
             }
@@ -313,55 +323,4 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
     private Card.Type.Category getCardCategory(Card card) {
            return card.type().category();
     }
-
-
-    // public static void main(String[] args) {
-    //     Card card = new Card(Card.Type.BUG, 1);
-    //     System.out.println(card + " " + card.value() + " " + card.cost());
-
-    //     Card card1 = new Card(Card.Type.METHOD, 1);
-    //     System.out.println(card1 + " " + card1.value() + " " + card1.cost());
-
-    //     Card card2 = new Card(Card.Type.MODULE, 1);
-    //     System.out.println(card2 + " " + card2.value() + " " + card2.cost());
-
-    //     Card card3 = new Card(Card.Type.FRAMEWORK, 1);
-    //     System.out.println(card3 + " " + card3.value() + " " + card3.cost());
-
-    //     Card card4 = new Card(Card.Type.BITCOIN, 1);
-    //     System.out.println(card4 + " " + card4.value() + " " + card4.cost());
-
-    //     Card card5 = new Card(Card.Type.ETHEREUM, 1);
-    //     System.out.println(card5 + " " + card5.value() + " " +card5.cost());
-
-    //     Card card6 = new Card(Card.Type.DOGECOIN, 1);
-    //     System.out.println(card6 + " " + card6.value() + " " + card6.cost());
-
-    //     Card card7 = new Card(Card.Type.REFACTOR , 1);
-    //     System.out.println(card7 + " " + card7.value() + " " + card7.cost());
-        
-    //     Card card8 = new Card(Card.Type.CODE_REVIEW , 1);
-    //     System.out.println(card8 + " " + card8.value() + " " + card8.cost());
-
-    //     Card card9 = new Card(Card.Type.EVERGREEN_TEST , 1);
-    //     System.out.println(card9 + " " + card9.value() + " " + card9.cost());
-
-    //     //TO DO: instantiate players
-    //     ConsolePlayer player1 = new ConsolePlayer();
-    //     ConsolePlayer player2 = new ConsolePlayer();
-    //     ConsolePlayer player3 = new ConsolePlayer();
-    //     ConsolePlayer player4 = new ConsolePlayer();
-
-    //     List<ConsolePlayer> players = List.of(player1, player2, player3, player4);
-        
-    //     Engine engine = new Engine(players);
-    //     GameResult result = null;
-    //     try {
-    //         result = engine.play();
-    //     } catch (PlayerViolationException e) {
-    //         e.printStackTrace();
-    //     }
-    //     System.out.println(result);
-    // }     
-    
 }

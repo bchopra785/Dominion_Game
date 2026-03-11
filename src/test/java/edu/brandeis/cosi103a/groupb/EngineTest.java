@@ -179,7 +179,7 @@ public class EngineTest {
         assertNotNull(state.currentPlayerHand());
         assertEquals(GameState.TurnPhase.CLEANUP, state.phase());
         assertEquals(1, state.availableActions());
-        assertTrue(state.spendableMoney() > 0);
+        assertEquals(0, state.spendableMoney());
         assertEquals(1, state.availableBuys());
         assertNotNull(state.buyableCards());
 
@@ -238,7 +238,7 @@ public class EngineTest {
         assertNotNull(state);
         assertNotNull(state.currentPlayerName());
         assertNotNull(state.currentPlayerHand());
-        assertEquals(GameState.TurnPhase.BUY, state.phase());
+        assertEquals(GameState.TurnPhase.MONEY, state.phase());
         assertEquals(1, state.availableActions());
         assertEquals(1,state.availableBuys());
         assertNotNull(state.buyableCards());
@@ -270,7 +270,7 @@ public class EngineTest {
         assertNotNull(state.currentPlayerHand());
         assertEquals(GameState.TurnPhase.BUY, state.phase());
         assertEquals(1, state.availableActions());
-        assertEquals(0,state.availableBuys());
+        assertEquals(1,state.availableBuys());
         assertNotNull(state.buyableCards());
 
     }

@@ -49,7 +49,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         this.players = players;
 
         //initialize board cards and player cards
-        this.boardCards = new BoardCards();
+        this.boardCards = new BoardCards(players.size());
         this.playerCardsMap = new HashMap<>();
 
         Map<String, ParentPlayer> builder = new HashMap<>();
@@ -110,9 +110,9 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
                 this.playerName = player.getName();
                 this.handObject = playerCardsMap.get(player).getHand();
                 this.availableActions = 1;
-                this.spendableMoney = playerCardsMap.get(player).getCostInHand();
+                this.spendableMoney = 0;
                 this.availableBuys = 1;
-                this.buyableCards = boardCards.getPlayableCards(playerCardsMap.get(player).getCostInHand());
+                this.buyableCards = boardCards.getPlayableCards(0);
 
                 
                 //ACTION PHASE
@@ -124,9 +124,18 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
                     actionDecision = actionDecision(actionState);
                 }
 
+                //MONEY PHASE
+                this.phase = GameState.TurnPhase.MONEY;
+                GameState moneyState = actionState;
+                Decision moneyDecision = moneyDecision(moneyState);
+                while (!(moneyDecision instanceof EndPhaseDecision && ((EndPhaseDecision) moneyDecision).phase().equals(GameState.TurnPhase.MONEY))) {
+                    moneyState = moneyPhase(moneyState, moneyDecision);
+                    moneyDecision = moneyDecision(moneyState);
+                }
+
                 //BUY PHASE
                 this.phase = GameState.TurnPhase.BUY;
-                GameState buyState = actionState;
+                GameState buyState = moneyState;
                 Decision buyDecision = buyDecision(buyState);
                 while (!(buyDecision instanceof EndPhaseDecision && ((EndPhaseDecision) buyDecision).phase().equals(GameState.TurnPhase.BUY))) {
                     buyState = buyPhase(buyState, buyDecision);
@@ -165,9 +174,54 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         playerCards.refreshHand(); 
         this.handObject = playerCards.getHand();  
         this.availableActions = 1;
-        this.spendableMoney = playerCards.getCostInHand();
+        this.spendableMoney = 0;
         this.availableBuys = 1;
-        this.buyableCards = boardCards.getPlayableCards(playerCards.getCostInHand());    
+        this.buyableCards = boardCards.getPlayableCards(0);    
+
+        return getState();
+    }
+
+    private Decision moneyDecision(GameState oldState) {
+
+        ParentPlayer currentPlayer = getPlayerByName(this.playerName);
+
+        ImmutableCollection<Card> unplayedCards = playerCardsMap.get(currentPlayer).getUnplayedCards();
+        ImmutableList.Builder<Decision> optionsBuilder = new ImmutableList.Builder<>();
+
+        // End phase first so console input index 0 can always skip MONEY phase
+        optionsBuilder.add(new EndPhaseDecision(GameState.TurnPhase.MONEY));
+
+        for (Card card : unplayedCards) {
+            if (getCardCategory(card).equals(Card.Type.Category.MONEY)) {
+                optionsBuilder.add(new PlayCardDecision(card));
+            }
+        }
+
+        ImmutableList<Decision> options = optionsBuilder.build();
+
+        while(true) {
+            Decision decision = currentPlayer.makeDecision(getState(), options);
+            if (checkDecision(decision, options)) {
+                return decision;
+            } else {
+                System.out.println("Invalid decision. Please choose a valid option.");
+            }
+        }
+    }
+
+
+    private GameState moneyPhase(GameState oldState, Decision decision) {
+
+        ParentPlayer currentPlayer = getPlayerByName(this.playerName);
+
+        if (decision instanceof PlayCardDecision) {
+            Card playedCard = ((PlayCardDecision) decision).card();
+            playerCardsMap.get(currentPlayer).playCard(playedCard);
+
+            this.spendableMoney += playedCard.value();
+            this.handObject = playerCardsMap.get(currentPlayer).getHand();
+            this.buyableCards = boardCards.getPlayableCards(this.spendableMoney);
+        }
 
         return getState();
     }

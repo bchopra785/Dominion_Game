@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import edu.brandeis.cosi.atg.decisions.BuyDecision;
 import edu.brandeis.cosi.atg.decisions.Decision;
 import edu.brandeis.cosi.atg.decisions.GainCardDecision;
+import edu.brandeis.cosi.atg.decisions.PlayCardDecision;
 import edu.brandeis.cosi.atg.event.Event;
 import edu.brandeis.cosi.atg.event.GameObserver;
 import edu.brandeis.cosi.atg.decisions.EndPhaseDecision;
@@ -48,6 +49,26 @@ public class BigMoneyPlayer extends ParentPlayer {
         out.println(getName() + " is making a decision...");
         if (options == null || options.isEmpty() || state == null) {
             return null;
+        }
+
+        // MONEY phase: play money cards so spendableMoney increases before BUY phase.
+        if (state.phase() == GameState.TurnPhase.MONEY) {
+            Decision bestMoneyPlay = null;
+            int bestValue = Integer.MIN_VALUE;
+            for (Decision opt : options) {
+                if (opt instanceof PlayCardDecision) {
+                    Card c = ((PlayCardDecision) opt).card();
+                    if (c.type().category() == Card.Type.Category.MONEY) {
+                        if (c.value() > bestValue) {
+                            bestValue = c.value();
+                            bestMoneyPlay = opt;
+                        }
+                    }
+                }
+            }
+            if (bestMoneyPlay != null) {
+                return bestMoneyPlay;
+            }
         }
 
         // FRAMEWORK-FIRST: if a BuyDecision for FRAMEWORK is available and affordable, take it.

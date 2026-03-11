@@ -36,7 +36,7 @@ public class GameHarness {
         System.out.println("You must have a minimum of " + minPlayers + " players to start a game.");
         System.out.println("You can have up to " + maxPlayers + " players in a game.");
 
-        while(numPlayers < minPlayers || numPlayers > maxPlayers) {
+        while(numPlayers < maxPlayers) {
             System.out.println("Please select a player type for player " + (numPlayers + 1));
 
             System.out.println("[0] No more players (start game)");

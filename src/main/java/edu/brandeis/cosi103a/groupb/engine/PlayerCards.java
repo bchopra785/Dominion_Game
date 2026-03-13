@@ -104,6 +104,21 @@ public class PlayerCards {
         }
     }
 
+    /**
+     * Discards a card from the unplayed hand to the discard pile.
+     * Used by action cards that cause a player to discard.
+     *
+     * @throws IllegalArgumentException if the card is not in the unplayed hand
+     */
+    public void discardCard(Card card) throws IllegalArgumentException {
+        if (unplayedCards.contains(card)) {
+            unplayedCards.remove(card);
+            discard.add(card);
+        } else {
+            throw new IllegalArgumentException("Card not in unplayed hand: " + card);
+        }
+    }
+
     // Get cost of currency cards in hand for checking if player can play a card
     public int getCostInHand() {
         int costInHand = 0;

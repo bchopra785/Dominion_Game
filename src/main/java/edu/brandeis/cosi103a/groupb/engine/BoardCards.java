@@ -20,7 +20,16 @@ public class BoardCards {
     public Map<Card.Type, Integer> cardsLeft; // for tracking number of cards left
 
     // Creates a new deck with cards for ATG
-    public BoardCards(){
+    /** Backward-compatible no-arg constructor (defaults to 1 player's worth of Bug cards). */
+    public BoardCards() {
+        this(1);
+    }
+
+    /**
+     * Creates board card piles for a game with the given number of players.
+     * The BUG pile is sized at 10 × numPlayers per the v2 API specification.
+     */
+    public BoardCards(int numPlayers) {
         // build each pile via the helper and stash in a single map
         cardMap = new HashMap<>();
         cardMap.put(Card.Type.METHOD, createStack(Card.Type.METHOD, 14));
@@ -34,7 +43,8 @@ public class BoardCards {
         cardMap.put(Card.Type.REFACTOR, createStack(Card.Type.REFACTOR, 10));
         cardMap.put(Card.Type.EVERGREEN_TEST, createStack(Card.Type.EVERGREEN_TEST, 10));
         cardMap.put(Card.Type.CODE_REVIEW, createStack(Card.Type.CODE_REVIEW, 10));
-        cardMap.put(Card.Type.BUG, createStack(Card.Type.BUG, 10));
+        // BUG pile: 10 cards per player as per API v2 specification
+        cardMap.put(Card.Type.BUG, createStack(Card.Type.BUG, 10 * numPlayers));
 
     }
 

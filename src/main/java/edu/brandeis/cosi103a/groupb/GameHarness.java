@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Scanner;
 
 //RUN  [mvn spring-boot:run]before running this method to start server
+//run game harness in another terminal to start the game and connect remote players
 public class GameHarness {
 
     public static void main(String[] args) throws PlayerViolationException {
@@ -35,7 +36,7 @@ public class GameHarness {
         System.out.println("You must have a minimum of " + minPlayers + " players to start a game.");
         System.out.println("You can have up to " + maxPlayers + " players in a game.");
 
-        while(numPlayers < minPlayers || numPlayers > maxPlayers) {
+        while(numPlayers < maxPlayers) {
             System.out.println("Please select a player type for player " + (numPlayers + 1));
 
             System.out.println("[0] No more players (start game)");

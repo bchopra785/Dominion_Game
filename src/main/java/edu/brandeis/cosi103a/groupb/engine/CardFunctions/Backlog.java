@@ -17,6 +17,7 @@ import edu.brandeis.cosi103a.groupb.engine.PlayerCards;
 import java.lang.reflect.Field;
 import java.util.List;
 
+/** Check the changing to public, try to work around that!!! */
 public class Backlog {
 
     public Backlog() {}
@@ -38,7 +39,7 @@ public class Backlog {
         while (true) {
 
              ImmutableCollection<Card> unplayed = playerCards.getUnplayedCards();
-             
+
             ImmutableList.Builder<Decision> optionsBuilder = ImmutableList.builder();
 
             for (Card card : unplayed) {

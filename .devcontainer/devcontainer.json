@@ -6,7 +6,10 @@
 	"image": "mcr.microsoft.com/devcontainers/base:bullseye",
 	"features": {
 		"ghcr.io/devcontainers/features/java:1": {}
-	}
+	},
+
+	"postCreateCommand": "sudo apt update && sudo apt install -y maven",
+	"remoteUser": "root"
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},

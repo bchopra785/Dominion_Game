@@ -36,13 +36,8 @@ public class PlayerServer {
         
     }
 
-    //TODO: implement logEvent endpoint
-    // @PostMapping(value = "/log-event", consumes = "application/json")
-    // public ResponseEntity<Void> logEvent(@RequestBody LogEventRequest request) {
-      
-    // }
 
-        @PostMapping("/log-event")
+    @PostMapping("/log-event")
     public ResponseEntity<Void> logEvent(@RequestBody LogEventRequest request) {
         // Validate the request
         if (request == null) {

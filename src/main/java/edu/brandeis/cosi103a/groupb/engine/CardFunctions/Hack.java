@@ -20,6 +20,7 @@ import java.util.Map;
 public class Hack {
 
     public Hack() {}
+    // doesnt check for monitoring card to avoid attack 
 
     public GameState play(GameState state, ConsolePlayer player, List<ConsolePlayer> players, Map<ConsolePlayer, PlayerCards> playerCardsMap, BoardCards boardCards) {
 

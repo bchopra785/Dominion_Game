@@ -23,7 +23,8 @@ public class DeploymentPipeline {
 
         buyableCards = boardCards.getPlayableCards(totalMoney);
 
-        // Note: Cost reduction not implemented without Engine changes
+        // Note: Cost reduction not implemented without Engine changes 
+        // needs $1 less for cards in this turn 
 
         GameState newState = new GameState(
 

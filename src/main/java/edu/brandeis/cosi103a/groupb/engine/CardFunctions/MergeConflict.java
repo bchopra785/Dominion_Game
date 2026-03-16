@@ -14,6 +14,7 @@ import edu.brandeis.cosi103a.groupb.engine.BoardCards;
 import edu.brandeis.cosi103a.groupb.engine.PlayerCards;
 
 public class MergeConflict {
+    // how are we doing the no end phase decision?? 
 
     public MergeConflict() {}
 

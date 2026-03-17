@@ -133,6 +133,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
                 //CLEANUP PHASE
                 this.phase = GameState.TurnPhase.CLEANUP;
                 cleanupPhase(player);
+                publishEvent(new EndTurnEvent());
 
             }   
 

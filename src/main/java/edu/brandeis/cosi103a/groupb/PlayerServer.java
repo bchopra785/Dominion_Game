@@ -12,6 +12,7 @@ import edu.brandeis.cosi.atg.event.Event;
 import edu.brandeis.cosi.atg.state.GameState;
 import edu.brandeis.cosi103a.groupb.network.DecisionRequest;
 import edu.brandeis.cosi103a.groupb.network.DecisionResponse;
+import edu.brandeis.cosi103a.groupb.network.LogEventRequest;
 
 @RestController
 public class PlayerServer {
@@ -35,12 +36,28 @@ public class PlayerServer {
         
     }
 
-    //TODO: implement logEvent endpoint
-    // @PostMapping(value = "/log-event", consumes = "application/json")
-    // public ResponseEntity<Void> logEvent(@RequestBody LogEventRequest request) {
-      
-    // }
+
+    @PostMapping("/log-event")
+    public ResponseEntity<Void> logEvent(@RequestBody LogEventRequest request) {
+        // Validate the request
+        if (request == null) {
+            return ResponseEntity.badRequest().build(); // 400
+        }
+
+        try {
+            // Handle the event (log it, update state, etc.)
+            System.out.println("Event received: " + request);
+
+            // Return 200 with empty body
+            return ResponseEntity.ok().build();
+
+        } catch (Exception e) {
+            // Return 500 if something goes wrong
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }
+
 
 // The "player server" will be an HTTP server. It will use an "RPC" (remote procedure call) API
 // style. It will accept POST requests with JSON bodies that represent the game state and

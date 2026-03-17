@@ -21,7 +21,6 @@ import java.util.Optional;
 
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 
 //client
@@ -58,29 +57,11 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         this.playerCardsMap = new HashMap<>();
         this.latestEventReason = Optional.empty();
 
-        Map<String, ParentPlayer> builder = new HashMap<>();
-
         for (ParentPlayer player : players) {
             PlayerCards playerCards = new PlayerCards(boardCards);
             playerCards.refreshHand(); // draw initial hand of 5 cards
             playerCardsMap.put(player, playerCards);
         }
-
-
-        //should never see these values (initialized before play() starts)
-        // if (!players.isEmpty()) {
-        //     ParentPlayer firstPlayer = players.get(0);
-        //     this.playerName = firstPlayer.getName();
-        //     this.handObject = playerCardsMap.get(firstPlayer).getHand();
-        // } else {
-        //     this.playerName = "placeholder";
-        //     this.handObject = new Hand(ImmutableList.of(), ImmutableList.of());
-        // }
-        // this.phase = GameState.TurnPhase.ACTION;
-        // this.availableActions = -1;
-        // this.spendableMoney = -1;
-        // this.availableBuys = -1;
-        // this.buyableCards = boardCards.getPlayableCards(-1);
 
     }
 
@@ -151,8 +132,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
                 //CLEANUP PHASE
                 this.phase = GameState.TurnPhase.CLEANUP;
-                GameState cleanup = cleanupPhase(player);
-                publishEvent(new EndTurnEvent());
+                cleanupPhase(player);
 
             }   
 

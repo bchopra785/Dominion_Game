@@ -1,7 +1,6 @@
 package edu.brandeis.cosi103a.groupb.engine.CardFunctions;
 
 import edu.brandeis.cosi.atg.cards.Card;
-import edu.brandeis.cosi.atg.decisions.BuyDecision;
 import edu.brandeis.cosi.atg.decisions.Decision;
 import edu.brandeis.cosi.atg.decisions.GainCardDecision;
 import edu.brandeis.cosi.atg.decisions.TrashCardDecision;

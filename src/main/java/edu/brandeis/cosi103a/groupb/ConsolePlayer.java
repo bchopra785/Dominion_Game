@@ -25,6 +25,7 @@ public class ConsolePlayer extends ParentPlayer {
 
     private final Scanner scanner;
     private final PrintStream out;
+    private final RecordingGameObserver observer;
 
     // Zero-arg constructor required by Engine
     public ConsolePlayer() {
@@ -47,6 +48,7 @@ public class ConsolePlayer extends ParentPlayer {
         }
         this.scanner = scanner;
         this.out = out;
+        this.observer = new RecordingGameObserver();
     }
 
     @Override
@@ -89,13 +91,15 @@ public class ConsolePlayer extends ParentPlayer {
 
     @Override
     public Optional<GameObserver> getObserver() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getObserver'");
+        return Optional.of(observer);
     }
 
     @Override
-    public Decision makeDecision(GameState arg0, ImmutableList<Decision> arg1, Optional<Event> arg2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'makeDecision'");
+    public Decision makeDecision(GameState state, ImmutableList<Decision> options, Optional<Event> reason) {
+        return makeDecision(state, options);
+    }
+
+    public int getObservedEventCount() {
+        return observer.getEventsSnapshot().size();
     }
 }

@@ -1,4 +1,5 @@
 package edu.brandeis.cosi103a.groupb.engine.CardFunctions;
+import edu.brandeis.cosi103a.groupb.ParentPlayer;
 
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -22,7 +23,7 @@ public class Ransomware {
 
     public Ransomware() {}
 
-    public GameState play(GameState state, ConsolePlayer player, List<ConsolePlayer> players, Map<ConsolePlayer, PlayerCards> playerCardsMap, BoardCards boardCards) {
+    public GameState play(GameState state, ParentPlayer player, List<ParentPlayer> players, Map<ParentPlayer, PlayerCards> playerCardsMap, BoardCards boardCards) {
 
         String playerName = state.currentPlayerName();
         Hand handObject = state.currentPlayerHand();
@@ -50,7 +51,7 @@ public class Ransomware {
 
         // Each other player chooses one: discard 2 cards; or gain a Bug
 
-        for (ConsolePlayer other : players) {
+        for (ParentPlayer other : players) {
 
             if (!other.getName().equals(player.getName())) {
 

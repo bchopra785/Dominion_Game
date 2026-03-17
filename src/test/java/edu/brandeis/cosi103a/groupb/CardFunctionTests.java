@@ -1,4 +1,4 @@
-package edu.brandeis.cosi103a.groupb.engine.CardFunctions;
+package edu.brandeis.cosi103a.groupb;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -18,6 +18,28 @@ import com.google.common.collect.ImmutableList;
 import edu.brandeis.cosi.atg.cards.Card;
 import edu.brandeis.cosi.atg.decisions.Decision;
 import edu.brandeis.cosi.atg.decisions.DiscardCardDecision;
+import edu.brandeis.cosi.atg.decisions.GainCardDecision;
+import edu.brandeis.cosi.atg.decisions.TrashCardDecision;
+import edu.brandeis.cosi.atg.state.CardStacks;
+import edu.brandeis.cosi.atg.state.GameState;
+import edu.brandeis.cosi.atg.state.Hand;
+import edu.brandeis.cosi103a.groupb.ParentPlayer;
+import edu.brandeis.cosi103a.groupb.engine.BoardCards;
+import edu.brandeis.cosi103a.groupb.engine.PlayerCards;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.Backlog;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.CodeReview;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.DailyScrum;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.EvergreenTest;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.Hack;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.Ipo;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.MergeConflict;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.Monitoring;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.Ransomware;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.Refactor;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.SprintPlanning;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.TechDebt;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.UnitTest;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.DeploymentPipeline;
 import edu.brandeis.cosi.atg.decisions.GainCardDecision;
 import edu.brandeis.cosi.atg.decisions.TrashCardDecision;
 import edu.brandeis.cosi.atg.state.CardStacks;
@@ -154,8 +176,8 @@ public class CardFunctionTests {
         pc2.drawToHand();
         pc3.drawToHand();
 
-        List<StubPlayer> players = List.of(p1, p2, p3);
-        Map<StubPlayer, PlayerCards> map = new HashMap<>();
+        List<ParentPlayer> players = List.of(p1, p2, p3);
+        Map<ParentPlayer, PlayerCards> map = new HashMap<>();
         map.put(p1, pc1);
         map.put(p2, pc2);
         map.put(p3, pc3);
@@ -164,7 +186,7 @@ public class CardFunctionTests {
         DailyScrum ds = new DailyScrum();
         GameState after = ds.play(before, p1, players, map, board);
 
-        assertEquals(1, after.availableBuys());
+        assertEquals(2, after.availableBuys());
         assertEquals(2, pc2.getHand().unplayedCards().size());
         assertEquals(2, pc3.getHand().unplayedCards().size());
     }
@@ -183,8 +205,8 @@ public class CardFunctionTests {
         // give p2 a monitoring card so they avoid the bug
         pc2.setUnplayedCards(List.of(new Card(Card.Type.MONITORING, 0)));
 
-        List<StubPlayer> players = List.of(p1, p2);
-        Map<StubPlayer, PlayerCards> map = new HashMap<>();
+        List<ParentPlayer> players = List.of(p1, p2);
+        Map<ParentPlayer, PlayerCards> map = new HashMap<>();
         map.put(p1, pc1);
         map.put(p2, pc2);
 
@@ -224,8 +246,8 @@ public class CardFunctionTests {
         defender.queueDecision(new DiscardCardDecision(new Card(Card.Type.BITCOIN, 0)));
         defender.queueDecision(new DiscardCardDecision(new Card(Card.Type.ETHEREUM, 1)));
 
-        List<StubPlayer> players = List.of(attacker, defender);
-        Map<StubPlayer, PlayerCards> map = new HashMap<>();
+        List<ParentPlayer> players = List.of(attacker, defender);
+        Map<ParentPlayer, PlayerCards> map = new HashMap<>();
         map.put(attacker, attackerCards);
         map.put(defender, defenderCards);
 
@@ -234,6 +256,42 @@ public class CardFunctionTests {
         hack.play(before, attacker, players, map, board);
 
         assertEquals(3, defenderCards.getHand().unplayedCards().size(), "Defender should be down to 3 cards");
+    }
+
+    @Test
+    public void testRansomware_discardTwoOrGainBug() throws Exception {
+        StubPlayer attacker = new StubPlayer("A");
+        StubPlayer defender = new StubPlayer("D");
+
+        TestPlayerCards attackerCards = new TestPlayerCards(board);
+        TestPlayerCards defenderCards = new TestPlayerCards(board);
+
+        attacker.setPlayerCards(attackerCards);
+        defender.setPlayerCards(defenderCards);
+
+        // Set defender hand to 5 cards
+        defenderCards.setUnplayedCards(List.of(
+            new Card(Card.Type.BITCOIN, 0),
+            new Card(Card.Type.ETHEREUM, 1),
+            new Card(Card.Type.DOGECOIN, 2),
+            new Card(Card.Type.METHOD, 2),
+            new Card(Card.Type.MODULE, 3)
+        ));
+
+        // Defender chooses to discard 2 cards
+        defender.queueDecision(new DiscardCardDecision(new Card(Card.Type.BITCOIN, 0)));
+        defender.queueDecision(new DiscardCardDecision(new Card(Card.Type.ETHEREUM, 1)));
+
+        List<ParentPlayer> players = List.of(attacker, defender);
+        Map<ParentPlayer, PlayerCards> map = new HashMap<>();
+        map.put(attacker, attackerCards);
+        map.put(defender, defenderCards);
+
+        GameState before = makeState(attacker.getName(), attackerCards);
+        Ransomware ransomware = new Ransomware();
+        ransomware.play(before, attacker, players, map, board);
+
+        assertEquals(3, defenderCards.getHand().unplayedCards().size(), "Defender should have discarded 2 cards");
     }
 
     @Test
@@ -326,11 +384,15 @@ public class CardFunctionTests {
         // Set a hand with at least one card
         pc.setUnplayedCards(List.of(new Card(Card.Type.BITCOIN, 0), new Card(Card.Type.ETHEREUM, 1)));
         
+        // Queue discard decision
+        player.queueDecision(new DiscardCardDecision(new Card(Card.Type.BITCOIN, 0)));
+        
+        int beforeDiscard = pc.getDiscardSize();
         GameState before = makeState(player.getName(), pc);
         TechDebt td = new TechDebt();
         GameState after = td.play(before, player, pc, board);
 
-        assertTrue(pc.getHand().unplayedCards().size() < 2, "Should have discarded at least one card");
+        assertEquals(beforeDiscard + 1, pc.getDiscardSize(), "Should have discarded one card");
     }
 
     @Test
@@ -356,5 +418,21 @@ public class CardFunctionTests {
         player.queueDecision(new edu.brandeis.cosi.atg.decisions.EndPhaseDecision(GameState.TurnPhase.CLEANUP));
         GameState after2 = ut.play(before, player, pc, board);
         assertEquals(before.currentPlayerHand().unplayedCards().size() + 2, after2.currentPlayerHand().unplayedCards().size());
+    }
+
+    @Test
+    public void testDeploymentPipeline_activatesCostReduction() throws Exception {
+        StubPlayer player = new StubPlayer("P1");
+        TestPlayerCards pc = new TestPlayerCards(board);
+        player.setPlayerCards(pc);
+
+        GameState before = makeState(player.getName(), pc);
+        
+        DeploymentPipeline dp = new DeploymentPipeline();
+        GameState after = dp.play(before, player, pc, board);
+
+        // Should add +$1 and +1 Buy, cost reduction is handled by Engine
+        assertEquals(before.spendableMoney() + 1, after.spendableMoney());
+        assertEquals(before.availableBuys() + 1, after.availableBuys());
     }
 }

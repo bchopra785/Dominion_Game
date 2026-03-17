@@ -1,4 +1,5 @@
 package edu.brandeis.cosi103a.groupb.engine.CardFunctions;
+import edu.brandeis.cosi103a.groupb.ParentPlayer;
 
 import java.util.List;
 import java.util.Map;
@@ -16,7 +17,7 @@ public class DailyScrum {
         
     }
     
-    public GameState play(GameState state, ConsolePlayer player, List<ConsolePlayer> players, Map<ConsolePlayer, PlayerCards> playerCardsMap, BoardCards boardCards) {
+    public GameState play(GameState state, ParentPlayer player, List<ParentPlayer> players, Map<ParentPlayer, PlayerCards> playerCardsMap, BoardCards boardCards) {
 
         String playerName = state.currentPlayerName();
         Hand handObject = state.currentPlayerHand();
@@ -37,7 +38,7 @@ public class DailyScrum {
         buyableCards = boardCards.getPlayableCards(totalMoney);
 
         // Each other player draws a card
-        for (ConsolePlayer otherPlayer : players) {
+        for (ParentPlayer otherPlayer : players) {
             if (!otherPlayer.getName().equals(player.getName())) {
                 playerCardsMap.get(otherPlayer).drawToHand();
             }

@@ -1,4 +1,5 @@
 package edu.brandeis.cosi103a.groupb.engine.CardFunctions;
+import edu.brandeis.cosi103a.groupb.ParentPlayer;
 
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -18,7 +19,7 @@ public class MergeConflict {
 
     public MergeConflict() {}
 
-    public GameState play(GameState state, ConsolePlayer player, PlayerCards playerCards, BoardCards boardCards) {
+    public GameState play(GameState state, ParentPlayer player, PlayerCards playerCards, BoardCards boardCards) {
 
         String playerName = state.currentPlayerName();
         Hand handObject = state.currentPlayerHand();

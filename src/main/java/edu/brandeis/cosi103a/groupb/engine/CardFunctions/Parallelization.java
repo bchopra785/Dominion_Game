@@ -11,8 +11,12 @@ import edu.brandeis.cosi.atg.state.CardStacks;
 import edu.brandeis.cosi.atg.state.GameState;
 import edu.brandeis.cosi.atg.state.Hand;
 import edu.brandeis.cosi103a.groupb.ConsolePlayer;
+import edu.brandeis.cosi103a.groupb.ParentPlayer;
 import edu.brandeis.cosi103a.groupb.engine.BoardCards;
 import edu.brandeis.cosi103a.groupb.engine.PlayerCards;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.CodeReview;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.EvergreenTest;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.Refactor;
 
 public class Parallelization {
 
@@ -54,13 +58,71 @@ public class Parallelization {
 
             Card chosenCard = ((PlayCardDecision) decision).card();
 
-            // Play it once (since can't play twice without recursion)
+            // Play it once to move to played area
 
             playerCards.playCard(chosenCard);
 
             handObject = playerCards.getHand();
 
-            // Note: To play twice, would need to call the card's play method, but for now, just once
+            // Execute the effect twice for supported cards
+
+            GameState currentState = new GameState(
+
+                playerName,
+
+                handObject,
+
+                phase,
+
+                actionAmt,
+
+                totalMoney,
+
+                availableBuys,
+
+                buyableCards
+
+            );
+
+            for (int i = 0; i < 2; i++) {
+
+                if (chosenCard.type().equals(Card.Type.CODE_REVIEW)) {
+
+                    CodeReview cr = new CodeReview();
+
+                    currentState = cr.play(currentState, (ParentPlayer) player, playerCards, boardCards);
+
+                } else if (chosenCard.type().equals(Card.Type.REFACTOR)) {
+
+                    Refactor r = new Refactor();
+
+                    currentState = r.play(currentState, (ParentPlayer) player, playerCards, boardCards);
+
+                } else if (chosenCard.type().equals(Card.Type.EVERGREEN_TEST)) {
+
+                    // Can't execute effect twice because signature requires more parameters
+
+                    // For now, do nothing extra
+
+                }
+
+            }
+
+            // Update state from the final currentState
+
+            playerName = currentState.currentPlayerName();
+
+            handObject = currentState.currentPlayerHand();
+
+            phase = currentState.phase();
+
+            actionAmt = currentState.availableActions();
+
+            totalMoney = currentState.spendableMoney();
+
+            availableBuys = currentState.availableBuys();
+
+            buyableCards = currentState.buyableCards();
 
         }
 

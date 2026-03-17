@@ -74,6 +74,11 @@ public class Refactor {
         }
         ImmutableList<Decision> options = optionsBuilder.build();
 
+        // If there are no valid cards to gain, just return the state
+        if (options.isEmpty()) {
+            return newState;
+        }
+
         // Call makeDecision with the buy options
         Decision gainCardDecision = player.makeDecision(newState, ImmutableList.copyOf(options));
 

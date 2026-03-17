@@ -56,6 +56,11 @@ public class Ransomware {
 
                 PlayerCards otherCards = playerCardsMap.get(other);
 
+                // If the other player has a Monitoring card in hand, they avoid this attack
+                if (hasMonitoring(otherCards)) {
+                    continue;
+                }
+
                 ImmutableCollection<Card> unplayed = otherCards.getUnplayedCards();
 
                 // For simplicity, if they have 2 or more cards, discard 2, else gain bug
@@ -132,6 +137,15 @@ public class Ransomware {
 
         return newState;
 
+    }
+
+    private boolean hasMonitoring(PlayerCards playerCards) {
+        for (Card c : playerCards.getUnplayedCards()) {
+            if (c.type().name().equals("MONITORING")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void discardCard(PlayerCards playerCards, Card card) throws Exception {

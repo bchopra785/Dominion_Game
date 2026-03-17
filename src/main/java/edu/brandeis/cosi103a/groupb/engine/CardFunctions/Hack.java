@@ -36,7 +36,7 @@ public class Hack {
 
         buyableCards = boardCards.getPlayableCards(totalMoney);
 
-        // Each other player discards down to 3 cards in hand
+        // Each other player discards down to 3 cards in hand (unless they have Monitoring)
 
         for (ConsolePlayer other : players) {
 
@@ -44,9 +44,14 @@ public class Hack {
 
                 PlayerCards otherCards = playerCardsMap.get(other);
 
+                // If the other player has a Monitoring card in hand, they avoid this attack
+                if (hasMonitoring(otherCards)) {
+                    continue;
+                }
+
                 while (otherCards.getUnplayedCards().size() > 3) {
 
-                     ImmutableCollection<Card> unplayed = playerCards.getUnplayedCards();
+                     ImmutableCollection<Card> unplayed = otherCards.getUnplayedCards();
 
                     ImmutableList.Builder<Decision> optionsBuilder = ImmutableList.builder();
 
@@ -98,6 +103,15 @@ public class Hack {
 
         return newState;
 
+    }
+
+    private boolean hasMonitoring(PlayerCards playerCards) {
+        for (Card c : playerCards.getUnplayedCards()) {
+            if (c.type().name().equals("MONITORING")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void discardCard(PlayerCards playerCards, Card card) throws Exception {

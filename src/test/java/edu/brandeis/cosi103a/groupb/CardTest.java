@@ -1,6 +1,5 @@
 package edu.brandeis.cosi103a.groupb;
 
-import org.checkerframework.checker.units.qual.C;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -8,7 +7,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.google.common.collect.ImmutableList;
 
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -19,7 +17,6 @@ import edu.brandeis.cosi.atg.state.Hand;
 import edu.brandeis.cosi103a.groupb.engine.BoardCards;
 import edu.brandeis.cosi103a.groupb.engine.PlayerCards;
 import edu.brandeis.cosi103a.groupb.engine.CardFunctions.CodeReview;
-import edu.brandeis.cosi103a.groupb.engine.CardFunctions.EvergreenTest;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;

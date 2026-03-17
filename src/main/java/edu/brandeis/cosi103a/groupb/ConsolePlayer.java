@@ -1,7 +1,6 @@
 package edu.brandeis.cosi103a.groupb;
 
 import com.google.common.collect.ImmutableList;
-import edu.brandeis.cosi.atg.decisions.BuyDecision;
 import edu.brandeis.cosi.atg.decisions.Decision;
 import edu.brandeis.cosi.atg.event.Event;
 import edu.brandeis.cosi.atg.event.GameObserver;

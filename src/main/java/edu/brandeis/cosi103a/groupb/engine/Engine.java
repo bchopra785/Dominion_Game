@@ -53,6 +53,11 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
     private int spendableMoney;
     private int availableBuys;
     private CardStacks buyableCards;
+<<<<<<< HEAD
+=======
+    private boolean costReductionActive; // for DeploymentPipeline
+    private Optional<Event> latestEventReason;
+>>>>>>> 64c9e705b478aaddfa096cfc21a6b5ec5b418782
 
     public Engine(List<ParentPlayer> players) {
         

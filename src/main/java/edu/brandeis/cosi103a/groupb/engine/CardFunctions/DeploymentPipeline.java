@@ -1,4 +1,5 @@
 package edu.brandeis.cosi103a.groupb.engine.CardFunctions;
+import edu.brandeis.cosi103a.groupb.ParentPlayer;
 
 import edu.brandeis.cosi.atg.state.CardStacks;
 import edu.brandeis.cosi.atg.state.GameState;
@@ -11,7 +12,7 @@ public class DeploymentPipeline {
 
     public DeploymentPipeline() {}
 
-    public GameState play(GameState state, ConsolePlayer player, PlayerCards playerCards, BoardCards boardCards) {
+    public GameState play(GameState state, ParentPlayer player, PlayerCards playerCards, BoardCards boardCards) {
 
         String playerName = state.currentPlayerName();
         Hand handObject = state.currentPlayerHand();
@@ -19,11 +20,9 @@ public class DeploymentPipeline {
         int actionAmt = state.availableActions();
         int totalMoney = state.spendableMoney() + 1; // +$1
         int availableBuys = state.availableBuys() + 1; // +1 Buy
-        CardStacks buyableCards = state.buyableCards();
+        CardStacks buyableCards = boardCards.getPlayableCards(totalMoney + 1); // Cost reduction: cards cost $1 less
 
-        buyableCards = boardCards.getPlayableCards(totalMoney);
-
-        // Note: Cost reduction not implemented without Engine changes
+        // Cost reduction is handled by including cards costing $1 more in buyableCards
 
         GameState newState = new GameState(
 

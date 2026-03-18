@@ -37,12 +37,16 @@ public class EvergreenTest {
         totalMoney = playerCards.getCostInHand();
         buyableCards = boardCards.getPlayableCards(playerCards.getCostInHand()); //buyable cards
 
-        // Give all other players a BUG card
+        // Give all other players a BUG card (unless they have Monitoring)
         for (ParentPlayer otherPlayer : players) {
             if (!otherPlayer.getName().equals(player.getName())) {
+                PlayerCards otherCards = playerCardsMap.get(otherPlayer);
+                if (hasMonitoring(otherCards)) {
+                    continue;
+                }
                 Card bugCard = boardCards.drawDeckCard(Card.Type.BUG); //draw a bug card from the board
                 if (bugCard != null) {
-                    playerCardsMap.get(otherPlayer).gainCard(bugCard);
+                    otherCards.gainCard(bugCard);
                 }
             }
         }
@@ -59,4 +63,14 @@ public class EvergreenTest {
 
         return newState;
     }
+
+    private boolean hasMonitoring(PlayerCards playerCards) {
+        for (Card c : playerCards.getUnplayedCards()) {
+            if (c.type().name().equals("MONITORING")) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
+

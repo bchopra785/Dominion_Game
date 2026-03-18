@@ -24,8 +24,9 @@ public class CodeReview {
         int availableBuys = state.availableBuys();
         CardStacks buyableCards = state.buyableCards();
         
-        //draw a card and give +2 actions
-        playerCards.drawToHand();
+            //draw two cards and give +2 actions
+            playerCards.drawToHand();
+            playerCards.drawToHand();
         handObject = playerCards.getHand();    //create new record class hand
         actionAmt += 2;
         totalMoney = playerCards.getCostInHand();

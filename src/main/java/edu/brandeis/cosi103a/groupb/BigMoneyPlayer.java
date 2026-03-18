@@ -26,20 +26,24 @@ public class BigMoneyPlayer extends ParentPlayer {
 
     private static final AtomicInteger COUNTER = new AtomicInteger(1);
     private PrintStream out;
+    private final RecordingGameObserver observer;
 
     public BigMoneyPlayer() {
         super("BigMoneyPlayer-" + COUNTER.getAndIncrement());
         this.out = System.out;
+        this.observer = new RecordingGameObserver();
     }
 
     public BigMoneyPlayer(String name) {
         super(name);
         this.out = System.out;
+        this.observer = new RecordingGameObserver();
     }
 
     public BigMoneyPlayer(String name, PrintStream out) {
         super(name);
         this.out = out;
+        this.observer = new RecordingGameObserver();
     }
 
     @Override
@@ -150,13 +154,15 @@ public class BigMoneyPlayer extends ParentPlayer {
 
     @Override
     public Optional<GameObserver> getObserver() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getObserver'");
+        return Optional.of(observer);
     }
 
     @Override
-    public Decision makeDecision(GameState arg0, ImmutableList<Decision> arg1, Optional<Event> arg2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'makeDecision'");
+    public Decision makeDecision(GameState state, ImmutableList<Decision> options, Optional<Event> reason) {
+        return makeDecision(state, options);
+    }
+
+    public int getObservedEventCount() {
+        return observer.getEventsSnapshot().size();
     }
 }

@@ -3,6 +3,10 @@ package edu.brandeis.cosi103a.groupb.engine;
 import edu.brandeis.cosi.atg.cards.*;
 import edu.brandeis.cosi.atg.decisions.*;
 import edu.brandeis.cosi.atg.engine.*;
+import edu.brandeis.cosi.atg.event.EndTurnEvent;
+import edu.brandeis.cosi.atg.event.Event;
+import edu.brandeis.cosi.atg.event.GainCardEvent;
+import edu.brandeis.cosi.atg.event.PlayCardEvent;
 import edu.brandeis.cosi.atg.state.*;
 import edu.brandeis.cosi103a.groupb.ParentPlayer;
 import edu.brandeis.cosi103a.groupb.engine.CardFunctions.CodeReview;
@@ -13,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -34,6 +39,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
     private int spendableMoney;
     private int availableBuys;
     private CardStacks buyableCards;
+    private Optional<Event> latestEventReason;
 
     public Engine(List<ParentPlayer> players) {
         
@@ -49,6 +55,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         //initialize board cards and player cards
         this.boardCards = new BoardCards(players.size());
         this.playerCardsMap = new HashMap<>();
+        this.latestEventReason = Optional.empty();
 
         for (ParentPlayer player : players) {
             PlayerCards playerCards = new PlayerCards(boardCards);
@@ -126,6 +133,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
                 //CLEANUP PHASE
                 this.phase = GameState.TurnPhase.CLEANUP;
                 cleanupPhase(player);
+                publishEvent(new EndTurnEvent());
 
             }   
 
@@ -161,6 +169,14 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         return getState();
     }
 
+    private void publishEvent(Event event) {
+        latestEventReason = Optional.ofNullable(event);
+        GameState snapshot = getState();
+        for (ParentPlayer player : players) {
+            player.getObserver().ifPresent(observer -> observer.notifyEvent(snapshot, event));
+        }
+    }
+
     private Decision moneyDecision(GameState oldState) {
 
         ParentPlayer currentPlayer = getPlayerByName(this.playerName);
@@ -180,7 +196,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         ImmutableList<Decision> options = optionsBuilder.build();
 
         while(true) {
-            Decision decision = currentPlayer.makeDecision(getState(), options);
+            Decision decision = currentPlayer.makeDecision(getState(), options, latestEventReason);
             if (checkDecision(decision, options)) {
                 return decision;
             } else {
@@ -197,6 +213,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         if (decision instanceof PlayCardDecision) {
             Card playedCard = ((PlayCardDecision) decision).card();
             playerCardsMap.get(currentPlayer).playCard(playedCard);
+            publishEvent(new PlayCardEvent(playedCard, currentPlayer.getName()));
 
             this.spendableMoney += playedCard.value();
             this.handObject = playerCardsMap.get(currentPlayer).getHand();
@@ -223,7 +240,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
         //continue prompting until valid decision is made
         while(true) {
-            Decision decision = currentPlayer.makeDecision(getState(), options);
+            Decision decision = currentPlayer.makeDecision(getState(), options, latestEventReason);
             if (checkDecision(decision, options)) {
                 return decision;
             } else {
@@ -245,6 +262,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
             // Gain the card
             Card gainedCard = boardCards.drawDeckCard(cardTypeToBuy);
             playerCardsMap.get(currentPlayer).gainCard(gainedCard);
+            publishEvent(new GainCardEvent(cardTypeToBuy, currentPlayer.getName()));
 
             this.spendableMoney -= gainedCard.cost();
             this.availableBuys -= 1;
@@ -281,7 +299,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
         //continue prompting until valid decision is made
         while(true) {
-            Decision decision = currentPlayer.makeDecision(getState(), options);
+            Decision decision = currentPlayer.makeDecision(getState(), options, latestEventReason);
             if (checkDecision(decision, options)) {
                 return decision;
             } else {
@@ -301,6 +319,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         if (decision instanceof PlayCardDecision) {
             playedCard = ((PlayCardDecision) decision).card();
             playerCardsMap.get(currentPlayer).playCard(playedCard); //move card from hand to play area
+            publishEvent(new PlayCardEvent(playedCard, currentPlayer.getName()));
         }
         handObject = playerCardsMap.get(currentPlayer).getHand(); //create new record class hand after playing card
 

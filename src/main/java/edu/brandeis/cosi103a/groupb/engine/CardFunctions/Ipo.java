@@ -1,4 +1,5 @@
 package edu.brandeis.cosi103a.groupb.engine.CardFunctions;
+import edu.brandeis.cosi103a.groupb.ParentPlayer;
 
 import edu.brandeis.cosi.atg.state.CardStacks;
 import edu.brandeis.cosi.atg.state.GameState;
@@ -13,7 +14,7 @@ public class Ipo {
         
     }
     
-    public GameState play(GameState state, ConsolePlayer player, PlayerCards playerCards, BoardCards boardCards) {
+    public GameState play(GameState state, ParentPlayer player, PlayerCards playerCards, BoardCards boardCards) {
 
         String playerName = state.currentPlayerName();
         Hand handObject = state.currentPlayerHand();

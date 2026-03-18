@@ -9,9 +9,23 @@ import edu.brandeis.cosi.atg.event.GainCardEvent;
 import edu.brandeis.cosi.atg.event.PlayCardEvent;
 import edu.brandeis.cosi.atg.state.*;
 import edu.brandeis.cosi103a.groupb.ParentPlayer;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.Backlog;
 import edu.brandeis.cosi103a.groupb.engine.CardFunctions.CodeReview;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.DailyScrum;
 import edu.brandeis.cosi103a.groupb.engine.CardFunctions.EvergreenTest;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.Hack;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.Ipo;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.MergeConflict;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.Monitoring;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.Parallelization;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.Ransomware;
 import edu.brandeis.cosi103a.groupb.engine.CardFunctions.Refactor;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.SprintPlanning;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.TechDebt;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.UnitTest;
+import edu.brandeis.cosi103a.groupb.ConsolePlayer;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.DeploymentPipeline;
+import java.util.UUID;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,6 +53,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
     private int spendableMoney;
     private int availableBuys;
     private CardStacks buyableCards;
+    private boolean costReductionActive; // for DeploymentPipeline
     private Optional<Event> latestEventReason;
 
     public Engine(List<ParentPlayer> players) {
@@ -51,6 +66,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
             throw new IllegalArgumentException("Engine supports at most 4 players");
         }
         this.players = players;
+        this.costReductionActive = false;
 
         //initialize board cards and player cards
         this.boardCards = new BoardCards(players.size());
@@ -95,6 +111,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
             //loop through each player
             for (ParentPlayer player : players) {
                 this.playerName = player.getName();
+                this.costReductionActive = false; // reset cost reduction each turn
                 this.handObject = playerCardsMap.get(player).getHand();
                 this.availableActions = 1;
                 this.spendableMoney = 0;
@@ -264,7 +281,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
             playerCardsMap.get(currentPlayer).gainCard(gainedCard);
             publishEvent(new GainCardEvent(cardTypeToBuy, currentPlayer.getName()));
 
-            this.spendableMoney -= gainedCard.cost();
+            this.spendableMoney -= gainedCard.cost() - (costReductionActive ? 1 : 0);
             this.availableBuys -= 1;
             this.buyableCards = boardCards.getPlayableCards(this.spendableMoney);
             
@@ -327,13 +344,50 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         if (playedCard != null) {
             if (getCardType(playedCard).equals(Card.Type.CODE_REVIEW)) {
                 CodeReview codeReview = new CodeReview();
-                newState = codeReview.play(getState(), currentPlayer, playerCardsMap.get(currentPlayer),boardCards);
+                newState = codeReview.play(getState(), currentPlayer, playerCardsMap.get(currentPlayer), boardCards);
             } else if (getCardType(playedCard).equals(Card.Type.EVERGREEN_TEST)) {
                 EvergreenTest evergreenTest = new EvergreenTest();
                 newState = evergreenTest.play(getState(), currentPlayer, players, playerCardsMap, boardCards);
             } else if (getCardType(playedCard).equals(Card.Type.REFACTOR)) {
                 Refactor refactor = new Refactor();
                 newState = refactor.play(getState(), currentPlayer, playerCardsMap.get(currentPlayer), boardCards);
+            } else if (getCardType(playedCard).equals(Card.Type.BACKLOG)) {
+                Backlog backlog = new Backlog();
+                newState = backlog.play(getState(), currentPlayer, playerCardsMap.get(currentPlayer), boardCards);
+            } else if (getCardType(playedCard).equals(Card.Type.MONITORING)) {
+                Monitoring monitoring = new Monitoring();
+                newState = monitoring.play(getState(), currentPlayer, playerCardsMap.get(currentPlayer), boardCards);
+            } else if (getCardType(playedCard).equals(Card.Type.IPO)) {
+                Ipo ipo = new Ipo();
+                newState = ipo.play(getState(), currentPlayer, playerCardsMap.get(currentPlayer), boardCards);
+            } else if (getCardType(playedCard).equals(Card.Type.MERGE_CONFLICT)) {
+                MergeConflict mergeConflict = new MergeConflict();
+                newState = mergeConflict.play(getState(), currentPlayer, playerCardsMap.get(currentPlayer), boardCards);
+            } else if (getCardType(playedCard).equals(Card.Type.SPRINT_PLANNING)) {
+                SprintPlanning sprintPlanning = new SprintPlanning();
+                newState = sprintPlanning.play(getState(), currentPlayer, playerCardsMap.get(currentPlayer), boardCards);
+            } else if (getCardType(playedCard).equals(Card.Type.TECH_DEBT)) {
+                TechDebt techDebt = new TechDebt();
+                newState = techDebt.play(getState(), currentPlayer, playerCardsMap.get(currentPlayer), boardCards);
+            } else if (getCardType(playedCard).equals(Card.Type.UNIT_TEST)) {
+                UnitTest unitTest = new UnitTest();
+                newState = unitTest.play(getState(), currentPlayer, playerCardsMap.get(currentPlayer), boardCards);
+            } else if (getCardType(playedCard).equals(Card.Type.HACK)) {
+                Hack hack = new Hack();
+                newState = hack.play(getState(), currentPlayer, players, playerCardsMap, boardCards);
+            } else if (getCardType(playedCard).equals(Card.Type.RANSOMWARE)) {
+                Ransomware ransomware = new Ransomware();
+                newState = ransomware.play(getState(), currentPlayer, players, playerCardsMap, boardCards);
+            } else if (getCardType(playedCard).equals(Card.Type.DAILY_SCRUM)) {
+                DailyScrum dailyScrum = new DailyScrum();
+                newState = dailyScrum.play(getState(), currentPlayer, players, playerCardsMap, boardCards);
+            } else if (getCardType(playedCard).equals(Card.Type.PARALLELIZATION)) {
+                Parallelization parallelization = new Parallelization();
+                newState = parallelization.play(getState(), currentPlayer, players, playerCardsMap, boardCards);
+            } else if (getCardType(playedCard).equals(Card.Type.DEPLOYMENT_PIPELINE)) {
+                DeploymentPipeline deploymentPipeline = new DeploymentPipeline();
+                newState = deploymentPipeline.play(getState(), currentPlayer, playerCardsMap.get(currentPlayer), boardCards);
+                this.costReductionActive = true; // activate cost reduction for this turn
             }
         }
 

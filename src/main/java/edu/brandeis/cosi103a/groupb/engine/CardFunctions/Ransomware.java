@@ -1,4 +1,5 @@
 package edu.brandeis.cosi103a.groupb.engine.CardFunctions;
+import edu.brandeis.cosi103a.groupb.ParentPlayer;
 
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -22,7 +23,7 @@ public class Ransomware {
 
     public Ransomware() {}
 
-    public GameState play(GameState state, ConsolePlayer player, List<ConsolePlayer> players, Map<ConsolePlayer, PlayerCards> playerCardsMap, BoardCards boardCards) {
+    public GameState play(GameState state, ParentPlayer player, List<ParentPlayer> players, Map<ParentPlayer, PlayerCards> playerCardsMap, BoardCards boardCards) {
 
         String playerName = state.currentPlayerName();
         Hand handObject = state.currentPlayerHand();
@@ -50,11 +51,16 @@ public class Ransomware {
 
         // Each other player chooses one: discard 2 cards; or gain a Bug
 
-        for (ConsolePlayer other : players) {
+        for (ParentPlayer other : players) {
 
             if (!other.getName().equals(player.getName())) {
 
                 PlayerCards otherCards = playerCardsMap.get(other);
+
+                // If the other player has a Monitoring card in hand, they avoid this attack
+                if (hasMonitoring(otherCards)) {
+                    continue;
+                }
 
                 ImmutableCollection<Card> unplayed = otherCards.getUnplayedCards();
 
@@ -132,6 +138,15 @@ public class Ransomware {
 
         return newState;
 
+    }
+
+    private boolean hasMonitoring(PlayerCards playerCards) {
+        for (Card c : playerCards.getUnplayedCards()) {
+            if (c.type().name().equals("MONITORING")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void discardCard(PlayerCards playerCards, Card card) throws Exception {

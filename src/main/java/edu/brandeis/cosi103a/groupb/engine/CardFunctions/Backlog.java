@@ -1,4 +1,5 @@
 package edu.brandeis.cosi103a.groupb.engine.CardFunctions;
+import edu.brandeis.cosi103a.groupb.ParentPlayer;
 
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -17,11 +18,12 @@ import edu.brandeis.cosi103a.groupb.engine.PlayerCards;
 import java.lang.reflect.Field;
 import java.util.List;
 
+/** Check the changing to public, try to work around that!!! */
 public class Backlog {
 
     public Backlog() {}
 
-    public GameState play(GameState state, ConsolePlayer player, PlayerCards playerCards, BoardCards boardCards) {
+    public GameState play(GameState state, ParentPlayer player, PlayerCards playerCards, BoardCards boardCards) {
 
         String playerName = state.currentPlayerName();
         Hand handObject = state.currentPlayerHand();
@@ -38,7 +40,7 @@ public class Backlog {
         while (true) {
 
              ImmutableCollection<Card> unplayed = playerCards.getUnplayedCards();
-             
+
             ImmutableList.Builder<Decision> optionsBuilder = ImmutableList.builder();
 
             for (Card card : unplayed) {

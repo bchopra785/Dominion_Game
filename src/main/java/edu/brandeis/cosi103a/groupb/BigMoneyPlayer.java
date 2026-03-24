@@ -6,7 +6,6 @@ import edu.brandeis.cosi.atg.decisions.Decision;
 import edu.brandeis.cosi.atg.decisions.GainCardDecision;
 import edu.brandeis.cosi.atg.decisions.PlayCardDecision;
 import edu.brandeis.cosi.atg.event.Event;
-import edu.brandeis.cosi.atg.event.GameObserver;
 import edu.brandeis.cosi.atg.decisions.EndPhaseDecision;
 import edu.brandeis.cosi.atg.state.GameState;
 import edu.brandeis.cosi.atg.cards.Card;
@@ -26,24 +25,20 @@ public class BigMoneyPlayer extends ParentPlayer {
 
     private static final AtomicInteger COUNTER = new AtomicInteger(1);
     private PrintStream out;
-    private final RecordingGameObserver observer;
 
     public BigMoneyPlayer() {
         super("BigMoneyPlayer-" + COUNTER.getAndIncrement());
         this.out = System.out;
-        this.observer = new RecordingGameObserver();
     }
 
     public BigMoneyPlayer(String name) {
         super(name);
         this.out = System.out;
-        this.observer = new RecordingGameObserver();
     }
 
     public BigMoneyPlayer(String name, PrintStream out) {
         super(name);
         this.out = out;
-        this.observer = new RecordingGameObserver();
     }
 
     @Override
@@ -152,17 +147,12 @@ public class BigMoneyPlayer extends ParentPlayer {
         }
     }
 
-    @Override
-    public Optional<GameObserver> getObserver() {
-        return Optional.of(observer);
-    }
+
 
     @Override
     public Decision makeDecision(GameState state, ImmutableList<Decision> options, Optional<Event> reason) {
         return makeDecision(state, options);
     }
 
-    public int getObservedEventCount() {
-        return observer.getEventsSnapshot().size();
-    }
+
 }

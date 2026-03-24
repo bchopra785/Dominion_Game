@@ -233,11 +233,6 @@ public class StrategyPlayer extends ParentPlayer {
     }
 
     @Override
-    public Optional<GameObserver> getObserver() {
-        return Optional.of(observer);
-    }
-
-    @Override
     public Decision makeDecision(GameState state, ImmutableList<Decision> options, Optional<Event> reason) {
         return makeDecision(state, options);
     }

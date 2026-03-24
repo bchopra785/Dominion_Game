@@ -40,8 +40,10 @@ public class PlayerServer {
     }
 
 
+
+    
     @PostMapping("/log-event")
-    public ResponseEntity<Void> logEvent(@RequestBody LogEventRequest request) {
+    public ResponseEntity<Void> logEvent(@RequestBody(required = false) LogEventRequest request) {
         // Validate the request
         if (request == null) {
             return ResponseEntity.badRequest().build(); // 400

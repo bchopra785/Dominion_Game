@@ -1,5 +1,7 @@
 package edu.brandeis.cosi103a.groupb;
 
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.util.Optional;
 
 import org.springframework.http.HttpEntity;
@@ -14,6 +16,10 @@ import edu.brandeis.cosi.atg.event.GameObserver;
 import edu.brandeis.cosi.atg.state.GameState;
 import edu.brandeis.cosi103a.groupb.network.DecisionRequest;
 import edu.brandeis.cosi103a.groupb.network.DecisionResponse;
+import edu.brandeis.cosi103a.groupb.network.LogEventRequest;
+
+import java.net.URI;
+
 
 public class PlayerClient extends ParentPlayer {
     
@@ -23,23 +29,42 @@ public class PlayerClient extends ParentPlayer {
 
     public PlayerClient(String name, String Uuid, String serverUrl) {
         super(name);
-        this.serverUrl = serverUrl;
-        this.Uuid = Uuid;
-        this.restTemplate = new RestTemplate();
+
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Name must not be null or empty");
+        }
+        if (Uuid == null || Uuid.isBlank()) {
+            throw new IllegalArgumentException("UUID must not be null or empty");
+        }
+        if (serverUrl == null || serverUrl.isBlank()) {
+            throw new IllegalArgumentException("Server URL must not be null or empty");
+        }
+        try {
+            new URI(serverUrl).toURL().toURI();
+        } catch (MalformedURLException | URISyntaxException e) {
+            throw new IllegalArgumentException("Server URL is not a valid URL: " + serverUrl, e);
+        }
+            this.serverUrl = serverUrl;
+            this.Uuid = Uuid;
+            this.restTemplate = new RestTemplate();
+        }
+
+    // This is method called by engine, and it gets decision by POST request to server using method below
+    @Override
+    public Decision makeDecision(GameState state, ImmutableList<Decision> options) {
+        
+        return this.makeDecision(state, options, Optional.empty());
     }
 
-    //TODO:defensive programming: 
-    //          check that serverUrl is valid URL, and that name and Uuid are not null/empty. 
-    //          Throw IllegalArgumentException if any checks fail.
-
+    // This is method that sends post request to server and gets decision, and it is called by the above method
     @Override
     public Decision makeDecision(GameState state, ImmutableList<Decision> options, Optional<Event> reason) {
         
-        //set headers for POST request
+        // Set headers for POST request
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         
-        //create the object to send to the server
+        // Create the object to send to the server
         DecisionRequest request = new DecisionRequest();
         request.setState(state);
         request.setOptions(options);
@@ -48,7 +73,7 @@ public class PlayerClient extends ParentPlayer {
 
         HttpEntity<DecisionRequest> entity = new HttpEntity<>(request, headers);
 
-        //send POST request to server and get response
+        // Send POST request to server and get response
         DecisionResponse responseBody = restTemplate.postForObject(
             serverUrl + "/decide", 
             entity, 
@@ -58,17 +83,21 @@ public class PlayerClient extends ParentPlayer {
         return responseBody.getDecision();
     }
 
-    @Override
-    public Optional<GameObserver> getObserver() {
-        // Remote players don't provide observers
-        return Optional.empty();
-    }
+    // This method is called by engine to log events, and it sends POST request to server using method below
+    public void logEvent(GameState state, Event event) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
 
-    @Override
-    public Decision makeDecision(GameState state, ImmutableList<Decision> options) {
-        //this feels like a terrible idea but I don't know a way around at present
-        return this.makeDecision(state, options, Optional.empty());
-    }
+        LogEventRequest request = new LogEventRequest();
+        request.setState(state);
+        request.setEvent(event);
+        request.setPlayerUuid(Uuid);
+
+        HttpEntity<LogEventRequest> entity = new HttpEntity<>(request, headers);
+        restTemplate.postForObject(serverUrl + "/log-event", entity, Void.class);
+}
+
+
 }
 
 // The "player client" will implement the Player interface from the ATG API, and be used directly

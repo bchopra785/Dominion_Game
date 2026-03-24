@@ -1,11 +1,14 @@
 package edu.brandeis.cosi103a.groupb;
 
+import java.util.Optional;
+
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import edu.brandeis.cosi.atg.cards.Card;
 import edu.brandeis.cosi.atg.decisions.Decision;
+import edu.brandeis.cosi.atg.event.GameObserver;
 import edu.brandeis.cosi.atg.state.CardStacks;
 import edu.brandeis.cosi.atg.state.GameState;
 import edu.brandeis.cosi.atg.state.Hand;
@@ -24,6 +27,7 @@ public abstract class ParentPlayer implements edu.brandeis.cosi.atg.player.Playe
     private final String name;          // immutable player name
     private int points;                 // accumulated victory points
     private PlayerCards playerCards;    // deck/hand manager (assigned by Engine)
+    private final RecordingGameObserver observer;      // observer for game events
 
     /**
      * Create a player with the given name.
@@ -31,6 +35,7 @@ public abstract class ParentPlayer implements edu.brandeis.cosi.atg.player.Playe
     public ParentPlayer(String name) {
         this.name = name;
         this.points = 0;
+        this.observer = new RecordingGameObserver();
     }
 
     /**
@@ -55,6 +60,14 @@ public abstract class ParentPlayer implements edu.brandeis.cosi.atg.player.Playe
 
     public PlayerCards getPlayerCards() {
         return playerCards;
+    }
+
+    public Optional<GameObserver> getObserver() {
+        return Optional.of(observer);
+    }
+
+    public int getObservedEventCount() {
+        return observer.getEventsSnapshot().size();
     }
 
     /**

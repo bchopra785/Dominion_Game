@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.google.common.collect.ImmutableList;
+
 import edu.brandeis.cosi.atg.decisions.Decision;
 import edu.brandeis.cosi.atg.event.Event;
 import edu.brandeis.cosi.atg.state.GameState;
@@ -28,10 +30,11 @@ public class PlayerServer {
         Event reason = request.getReason();
         String player_uuid = request.getplayer_uuid();
 
-        //make decision and return ResponseEntity<DecisionResponse>
-        //TODO: change to actual logic
-        Decision chosenDecision = options.get(0);
-        DecisionResponse responseBody = new DecisionResponse(chosenDecision, "Chose the first option as a placeholder");
+        //make decision using BigMoneyPlayerand return ResponseEntity<DecisionResponse>
+        BigMoneyPlayer player = new BigMoneyPlayer();
+        ImmutableList<Decision> immutableOptions = ImmutableList.copyOf(options);
+        Decision chosenDecision = player.makeDecision(state, immutableOptions);
+        DecisionResponse responseBody = new DecisionResponse(chosenDecision, "Using BigMoneyPlayer strategy");
         return ResponseEntity.ok(responseBody);
         
     }

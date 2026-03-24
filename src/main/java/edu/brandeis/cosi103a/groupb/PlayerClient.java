@@ -16,6 +16,8 @@ import edu.brandeis.cosi.atg.event.GameObserver;
 import edu.brandeis.cosi.atg.state.GameState;
 import edu.brandeis.cosi103a.groupb.network.DecisionRequest;
 import edu.brandeis.cosi103a.groupb.network.DecisionResponse;
+import edu.brandeis.cosi103a.groupb.network.LogEventRequest;
+
 import java.net.URI;
 
 
@@ -81,11 +83,19 @@ public class PlayerClient extends ParentPlayer {
         return responseBody.getDecision();
     }
 
-    @Override
-    public Optional<GameObserver> getObserver() {
-        // Remote players don't provide observers
-        return Optional.empty();
-    }
+    // This method is called by engine to log events, and it sends POST request to server using method below
+    public void logEvent(GameState state, Event event) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        LogEventRequest request = new LogEventRequest();
+        request.setState(state);
+        request.setEvent(event);
+        request.setPlayerUuid(Uuid);
+
+        HttpEntity<LogEventRequest> entity = new HttpEntity<>(request, headers);
+        restTemplate.postForObject(serverUrl + "/log-event", entity, Void.class);
+}
 
 
 }

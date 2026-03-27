@@ -13,6 +13,7 @@ import edu.brandeis.cosi.atg.state.Hand;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class StrategyPlayerActionTest {
 
@@ -149,5 +150,39 @@ public class StrategyPlayerActionTest {
 
         Decision chosen = p.chooseMoneyDecision(makeState(GameState.TurnPhase.MONEY, 0), options);
         assertSame(codeReview, chosen);
+    }
+
+    @Test
+    public void actionDecisionOnlyEndPhases() {
+        StrategyPlayer p = new StrategyPlayer("Mika");
+        Decision endAction = new EndPhaseDecision(GameState.TurnPhase.ACTION);
+        Decision endBuy = new EndPhaseDecision(GameState.TurnPhase.BUY);
+        ImmutableList<Decision> options = ImmutableList.of(endAction, endBuy);
+        Decision chosen = p.chooseActionDecision(makeState(GameState.TurnPhase.ACTION, 0), options);
+        assertSame(endAction, chosen);
+    }
+
+    @Test
+    public void actionDecisionEmptyOptions() {
+        StrategyPlayer p = new StrategyPlayer("Mika");
+        ImmutableList<Decision> options = ImmutableList.of();
+        assertThrows(IndexOutOfBoundsException.class, () -> p.chooseActionDecision(makeState(GameState.TurnPhase.ACTION, 0), options));
+    }
+
+    @Test
+    public void moneyDecisionOnlyEndPhases() {
+        StrategyPlayer p = new StrategyPlayer("Mika");
+        Decision endMoney = new EndPhaseDecision(GameState.TurnPhase.MONEY);
+        Decision endAction = new EndPhaseDecision(GameState.TurnPhase.ACTION);
+        ImmutableList<Decision> options = ImmutableList.of(endMoney, endAction);
+        Decision chosen = p.chooseMoneyDecision(makeState(GameState.TurnPhase.MONEY, 0), options);
+        assertSame(endMoney, chosen);
+    }
+
+    @Test
+    public void moneyDecisionEmptyOptions() {
+        StrategyPlayer p = new StrategyPlayer("Mika");
+        ImmutableList<Decision> options = ImmutableList.of();
+        assertThrows(IndexOutOfBoundsException.class, () -> p.chooseMoneyDecision(makeState(GameState.TurnPhase.MONEY, 0), options));
     }
 }

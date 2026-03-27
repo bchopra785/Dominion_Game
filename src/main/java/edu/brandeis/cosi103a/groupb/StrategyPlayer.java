@@ -137,7 +137,7 @@ public class StrategyPlayer extends ParentPlayer {
     }
 
     /**
-     * Person B: BUY-phase logic. Prefer card draw (DAILY_SCRUM > IPO > any draw), then best money (DOGECOIN > ETHEREUM > BITCOIN), then EndPhaseDecision. Tie-break: first matching BuyDecision in options.
+    * Person B: BUY-phase logic. Prefer card draw (DAILY_SCRUM > IPO), then best money (DOGECOIN > ETHEREUM > BITCOIN), then EndPhaseDecision. Tie-break: first matching BuyDecision in options.
      */
     public Decision chooseBuyDecision(GameState state, ImmutableList<Decision> options) {
         // 1. Find all BuyDecisions and their card types
@@ -196,16 +196,12 @@ public class StrategyPlayer extends ParentPlayer {
 
     // Helper: extract Card.Type from Decision if possible
     private Card.Type getTypeFromDecision(Decision d) {
-        try {
-            if (d instanceof PlayCardDecision) {
-                return ((PlayCardDecision) d).card().type();
-            }
-            if (d.getClass().getSimpleName().equals("BuyDecision")) {
-                java.lang.reflect.Method m = d.getClass().getMethod("cardType");
-                return (Card.Type) m.invoke(d);
-            }
-        } catch (Exception e) {
-            return null;
+        if (d instanceof PlayCardDecision) {
+            return ((PlayCardDecision) d).card().type();
+        }
+        // Prefer direct type check for BuyDecision if available
+        if (d instanceof edu.brandeis.cosi.atg.decisions.BuyDecision) {
+            return ((edu.brandeis.cosi.atg.decisions.BuyDecision) d).cardType();
         }
         return null;
     }

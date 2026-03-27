@@ -66,4 +66,37 @@ public class StrategyPlayerBuyTest {
         ImmutableList<Decision> options = ImmutableList.of(doge1, doge2);
         assertEquals(doge1, player.chooseBuyDecision(null, options));
     }
+
+    @Test
+    public void testBuyDecisionOnlyEndPhaseNotBuy() {
+        StrategyPlayer player = new StrategyPlayer();
+        Decision endAction = new EndPhaseDecision(GameState.TurnPhase.ACTION);
+        ImmutableList<Decision> options = ImmutableList.of(endAction);
+        assertEquals(endAction, player.chooseBuyDecision(null, options));
+    }
+
+    @Test
+    public void testBuyDecisionEmptyOptions() {
+        StrategyPlayer player = new StrategyPlayer();
+        ImmutableList<Decision> options = ImmutableList.of();
+        assertThrows(IndexOutOfBoundsException.class, () -> player.chooseBuyDecision(null, options));
+    }
+
+    @Test
+    public void testBuyDecisionMultipleEndPhases() {
+        StrategyPlayer player = new StrategyPlayer();
+        Decision endBuy = new EndPhaseDecision(GameState.TurnPhase.BUY);
+        Decision endAction = new EndPhaseDecision(GameState.TurnPhase.ACTION);
+        ImmutableList<Decision> options = ImmutableList.of(endAction, endBuy);
+        assertEquals(endBuy, player.chooseBuyDecision(null, options));
+    }
+
+    @Test
+    public void testBuyDecisionAllBuyDecisionsNoPreferredType() {
+        StrategyPlayer player = new StrategyPlayer();
+        Decision method = buy(Card.Type.METHOD);
+        Decision module = buy(Card.Type.MODULE);
+        ImmutableList<Decision> options = ImmutableList.of(method, module);
+        assertEquals(method, player.chooseBuyDecision(null, options));
+    }
 }

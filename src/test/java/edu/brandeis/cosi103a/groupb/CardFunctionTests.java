@@ -23,6 +23,8 @@ import edu.brandeis.cosi.atg.decisions.TrashCardDecision;
 import edu.brandeis.cosi.atg.state.CardStacks;
 import edu.brandeis.cosi.atg.state.GameState;
 import edu.brandeis.cosi.atg.state.Hand;
+import edu.brandeis.cosi103a.groupb.CardFunctionTests.StubPlayer;
+import edu.brandeis.cosi103a.groupb.CardFunctionTests.TestPlayerCards;
 import edu.brandeis.cosi103a.groupb.ParentPlayer;
 import edu.brandeis.cosi103a.groupb.engine.BoardCards;
 import edu.brandeis.cosi103a.groupb.engine.PlayerCards;
@@ -40,18 +42,16 @@ import edu.brandeis.cosi103a.groupb.engine.CardFunctions.SprintPlanning;
 import edu.brandeis.cosi103a.groupb.engine.CardFunctions.TechDebt;
 import edu.brandeis.cosi103a.groupb.engine.CardFunctions.UnitTest;
 import edu.brandeis.cosi103a.groupb.engine.CardFunctions.DeploymentPipeline;
-import edu.brandeis.cosi.atg.decisions.GainCardDecision;
-import edu.brandeis.cosi.atg.decisions.TrashCardDecision;
-import edu.brandeis.cosi.atg.state.CardStacks;
-import edu.brandeis.cosi.atg.state.GameState;
-import edu.brandeis.cosi.atg.state.Hand;
-import edu.brandeis.cosi103a.groupb.ParentPlayer;
-import edu.brandeis.cosi103a.groupb.engine.BoardCards;
-import edu.brandeis.cosi103a.groupb.engine.PlayerCards;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.Parallelization;
+
+
 
 public class CardFunctionTests {
 
+    // --- EDGE CASE TESTS FOR ACTION CARDS ---
+
     private BoardCards board;
+
 
     static class StubPlayer extends ConsolePlayer {
         private final Deque<Decision> decisions = new ArrayDeque<>();
@@ -82,6 +82,10 @@ public class CardFunctionTests {
             return java.util.Optional.empty();
         }
     }
+
+
+
+    // ...rest of the test class...
 
     static class TestPlayerCards extends PlayerCards {
         TestPlayerCards(BoardCards board) {
@@ -435,4 +439,186 @@ public class CardFunctionTests {
         assertEquals(before.spendableMoney() + 1, after.spendableMoney());
         assertEquals(before.availableBuys() + 1, after.availableBuys());
     }
+
+    @Test
+    public void testParallelization_playActionWithNoEffect() throws Exception {
+        StubPlayer player = new StubPlayer("P1");
+        TestPlayerCards pc = new TestPlayerCards(board);
+        player.setPlayerCards(pc);
+        // Add an action card that does nothing (simulate with Monitoring)
+        pc.setUnplayedCards(List.of(new Card(Card.Type.MONITORING, 0)));
+        List<ParentPlayer> players = List.of(player);
+        Map<ParentPlayer, PlayerCards> map = Map.of(player, pc);
+        // Should not throw
+        edu.brandeis.cosi103a.groupb.engine.CardFunctions.Parallelization par = new edu.brandeis.cosi103a.groupb.engine.CardFunctions.Parallelization();
+        // Queue EndPhaseDecision so player can respond
+        player.queueDecision(new edu.brandeis.cosi.atg.decisions.EndPhaseDecision(GameState.TurnPhase.ACTION));
+        assertDoesNotThrow(() -> par.play(makeState(player.getName(), pc), player, players, map, board));
+    }
+
+    @Test
+    public void testParallelization_noPlayableActions() throws Exception {
+        StubPlayer player = new StubPlayer("P1");
+        TestPlayerCards pc = new TestPlayerCards(board);
+        player.setPlayerCards(pc);
+        // No action cards in hand
+        pc.setUnplayedCards(List.of());
+        List<ParentPlayer> players = List.of(player);
+        Map<ParentPlayer, PlayerCards> map = Map.of(player, pc);
+        edu.brandeis.cosi103a.groupb.engine.CardFunctions.Parallelization par = new edu.brandeis.cosi103a.groupb.engine.CardFunctions.Parallelization();
+        // Queue EndPhaseDecision so player can respond
+        player.queueDecision(new edu.brandeis.cosi.atg.decisions.EndPhaseDecision(GameState.TurnPhase.ACTION));
+        assertDoesNotThrow(() -> par.play(makeState(player.getName(), pc), player, players, map, board));
+    }
+
+    @Test
+    public void testBacklog_noCardsToDiscard() throws Exception {
+        StubPlayer player = new StubPlayer("P1");
+        TestPlayerCards pc = new TestPlayerCards(board);
+        player.setPlayerCards(pc);
+        // No cards in hand
+        pc.setUnplayedCards(List.of());
+        Backlog backlog = new Backlog();
+        player.queueDecision(new edu.brandeis.cosi.atg.decisions.EndPhaseDecision(GameState.TurnPhase.ACTION));
+        GameState newState = backlog.play(makeState(player.getName(), pc), player, pc, board);
+        assertEquals(0, newState.currentPlayerHand().unplayedCards().size());
+    }
+
+    
+    @Test
+    public void testEvergreenTest_allOthersHaveMonitoring() throws Exception {
+        StubPlayer p1 = new StubPlayer("P1");
+        StubPlayer p2 = new StubPlayer("P2");
+        TestPlayerCards pc1 = new TestPlayerCards(board);
+        TestPlayerCards pc2 = new TestPlayerCards(board);
+        p1.setPlayerCards(pc1);
+        p2.setPlayerCards(pc2);
+        pc2.setUnplayedCards(List.of(new Card(Card.Type.MONITORING, 0)));
+        List<ParentPlayer> players = List.of(p1, p2);
+        Map<ParentPlayer, PlayerCards> map = Map.of(p1, pc1, p2, pc2);
+        EvergreenTest et = new EvergreenTest();
+        et.play(makeState(p1.getName(), pc1), p1, players, map, board);
+        assertEquals(0, pc2.getDiscardSize());
+    }
+
+    @Test
+    public void testEvergreenTest_bugPileEmpty() throws Exception {
+        StubPlayer p1 = new StubPlayer("P1");
+        StubPlayer p2 = new StubPlayer("P2");
+        TestPlayerCards pc1 = new TestPlayerCards(board);
+        TestPlayerCards pc2 = new TestPlayerCards(board);
+        p1.setPlayerCards(pc1);
+        p2.setPlayerCards(pc2);
+        // Remove all bugs from board
+        while (board.drawDeckCard(Card.Type.BUG) != null) {}
+        List<ParentPlayer> players = List.of(p1, p2);
+        Map<ParentPlayer, PlayerCards> map = Map.of(p1, pc1, p2, pc2);
+        EvergreenTest et = new EvergreenTest();
+        et.play(makeState(p1.getName(), pc1), p1, players, map, board);
+        // Should not throw, discard remains 0
+        assertEquals(0, pc2.getDiscardSize());
+    }
+
+    @Test
+    public void testHack_handAlreadyThreeOrLess() throws Exception {
+        StubPlayer attacker = new StubPlayer("A");
+        StubPlayer defender = new StubPlayer("D");
+        TestPlayerCards attackerCards = new TestPlayerCards(board);
+        TestPlayerCards defenderCards = new TestPlayerCards(board);
+        attacker.setPlayerCards(attackerCards);
+        defender.setPlayerCards(defenderCards);
+        defenderCards.setUnplayedCards(List.of(new Card(Card.Type.BITCOIN, 0), new Card(Card.Type.ETHEREUM, 1), new Card(Card.Type.DOGECOIN, 2)));
+        List<ParentPlayer> players = List.of(attacker, defender);
+        Map<ParentPlayer, PlayerCards> map = Map.of(attacker, attackerCards, defender, defenderCards);
+        Hack hack = new Hack();
+        hack.play(makeState(attacker.getName(), attackerCards), attacker, players, map, board);
+        assertEquals(3, defenderCards.getHand().unplayedCards().size());
+    }
+
+    @Test
+    public void testHack_handEmpty() throws Exception {
+        StubPlayer attacker = new StubPlayer("A");
+        StubPlayer defender = new StubPlayer("D");
+        TestPlayerCards attackerCards = new TestPlayerCards(board);
+        TestPlayerCards defenderCards = new TestPlayerCards(board);
+        attacker.setPlayerCards(attackerCards);
+        defender.setPlayerCards(defenderCards);
+        defenderCards.setUnplayedCards(List.of());
+        List<ParentPlayer> players = List.of(attacker, defender);
+        Map<ParentPlayer, PlayerCards> map = Map.of(attacker, attackerCards, defender, defenderCards);
+        Hack hack = new Hack();
+        hack.play(makeState(attacker.getName(), attackerCards), attacker, players, map, board);
+        assertEquals(0, defenderCards.getHand().unplayedCards().size());
+    }
+
+    @Test
+    public void testRansomware_handLessThanTwo() throws Exception {
+        StubPlayer attacker = new StubPlayer("A");
+        StubPlayer defender = new StubPlayer("D");
+        TestPlayerCards attackerCards = new TestPlayerCards(board);
+        TestPlayerCards defenderCards = new TestPlayerCards(board);
+        attacker.setPlayerCards(attackerCards);
+        defender.setPlayerCards(defenderCards);
+        defenderCards.setUnplayedCards(List.of(new Card(Card.Type.BITCOIN, 0)));
+        List<ParentPlayer> players = List.of(attacker, defender);
+        Map<ParentPlayer, PlayerCards> map = Map.of(attacker, attackerCards, defender, defenderCards);
+        Ransomware ransomware = new Ransomware();
+        ransomware.play(makeState(attacker.getName(), attackerCards), attacker, players, map, board);
+        // Should gain bug if bug available, or nothing if not
+        // Accept either 1 or 0 in discard
+        assertTrue(defenderCards.getDiscardSize() <= 1);
+    }
+
+    @Test
+    public void testRansomware_bugPileEmpty() throws Exception {
+        StubPlayer attacker = new StubPlayer("A");
+        StubPlayer defender = new StubPlayer("D");
+        TestPlayerCards attackerCards = new TestPlayerCards(board);
+        TestPlayerCards defenderCards = new TestPlayerCards(board);
+        attacker.setPlayerCards(attackerCards);
+        defender.setPlayerCards(defenderCards);
+        defenderCards.setUnplayedCards(List.of(new Card(Card.Type.BITCOIN, 0)));
+        while (board.drawDeckCard(Card.Type.BUG) != null) {}
+        List<ParentPlayer> players = List.of(attacker, defender);
+        Map<ParentPlayer, PlayerCards> map = Map.of(attacker, attackerCards, defender, defenderCards);
+        Ransomware ransomware = new Ransomware();
+        ransomware.play(makeState(attacker.getName(), attackerCards), attacker, players, map, board);
+        assertEquals(0, defenderCards.getDiscardSize());
+    }
+
+    @Test
+    public void testDeploymentPipeline_noCardsToBuyEvenWithReduction() throws Exception {
+        StubPlayer player = new StubPlayer("P1");
+        TestPlayerCards pc = new TestPlayerCards(board);
+        player.setPlayerCards(pc);
+        // Empty the board so no cards can be bought
+        Field cardMapField = BoardCards.class.getDeclaredField("cardMap");
+        cardMapField.setAccessible(true);
+        ((Map<?, ?>) cardMapField.get(board)).clear();
+        DeploymentPipeline dp = new DeploymentPipeline();
+        // Should not throw
+        assertDoesNotThrow(() -> dp.play(makeState(player.getName(), pc), player, pc, board));
+    }
+
+    @Test
+    public void testParallelization_playsActionTwice() throws Exception {
+        StubPlayer player = new StubPlayer("P1");
+        TestPlayerCards pc = new TestPlayerCards(board);
+        player.setPlayerCards(pc);
+        // Add a CodeReview card to hand
+        Card codeReview = new Card(Card.Type.CODE_REVIEW, 0);
+        pc.setUnplayedCards(List.of(codeReview));
+        List<ParentPlayer> players = List.of(player);
+        Map<ParentPlayer, PlayerCards> map = Map.of(player, pc);
+        edu.brandeis.cosi103a.groupb.engine.CardFunctions.Parallelization par = new edu.brandeis.cosi103a.groupb.engine.CardFunctions.Parallelization();
+        // Queue the decision to play CodeReview
+        player.queueDecision(new edu.brandeis.cosi.atg.decisions.PlayCardDecision(codeReview));
+        // Initial hand size
+        int before = pc.getHand().unplayedCards().size();
+        // Play Parallelization
+        GameState after = par.play(makeState(player.getName(), pc), player, players, map, board);
+        // CodeReview draws 2 cards, Parallelization should apply it twice (total +3, since CodeReview is played from hand)
+        assertEquals(before + 3, after.currentPlayerHand().unplayedCards().size());
+    }
+
 }

@@ -18,7 +18,7 @@ public class BigMoneyPlayerMoneyFallbackTest {
 
     private GameState makeStateWithMoney(int spendableMoney) {
         return new GameState(
-            "Mika",
+            "TestPlayer",
             new Hand(ImmutableList.of(), ImmutableList.of()),
             GameState.TurnPhase.BUY,
             1,
@@ -30,7 +30,7 @@ public class BigMoneyPlayerMoneyFallbackTest {
 
     @Test
     public void choosesBestAffordableMoneyCard() {
-        BigMoneyPlayer p = new BigMoneyPlayer("Mika");
+        BigMoneyPlayer p = new BigMoneyPlayer("TestPlayer");
 
         Decision dBitcoin = new BuyDecision(Card.Type.BITCOIN);
         Decision dEthereum = new BuyDecision(Card.Type.ETHEREUM);
@@ -45,7 +45,7 @@ public class BigMoneyPlayerMoneyFallbackTest {
 
     @Test
     public void choosesLowestWhenOnlyLowAvailable() {
-        BigMoneyPlayer p = new BigMoneyPlayer("Mika");
+        BigMoneyPlayer p = new BigMoneyPlayer("TestPlayer");
 
         Decision dBitcoin = new BuyDecision(Card.Type.BITCOIN);
         Decision end = new EndPhaseDecision(GameState.TurnPhase.BUY);
@@ -58,7 +58,7 @@ public class BigMoneyPlayerMoneyFallbackTest {
 
     @Test
     public void choosesEndPhaseWhenNothingAffordable() {
-        BigMoneyPlayer p = new BigMoneyPlayer("Mika");
+        BigMoneyPlayer p = new BigMoneyPlayer("TestPlayer");
 
         Decision end = new EndPhaseDecision(GameState.TurnPhase.BUY);
         ImmutableList<Decision> options = ImmutableList.of(end);
@@ -71,7 +71,7 @@ public class BigMoneyPlayerMoneyFallbackTest {
 
     @Test
     public void frameworkAvailableAndAffordable() {
-        BigMoneyPlayer p = new BigMoneyPlayer("Mika");
+        BigMoneyPlayer p = new BigMoneyPlayer("TestPlayer");
 
         GameState state = makeStateWithMoney(8);
 
@@ -86,7 +86,7 @@ public class BigMoneyPlayerMoneyFallbackTest {
 
     @Test
     public void frameworkSkippedWhenNotAffordable() {
-        BigMoneyPlayer p = new BigMoneyPlayer("Mika");
+        BigMoneyPlayer p = new BigMoneyPlayer("TestPlayer");
 
         GameState state = makeStateWithMoney(6);
 
@@ -108,7 +108,7 @@ public class BigMoneyPlayerMoneyFallbackTest {
 
     @Test
     public void frameworkPreferredOverMoneyWhenAffordable() {
-        BigMoneyPlayer p = new BigMoneyPlayer("Mika");
+        BigMoneyPlayer p = new BigMoneyPlayer("TestPlayer");
 
         GameState state = makeStateWithMoney(8);
 
@@ -124,7 +124,7 @@ public class BigMoneyPlayerMoneyFallbackTest {
 
     @Test
     public void returnsNullWhenStateIsNull() {
-        BigMoneyPlayer p = new BigMoneyPlayer("Mika");
+        BigMoneyPlayer p = new BigMoneyPlayer("TestPlayer");
 
         Decision dBitcoin = new BuyDecision(Card.Type.BITCOIN);
         ImmutableList<Decision> options = ImmutableList.of(dBitcoin);
@@ -135,7 +135,7 @@ public class BigMoneyPlayerMoneyFallbackTest {
 
     @Test
     public void returnsNullWhenOptionsAreEmpty() {
-        BigMoneyPlayer p = new BigMoneyPlayer("Mika");
+        BigMoneyPlayer p = new BigMoneyPlayer("TestPlayer");
 
         Decision chosen = p.makeDecision(makeStateWithMoney(5), ImmutableList.of());
         assertNull(chosen);
@@ -143,7 +143,7 @@ public class BigMoneyPlayerMoneyFallbackTest {
 
     @Test
     public void fallsBackToFirstOptionWhenNoMoneyAndNoEndPhase() {
-        BigMoneyPlayer p = new BigMoneyPlayer("Mika");
+        BigMoneyPlayer p = new BigMoneyPlayer("TestPlayer");
 
         Decision methodDecision = new BuyDecision(Card.Type.METHOD);
         Decision moduleDecision = new BuyDecision(Card.Type.MODULE);

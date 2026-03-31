@@ -234,6 +234,26 @@ public class StrategyPlayerActionTest {
     }
 
     @Test
+    public void actionDecisionOnlyEndPhases() {
+        StrategyPlayer p = new StrategyPlayer("TestPlayer");
+        Decision endAction = new EndPhaseDecision(GameState.TurnPhase.ACTION);
+        Decision endBuy = new EndPhaseDecision(GameState.TurnPhase.BUY);
+        ImmutableList<Decision> options = ImmutableList.of(endAction, endBuy);
+        Decision chosen = p.chooseActionDecision(makeState(GameState.TurnPhase.ACTION, 0), options);
+        assertSame(endAction, chosen);
+    }
+
+    @Test
+    public void moneyDecisionOnlyEndPhases() {
+        StrategyPlayer p = new StrategyPlayer("TestPlayer");
+        Decision endMoney = new EndPhaseDecision(GameState.TurnPhase.MONEY);
+        Decision endAction = new EndPhaseDecision(GameState.TurnPhase.ACTION);
+        ImmutableList<Decision> options = ImmutableList.of(endMoney, endAction);
+        Decision chosen = p.chooseMoneyDecision(makeState(GameState.TurnPhase.MONEY, 0), options);
+        assertSame(endMoney, chosen);
+    }
+
+    @Test
     public void makeDecisionRoutesToActionLogic() {
         StrategyPlayer p = new StrategyPlayer("TestPlayer");
 

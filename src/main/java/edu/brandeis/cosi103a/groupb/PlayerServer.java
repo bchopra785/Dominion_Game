@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.google.common.collect.ImmutableList;
 
 import edu.brandeis.cosi.atg.decisions.Decision;
-import edu.brandeis.cosi.atg.event.Event;
 import edu.brandeis.cosi.atg.state.GameState;
 import edu.brandeis.cosi103a.groupb.network.DecisionRequest;
 import edu.brandeis.cosi103a.groupb.network.DecisionResponse;
@@ -18,30 +17,37 @@ import edu.brandeis.cosi103a.groupb.network.LogEventRequest;
 
 @RestController
 public class PlayerServer {
-    //returns RespondEntity<DecisionResponse>
-    //DecisionResponse is the Custom Java class that contains chosen decision
-    //decide is the name of the function
-    //it takes in @RequestBody DecisionRequest request as input, where DecisionRequest is the Custom Java class that contains the game state and possible decisions
-    //@RequestBody converts the JSON body of the HTTP reqyest into Java object "request" of type DecisionRequest
-    @PostMapping(value = "/decide", consumes = "application/json", produces = "application/json") 
-    public ResponseEntity<DecisionResponse> decide(@RequestBody DecisionRequest request) {
+
+@PostMapping(value = "/decide", consumes = "application/json", produces = "application/json") 
+public ResponseEntity<DecisionResponse> decide(@RequestBody DecisionRequest request) {
+    try {
+        // Validate request fields
+        if (request.getState() == null || request.getOptions() == null) {
+            return ResponseEntity.badRequest().build(); // 400
+        }
+
         GameState state = request.getState();
         List<Decision> options = request.getOptions();
-        Event reason = request.getReason();
-        String player_uuid = request.getplayer_uuid();
 
-        //make decision using BigMoneyPlayerand return ResponseEntity<DecisionResponse>
+        // Make decision using BigMoneyPlayer and return ResponseEntity<DecisionResponse>
         BigMoneyPlayer player = new BigMoneyPlayer();
         ImmutableList<Decision> immutableOptions = ImmutableList.copyOf(options);
         Decision chosenDecision = player.makeDecision(state, immutableOptions);
         DecisionResponse responseBody = new DecisionResponse(chosenDecision, "Using BigMoneyPlayer strategy");
         return ResponseEntity.ok(responseBody);
-        
+
+    } catch (IllegalArgumentException e) {
+        // Bad data in the request, e.g. empty options list
+        return ResponseEntity.badRequest().build(); // 400
+
+    } catch (Exception e) {
+        // Catch-all for unexpected errors
+        return ResponseEntity.internalServerError().build(); // 500
     }
+}
 
-
-    @PostMapping("/log-event")
-    public ResponseEntity<Void> logEvent(@RequestBody LogEventRequest request) {
+    @PostMapping(value = "/log-event", consumes = "application/json", produces = "application/json") 
+    public ResponseEntity<Void> logEvent(@RequestBody(required = false) LogEventRequest request) {
         // Validate the request
         if (request == null) {
             return ResponseEntity.badRequest().build(); // 400

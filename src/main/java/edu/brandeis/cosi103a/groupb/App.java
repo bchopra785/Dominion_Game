@@ -1,4 +1,4 @@
-package edu.brandeis.cosi103a.groupb.network;
+package edu.brandeis.cosi103a.groupb;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

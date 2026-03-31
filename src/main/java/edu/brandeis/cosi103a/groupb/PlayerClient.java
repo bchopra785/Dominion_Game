@@ -97,6 +97,10 @@ public class PlayerClient extends ParentPlayer {
         restTemplate.postForObject(serverUrl + "/log-event", entity, Void.class);
 }
 
+// For testing purposes, we can expose the RestTemplate to verify that the correct requests are being made
+public RestTemplate getRestTemplate() {
+    return restTemplate;
+}
 
 }
 

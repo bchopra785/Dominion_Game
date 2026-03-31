@@ -1,13 +1,23 @@
 package edu.brandeis.cosi103a.groupb;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
 import edu.brandeis.cosi103a.groupb.network.LogEventRequest;
+import edu.brandeis.cosi.atg.decisions.Decision;
+import edu.brandeis.cosi.atg.decisions.EndPhaseDecision;
+import edu.brandeis.cosi.atg.decisions.PlayCardDecision;
+import edu.brandeis.cosi.atg.state.CardStacks;
+import edu.brandeis.cosi.atg.state.GameState;
+import edu.brandeis.cosi.atg.state.Hand;
 import edu.brandeis.cosi103a.groupb.network.DecisionRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import edu.brandeis.cosi.atg.cards.Card;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -60,6 +70,10 @@ public class PlayerServerTest {
         DecisionRequest request = new DecisionRequest();
         request.setplayer_uuid("test-uuid-123");
         // set state and options with mock objects
+        request.setState(mockGameState());
+        Decision refactor = new PlayCardDecision(new Card(Card.Type.REFACTOR, 1));
+        ImmutableList<Decision> options = ImmutableList.of(refactor);
+        request.setOptions(options);
 
         mockMvc.perform(post("/decide")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -75,4 +89,18 @@ public class PlayerServerTest {
                 .content(""))
                 .andExpect(status().isBadRequest());
     }
+
+        // --- Helpers ---
+    private GameState mockGameState() {
+        return new GameState(
+            "P1",
+            new Hand(ImmutableList.of(), ImmutableList.of()),
+            GameState.TurnPhase.BUY,
+            1,
+            0,
+            1,
+            new CardStacks(ImmutableMap.of())
+        );
+    }
+
 }

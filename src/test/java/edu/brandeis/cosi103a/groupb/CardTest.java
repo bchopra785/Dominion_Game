@@ -16,7 +16,7 @@ import edu.brandeis.cosi.atg.state.GameState;
 import edu.brandeis.cosi.atg.state.Hand;
 import edu.brandeis.cosi103a.groupb.engine.BoardCards;
 import edu.brandeis.cosi103a.groupb.engine.PlayerCards;
-import edu.brandeis.cosi103a.groupb.engine.CardFunctions.CodeReview;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.ActionCards;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -71,9 +71,10 @@ public class CardTest {
     @Test
     public void testCodeReviewUnit(){
 
-        ConsolePlayer player = null;
+        ConsolePlayer player = new ConsolePlayer(new Scanner(""), System.out);
         BoardCards boardCards = new BoardCards();
         PlayerCards playerCards = createMockPlayerCards();
+        player.setPlayerCards(playerCards);
         Hand handObject = playerCards.getHand();    //create new record class hand
 
         GameState state = new GameState(
@@ -87,8 +88,14 @@ public class CardTest {
         );
         
         
-        CodeReview codeReview = new CodeReview();
-        GameState newState = codeReview.play(state, player, playerCards, boardCards);
+        GameState newState = ActionCards.playActionCard(
+            new Card(Card.Type.CODE_REVIEW, 0),
+            state,
+            player,
+            List.of(player),
+            java.util.Map.of(player, playerCards),
+            boardCards
+        );
         assertEquals(newState.currentPlayerName(), "Player1");
         assertEquals(newState.availableActions(), 3); // +2 actions from code review
 
@@ -98,9 +105,9 @@ public class CardTest {
     public void testCodeReviewIntegration(){
         BoardCards boardCards = new BoardCards();
         PlayerCards playerCards = new PlayerCards(boardCards);
-        CodeReview codeReview = new CodeReview();
         Scanner scanner = new Scanner(System.in);
         ConsolePlayer player = new ConsolePlayer(scanner, System.out);
+        player.setPlayerCards(playerCards);
         GameState state = new GameState(
             "Player1",
             playerCards.getHand(),
@@ -110,7 +117,14 @@ public class CardTest {
             1,
             boardCards.getPlayableCards(5)
         );
-        GameState newstate = codeReview.play(state, player, playerCards, boardCards);
+        GameState newstate = ActionCards.playActionCard(
+            new Card(Card.Type.CODE_REVIEW, 0),
+            state,
+            player,
+            List.of(player),
+            java.util.Map.of(player, playerCards),
+            boardCards
+        );
         assertEquals(newstate.currentPlayerName(), "Player1");
         assertEquals(newstate.availableActions(), 3); // +2 actions from code review
         //assertTrue(newstate.spendableMoney() >= 5); // should still have 5 bitcoin in hand

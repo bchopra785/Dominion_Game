@@ -1,7 +1,9 @@
 package edu.brandeis.cosi103a.groupb.network;
 
 import edu.brandeis.cosi.atg.decisions.Decision;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 public class DecisionResponse {
     // This is the decision object you picked from the 'options' list 
     // in the DecisionRequest.
@@ -19,7 +21,7 @@ public class DecisionResponse {
         this.metadata = metadata;
     }
 
-    // Getters and Setters (so Spring can read the data)
+    // Getters and Setters (so Spring can read the data and also for testing)
     public Decision getDecision() { return decision; }
 
     public void setDecision(Decision decision) { this.decision = decision; }

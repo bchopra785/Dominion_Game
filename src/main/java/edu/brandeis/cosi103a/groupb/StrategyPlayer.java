@@ -137,10 +137,73 @@ public class StrategyPlayer extends ParentPlayer {
     }
 
     /**
-     * Person B will replace this BUY logic.
+    * Person B: BUY-phase logic. Prefer card draw (DAILY_SCRUM > IPO), then best money (DOGECOIN > ETHEREUM > BITCOIN), then EndPhaseDecision. Tie-break: first matching BuyDecision in options.
      */
     public Decision chooseBuyDecision(GameState state, ImmutableList<Decision> options) {
-        return findBestFallback(options, GameState.TurnPhase.BUY);
+        // 1. Find all BuyDecisions and their card types
+        Card.Type targetType = null;
+        // a. Prefer DAILY_SCRUM
+        for (Decision d : options) {
+            Card.Type t = getTypeFromDecision(d);
+            if (t == Card.Type.DAILY_SCRUM) {
+                targetType = Card.Type.DAILY_SCRUM;
+                break;
+            }
+        }
+        // b. Prefer IPO if no DAILY_SCRUM
+        if (targetType == null) {
+            for (Decision d : options) {
+                Card.Type t = getTypeFromDecision(d);
+                if (t == Card.Type.IPO) {
+                    targetType = Card.Type.IPO;
+                    break;
+                }
+            }
+        }
+        // 2. If no card-drawers, prefer best money: DOGECOIN > ETHEREUM > BITCOIN
+        if (targetType == null) {
+            Card.Type[] moneyPriority = {Card.Type.DOGECOIN, Card.Type.ETHEREUM, Card.Type.BITCOIN};
+            for (Card.Type moneyType : moneyPriority) {
+                for (Decision d : options) {
+                    Card.Type t = getTypeFromDecision(d);
+                    if (t == moneyType) {
+                        targetType = moneyType;
+                        break;
+                    }
+                }
+                if (targetType != null) break;
+            }
+        }
+        // 3. If neither exists, return EndPhaseDecision for BUY phase
+        if (targetType == null) {
+            for (Decision d : options) {
+                if (d instanceof EndPhaseDecision && ((EndPhaseDecision) d).phase() == GameState.TurnPhase.BUY) return d;
+            }
+            for (Decision d : options) {
+                if (d instanceof EndPhaseDecision) return d;
+            }
+            // Fallback: pick first option
+            return options.get(0);
+        }
+        // 4. MATCHING RULE: return the FIRST BuyDecision whose card matches the selected type
+        for (Decision d : options) {
+            Card.Type t = getTypeFromDecision(d);
+            if (t == targetType) return d;
+        }
+        // Fallback: pick first option
+        return options.get(0);
+    }
+
+    // Helper: extract Card.Type from Decision if possible
+    private Card.Type getTypeFromDecision(Decision d) {
+        if (d instanceof PlayCardDecision) {
+            return ((PlayCardDecision) d).card().type();
+        }
+        // Prefer direct type check for BuyDecision if available
+        if (d instanceof edu.brandeis.cosi.atg.decisions.BuyDecision) {
+            return ((edu.brandeis.cosi.atg.decisions.BuyDecision) d).cardType();
+        }
+        return null;
     }
 
     private Decision findBestFallback(ImmutableList<Decision> options, GameState.TurnPhase preferredPhase) {
@@ -163,11 +226,6 @@ public class StrategyPlayer extends ParentPlayer {
 
         out.println(getName() + " chose first option fallback");
         return options.get(0);
-    }
-
-    @Override
-    public Optional<GameObserver> getObserver() {
-        return Optional.of(observer);
     }
 
     @Override

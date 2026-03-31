@@ -18,31 +18,13 @@ import com.google.common.collect.ImmutableList;
 import edu.brandeis.cosi.atg.cards.Card;
 import edu.brandeis.cosi.atg.decisions.Decision;
 import edu.brandeis.cosi.atg.decisions.DiscardCardDecision;
-import edu.brandeis.cosi.atg.decisions.GainCardDecision;
 import edu.brandeis.cosi.atg.decisions.TrashCardDecision;
 import edu.brandeis.cosi.atg.state.CardStacks;
 import edu.brandeis.cosi.atg.state.GameState;
 import edu.brandeis.cosi.atg.state.Hand;
-import edu.brandeis.cosi103a.groupb.CardFunctionTests.StubPlayer;
-import edu.brandeis.cosi103a.groupb.CardFunctionTests.TestPlayerCards;
-import edu.brandeis.cosi103a.groupb.ParentPlayer;
 import edu.brandeis.cosi103a.groupb.engine.BoardCards;
 import edu.brandeis.cosi103a.groupb.engine.PlayerCards;
-import edu.brandeis.cosi103a.groupb.engine.CardFunctions.Backlog;
-import edu.brandeis.cosi103a.groupb.engine.CardFunctions.CodeReview;
-import edu.brandeis.cosi103a.groupb.engine.CardFunctions.DailyScrum;
-import edu.brandeis.cosi103a.groupb.engine.CardFunctions.EvergreenTest;
-import edu.brandeis.cosi103a.groupb.engine.CardFunctions.Hack;
-import edu.brandeis.cosi103a.groupb.engine.CardFunctions.Ipo;
-import edu.brandeis.cosi103a.groupb.engine.CardFunctions.MergeConflict;
-import edu.brandeis.cosi103a.groupb.engine.CardFunctions.Monitoring;
-import edu.brandeis.cosi103a.groupb.engine.CardFunctions.Ransomware;
-import edu.brandeis.cosi103a.groupb.engine.CardFunctions.Refactor;
-import edu.brandeis.cosi103a.groupb.engine.CardFunctions.SprintPlanning;
-import edu.brandeis.cosi103a.groupb.engine.CardFunctions.TechDebt;
-import edu.brandeis.cosi103a.groupb.engine.CardFunctions.UnitTest;
-import edu.brandeis.cosi103a.groupb.engine.CardFunctions.DeploymentPipeline;
-import edu.brandeis.cosi103a.groupb.engine.CardFunctions.Parallelization;
+import edu.brandeis.cosi103a.groupb.engine.CardFunctions.ActionCards;
 
 
 
@@ -134,13 +116,18 @@ public class CardFunctionTests {
         // two cards in hand
         pc.setUnplayedCards(List.of(new Card(Card.Type.BITCOIN, 0), new Card(Card.Type.ETHEREUM, 1)));
 
-        Backlog backlog = new Backlog();
-
         // discard first card, then end
         player.queueDecision(new DiscardCardDecision(new Card(Card.Type.BITCOIN, 0)));
         player.queueDecision(new edu.brandeis.cosi.atg.decisions.EndPhaseDecision(GameState.TurnPhase.ACTION));
 
-        GameState newState = backlog.play(makeState(player.getName(), pc), player, pc, board);
+        GameState newState = ActionCards.playActionCard(
+            new Card(Card.Type.BACKLOG, 0),
+            makeState(player.getName(), pc),
+            player,
+            List.of(player),
+            Map.of(player, pc),
+            board
+        );
         assertEquals(2, newState.currentPlayerHand().unplayedCards().size());
         assertEquals(1, pc.getDiscardSize());
     }
@@ -187,8 +174,7 @@ public class CardFunctionTests {
         map.put(p3, pc3);
 
         GameState before = makeState(p1.getName(), pc1);
-        DailyScrum ds = new DailyScrum();
-        GameState after = ds.play(before, p1, players, map, board);
+        GameState after = ActionCards.playActionCard(new Card(Card.Type.DAILY_SCRUM, 0), before, p1, players, map, board);
 
         assertEquals(2, after.availableBuys());
         assertEquals(2, pc2.getHand().unplayedCards().size());
@@ -215,14 +201,13 @@ public class CardFunctionTests {
         map.put(p2, pc2);
 
         GameState before = makeState(p1.getName(), pc1);
-        EvergreenTest et = new EvergreenTest();
-        et.play(before, p1, players, map, board);
+        ActionCards.playActionCard(new Card(Card.Type.EVERGREEN_TEST, 0), before, p1, players, map, board);
 
         assertEquals(0, pc2.getDiscardSize(), "Player with Monitoring should not receive bug");
 
         // Now without monitoring, they should get a bug
         pc2.setUnplayedCards(List.of(new Card(Card.Type.BITCOIN, 0)));
-        et.play(before, p1, players, map, board);
+        ActionCards.playActionCard(new Card(Card.Type.EVERGREEN_TEST, 0), before, p1, players, map, board);
         assertEquals(1, pc2.getDiscardSize(), "Player without Monitoring should gain a bug");
     }
 
@@ -256,8 +241,7 @@ public class CardFunctionTests {
         map.put(defender, defenderCards);
 
         GameState before = makeState(attacker.getName(), attackerCards);
-        Hack hack = new Hack();
-        hack.play(before, attacker, players, map, board);
+        ActionCards.playActionCard(new Card(Card.Type.HACK, 0), before, attacker, players, map, board);
 
         assertEquals(3, defenderCards.getHand().unplayedCards().size(), "Defender should be down to 3 cards");
     }
@@ -292,8 +276,7 @@ public class CardFunctionTests {
         map.put(defender, defenderCards);
 
         GameState before = makeState(attacker.getName(), attackerCards);
-        Ransomware ransomware = new Ransomware();
-        ransomware.play(before, attacker, players, map, board);
+        ActionCards.playActionCard(new Card(Card.Type.RANSOMWARE, 0), before, attacker, players, map, board);
 
         assertEquals(3, defenderCards.getHand().unplayedCards().size(), "Defender should have discarded 2 cards");
     }
@@ -307,8 +290,14 @@ public class CardFunctionTests {
         int beforeActions = 1;
         GameState before = makeState(player.getName(), pc);
 
-        Ipo ipo = new Ipo();
-        GameState after = ipo.play(before, player, pc, board);
+        GameState after = ActionCards.playActionCard(
+            new Card(Card.Type.IPO, 0),
+            before,
+            player,
+            List.of(player),
+            Map.of(player, pc),
+            board
+        );
 
         assertEquals(beforeActions + 1, after.availableActions());
         assertEquals(before.spendableMoney() + 2, after.spendableMoney());
@@ -325,8 +314,14 @@ public class CardFunctionTests {
         player.queueDecision(new TrashCardDecision(new Card(Card.Type.METHOD, 2)));
 
         GameState before = makeState(player.getName(), pc);
-        MergeConflict mc = new MergeConflict();
-        GameState after = mc.play(before, player, pc, board);
+        GameState after = ActionCards.playActionCard(
+            new Card(Card.Type.MERGE_CONFLICT, 0),
+            before,
+            player,
+            List.of(player),
+            Map.of(player, pc),
+            board
+        );
 
         assertEquals(2, after.currentPlayerHand().unplayedCards().size());
     }
@@ -338,8 +333,14 @@ public class CardFunctionTests {
         player.setPlayerCards(pc);
 
         int before = pc.getHand().unplayedCards().size();
-        Monitoring mon = new Monitoring();
-        GameState after = mon.play(makeState(player.getName(), pc), player, pc, board);
+        GameState after = ActionCards.playActionCard(
+            new Card(Card.Type.MONITORING, 0),
+            makeState(player.getName(), pc),
+            player,
+            List.of(player),
+            Map.of(player, pc),
+            board
+        );
         assertEquals(before + 2, after.currentPlayerHand().unplayedCards().size());
     }
 
@@ -357,8 +358,14 @@ public class CardFunctionTests {
         pc.setUnplayedCards(List.of(new Card(Card.Type.BITCOIN, 0)));
         player.queueDecision(new TrashCardDecision(new Card(Card.Type.BITCOIN, 0)));
 
-        Refactor refactor = new Refactor();
-        assertDoesNotThrow(() -> refactor.play(makeState(player.getName(), pc), player, pc, board));
+        assertDoesNotThrow(() -> ActionCards.playActionCard(
+            new Card(Card.Type.REFACTOR, 0),
+            makeState(player.getName(), pc),
+            player,
+            List.of(player),
+            Map.of(player, pc),
+            board
+        ));
     }
 
     @Test
@@ -368,8 +375,14 @@ public class CardFunctionTests {
         player.setPlayerCards(pc);
 
         GameState before = makeState(player.getName(), pc);
-        SprintPlanning sp = new SprintPlanning();
-        GameState after = sp.play(before, player, pc, board);
+        GameState after = ActionCards.playActionCard(
+            new Card(Card.Type.SPRINT_PLANNING, 0),
+            before,
+            player,
+            List.of(player),
+            Map.of(player, pc),
+            board
+        );
 
         assertEquals(before.availableActions() + 1, after.availableActions());
         assertEquals(before.availableBuys() + 1, after.availableBuys());
@@ -393,8 +406,15 @@ public class CardFunctionTests {
         
         int beforeDiscard = pc.getDiscardSize();
         GameState before = makeState(player.getName(), pc);
-        TechDebt td = new TechDebt();
-        GameState after = td.play(before, player, pc, board);
+        GameState after = ActionCards.playActionCard(
+            new Card(Card.Type.TECH_DEBT, 0),
+            before,
+            player,
+            List.of(player),
+            Map.of(player, pc),
+            board
+        );
+        assertNotNull(after);
 
         assertEquals(beforeDiscard + 1, pc.getDiscardSize(), "Should have discarded one card");
     }
@@ -406,21 +426,40 @@ public class CardFunctionTests {
         player.setPlayerCards(pc);
 
         GameState before = makeState(player.getName(), pc);
-        UnitTest ut = new UnitTest();
-
         // Option 0: +2 Actions
         player.queueDecision(new edu.brandeis.cosi.atg.decisions.EndPhaseDecision(GameState.TurnPhase.ACTION));
-        GameState after0 = ut.play(before, player, pc, board);
+        GameState after0 = ActionCards.playActionCard(
+            new Card(Card.Type.UNIT_TEST, 0),
+            before,
+            player,
+            List.of(player),
+            Map.of(player, pc),
+            board
+        );
         assertEquals(before.availableActions() + 2, after0.availableActions());
 
         // Option 1: +$2
         player.queueDecision(new edu.brandeis.cosi.atg.decisions.EndPhaseDecision(GameState.TurnPhase.BUY));
-        GameState after1 = ut.play(before, player, pc, board);
+        GameState after1 = ActionCards.playActionCard(
+            new Card(Card.Type.UNIT_TEST, 0),
+            before,
+            player,
+            List.of(player),
+            Map.of(player, pc),
+            board
+        );
         assertEquals(before.spendableMoney() + 2, after1.spendableMoney());
 
         // Option 2: +2 Cards
         player.queueDecision(new edu.brandeis.cosi.atg.decisions.EndPhaseDecision(GameState.TurnPhase.CLEANUP));
-        GameState after2 = ut.play(before, player, pc, board);
+        GameState after2 = ActionCards.playActionCard(
+            new Card(Card.Type.UNIT_TEST, 0),
+            before,
+            player,
+            List.of(player),
+            Map.of(player, pc),
+            board
+        );
         assertEquals(before.currentPlayerHand().unplayedCards().size() + 2, after2.currentPlayerHand().unplayedCards().size());
     }
 
@@ -432,8 +471,14 @@ public class CardFunctionTests {
 
         GameState before = makeState(player.getName(), pc);
         
-        DeploymentPipeline dp = new DeploymentPipeline();
-        GameState after = dp.play(before, player, pc, board);
+        GameState after = ActionCards.playActionCard(
+            new Card(Card.Type.DEPLOYMENT_PIPELINE, 0),
+            before,
+            player,
+            List.of(player),
+            Map.of(player, pc),
+            board
+        );
 
         // Should add +$1 and +1 Buy, cost reduction is handled by Engine
         assertEquals(before.spendableMoney() + 1, after.spendableMoney());
@@ -450,10 +495,16 @@ public class CardFunctionTests {
         List<ParentPlayer> players = List.of(player);
         Map<ParentPlayer, PlayerCards> map = Map.of(player, pc);
         // Should not throw
-        edu.brandeis.cosi103a.groupb.engine.CardFunctions.Parallelization par = new edu.brandeis.cosi103a.groupb.engine.CardFunctions.Parallelization();
         // Queue EndPhaseDecision so player can respond
         player.queueDecision(new edu.brandeis.cosi.atg.decisions.EndPhaseDecision(GameState.TurnPhase.ACTION));
-        assertDoesNotThrow(() -> par.play(makeState(player.getName(), pc), player, players, map, board));
+        assertDoesNotThrow(() -> ActionCards.playActionCard(
+            new Card(Card.Type.PARALLELIZATION, 0),
+            makeState(player.getName(), pc),
+            player,
+            players,
+            map,
+            board
+        ));
     }
 
     @Test
@@ -465,10 +516,16 @@ public class CardFunctionTests {
         pc.setUnplayedCards(List.of());
         List<ParentPlayer> players = List.of(player);
         Map<ParentPlayer, PlayerCards> map = Map.of(player, pc);
-        edu.brandeis.cosi103a.groupb.engine.CardFunctions.Parallelization par = new edu.brandeis.cosi103a.groupb.engine.CardFunctions.Parallelization();
         // Queue EndPhaseDecision so player can respond
         player.queueDecision(new edu.brandeis.cosi.atg.decisions.EndPhaseDecision(GameState.TurnPhase.ACTION));
-        assertDoesNotThrow(() -> par.play(makeState(player.getName(), pc), player, players, map, board));
+        assertDoesNotThrow(() -> ActionCards.playActionCard(
+            new Card(Card.Type.PARALLELIZATION, 0),
+            makeState(player.getName(), pc),
+            player,
+            players,
+            map,
+            board
+        ));
     }
 
     @Test
@@ -478,9 +535,15 @@ public class CardFunctionTests {
         player.setPlayerCards(pc);
         // No cards in hand
         pc.setUnplayedCards(List.of());
-        Backlog backlog = new Backlog();
         player.queueDecision(new edu.brandeis.cosi.atg.decisions.EndPhaseDecision(GameState.TurnPhase.ACTION));
-        GameState newState = backlog.play(makeState(player.getName(), pc), player, pc, board);
+        GameState newState = ActionCards.playActionCard(
+            new Card(Card.Type.BACKLOG, 0),
+            makeState(player.getName(), pc),
+            player,
+            List.of(player),
+            Map.of(player, pc),
+            board
+        );
         assertEquals(0, newState.currentPlayerHand().unplayedCards().size());
     }
 
@@ -496,8 +559,7 @@ public class CardFunctionTests {
         pc2.setUnplayedCards(List.of(new Card(Card.Type.MONITORING, 0)));
         List<ParentPlayer> players = List.of(p1, p2);
         Map<ParentPlayer, PlayerCards> map = Map.of(p1, pc1, p2, pc2);
-        EvergreenTest et = new EvergreenTest();
-        et.play(makeState(p1.getName(), pc1), p1, players, map, board);
+        ActionCards.playActionCard(new Card(Card.Type.EVERGREEN_TEST, 0), makeState(p1.getName(), pc1), p1, players, map, board);
         assertEquals(0, pc2.getDiscardSize());
     }
 
@@ -513,8 +575,7 @@ public class CardFunctionTests {
         while (board.drawDeckCard(Card.Type.BUG) != null) {}
         List<ParentPlayer> players = List.of(p1, p2);
         Map<ParentPlayer, PlayerCards> map = Map.of(p1, pc1, p2, pc2);
-        EvergreenTest et = new EvergreenTest();
-        et.play(makeState(p1.getName(), pc1), p1, players, map, board);
+        ActionCards.playActionCard(new Card(Card.Type.EVERGREEN_TEST, 0), makeState(p1.getName(), pc1), p1, players, map, board);
         // Should not throw, discard remains 0
         assertEquals(0, pc2.getDiscardSize());
     }
@@ -530,8 +591,7 @@ public class CardFunctionTests {
         defenderCards.setUnplayedCards(List.of(new Card(Card.Type.BITCOIN, 0), new Card(Card.Type.ETHEREUM, 1), new Card(Card.Type.DOGECOIN, 2)));
         List<ParentPlayer> players = List.of(attacker, defender);
         Map<ParentPlayer, PlayerCards> map = Map.of(attacker, attackerCards, defender, defenderCards);
-        Hack hack = new Hack();
-        hack.play(makeState(attacker.getName(), attackerCards), attacker, players, map, board);
+        ActionCards.playActionCard(new Card(Card.Type.HACK, 0), makeState(attacker.getName(), attackerCards), attacker, players, map, board);
         assertEquals(3, defenderCards.getHand().unplayedCards().size());
     }
 
@@ -546,8 +606,7 @@ public class CardFunctionTests {
         defenderCards.setUnplayedCards(List.of());
         List<ParentPlayer> players = List.of(attacker, defender);
         Map<ParentPlayer, PlayerCards> map = Map.of(attacker, attackerCards, defender, defenderCards);
-        Hack hack = new Hack();
-        hack.play(makeState(attacker.getName(), attackerCards), attacker, players, map, board);
+        ActionCards.playActionCard(new Card(Card.Type.HACK, 0), makeState(attacker.getName(), attackerCards), attacker, players, map, board);
         assertEquals(0, defenderCards.getHand().unplayedCards().size());
     }
 
@@ -562,8 +621,7 @@ public class CardFunctionTests {
         defenderCards.setUnplayedCards(List.of(new Card(Card.Type.BITCOIN, 0)));
         List<ParentPlayer> players = List.of(attacker, defender);
         Map<ParentPlayer, PlayerCards> map = Map.of(attacker, attackerCards, defender, defenderCards);
-        Ransomware ransomware = new Ransomware();
-        ransomware.play(makeState(attacker.getName(), attackerCards), attacker, players, map, board);
+        ActionCards.playActionCard(new Card(Card.Type.RANSOMWARE, 0), makeState(attacker.getName(), attackerCards), attacker, players, map, board);
         // Should gain bug if bug available, or nothing if not
         // Accept either 1 or 0 in discard
         assertTrue(defenderCards.getDiscardSize() <= 1);
@@ -581,8 +639,7 @@ public class CardFunctionTests {
         while (board.drawDeckCard(Card.Type.BUG) != null) {}
         List<ParentPlayer> players = List.of(attacker, defender);
         Map<ParentPlayer, PlayerCards> map = Map.of(attacker, attackerCards, defender, defenderCards);
-        Ransomware ransomware = new Ransomware();
-        ransomware.play(makeState(attacker.getName(), attackerCards), attacker, players, map, board);
+        ActionCards.playActionCard(new Card(Card.Type.RANSOMWARE, 0), makeState(attacker.getName(), attackerCards), attacker, players, map, board);
         assertEquals(0, defenderCards.getDiscardSize());
     }
 
@@ -595,9 +652,15 @@ public class CardFunctionTests {
         Field cardMapField = BoardCards.class.getDeclaredField("cardMap");
         cardMapField.setAccessible(true);
         ((Map<?, ?>) cardMapField.get(board)).clear();
-        DeploymentPipeline dp = new DeploymentPipeline();
         // Should not throw
-        assertDoesNotThrow(() -> dp.play(makeState(player.getName(), pc), player, pc, board));
+        assertDoesNotThrow(() -> ActionCards.playActionCard(
+            new Card(Card.Type.DEPLOYMENT_PIPELINE, 0),
+            makeState(player.getName(), pc),
+            player,
+            List.of(player),
+            Map.of(player, pc),
+            board
+        ));
     }
 
     @Test
@@ -610,13 +673,19 @@ public class CardFunctionTests {
         pc.setUnplayedCards(List.of(codeReview));
         List<ParentPlayer> players = List.of(player);
         Map<ParentPlayer, PlayerCards> map = Map.of(player, pc);
-        edu.brandeis.cosi103a.groupb.engine.CardFunctions.Parallelization par = new edu.brandeis.cosi103a.groupb.engine.CardFunctions.Parallelization();
         // Queue the decision to play CodeReview
         player.queueDecision(new edu.brandeis.cosi.atg.decisions.PlayCardDecision(codeReview));
         // Initial hand size
         int before = pc.getHand().unplayedCards().size();
         // Play Parallelization
-        GameState after = par.play(makeState(player.getName(), pc), player, players, map, board);
+        GameState after = ActionCards.playActionCard(
+            new Card(Card.Type.PARALLELIZATION, 0),
+            makeState(player.getName(), pc),
+            player,
+            players,
+            map,
+            board
+        );
         // CodeReview draws 2 cards, Parallelization should apply it twice (total +3, since CodeReview is played from hand)
         assertEquals(before + 3, after.currentPlayerHand().unplayedCards().size());
     }

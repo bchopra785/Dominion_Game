@@ -6,7 +6,6 @@ import edu.brandeis.cosi.atg.decisions.Decision;
 import edu.brandeis.cosi.atg.decisions.EndPhaseDecision;
 import edu.brandeis.cosi.atg.decisions.PlayCardDecision;
 import edu.brandeis.cosi.atg.event.Event;
-import edu.brandeis.cosi.atg.event.GameObserver;
 import edu.brandeis.cosi.atg.state.GameState;
 
 import java.io.PrintStream;
@@ -28,25 +27,17 @@ public class StrategyPlayer extends ParentPlayer {
 
     private static final AtomicInteger COUNTER = new AtomicInteger(1);
 
-    private final PrintStream out;
-    private final RecordingGameObserver observer;
 
     public StrategyPlayer() {
         super("StrategyPlayer-" + COUNTER.getAndIncrement());
-        this.out = System.out;
-        this.observer = new RecordingGameObserver();
     }
 
     public StrategyPlayer(String name) {
         super(name);
-        this.out = System.out;
-        this.observer = new RecordingGameObserver();
     }
 
     public StrategyPlayer(String name, PrintStream out) {
         super(name);
-        this.out = out;
-        this.observer = new RecordingGameObserver();
     }
 
     @Override
@@ -211,7 +202,6 @@ public class StrategyPlayer extends ParentPlayer {
             if (option instanceof EndPhaseDecision) {
                 EndPhaseDecision end = (EndPhaseDecision) option;
                 if (end.phase() == preferredPhase) {
-                    out.println(getName() + " chose EndPhaseDecision(" + preferredPhase + ")");
                     return option;
                 }
             }
@@ -219,12 +209,10 @@ public class StrategyPlayer extends ParentPlayer {
 
         for (Decision option : options) {
             if (option instanceof EndPhaseDecision) {
-                out.println(getName() + " chose EndPhaseDecision(fallback)");
                 return option;
             }
         }
 
-        out.println(getName() + " chose first option fallback");
         return options.get(0);
     }
 

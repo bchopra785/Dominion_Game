@@ -6,6 +6,7 @@ import edu.brandeis.cosi.atg.state.PlayerResult;
 import edu.brandeis.cosi103a.groupb.BigMoneyPlayer;
 import edu.brandeis.cosi103a.groupb.ParentPlayer;
 import edu.brandeis.cosi103a.groupb.StrategyPlayer;
+import edu.brandeis.cosi103a.groupb.WeightedPlayer;
 import edu.brandeis.cosi103a.groupb.engine.Engine;
 
 import java.io.PrintStream;
@@ -226,6 +227,11 @@ public class PlayerRatingHarness {
             "Strategy",
             "Existing action-aware strategy player",
             StrategyPlayer::new
+        ));
+        templates.add(new Template(
+            "Weighted",
+            "Weight-based AI with dynamic threat detection and lookahead",
+            WeightedPlayer::new
         ));
         return templates;
     }

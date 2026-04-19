@@ -151,7 +151,17 @@ public class StrategyPlayer extends ParentPlayer {
                 }
             }
         }
-        // 2. If no card-drawers, prefer best money: DOGECOIN > ETHEREUM > BITCOIN
+        // 2. Prefer FRAMEWORK if available for points
+        if (targetType == null) {
+            for (Decision d : options) {
+                Card.Type t = getTypeFromDecision(d);
+                if (t == Card.Type.FRAMEWORK) {
+                    targetType = Card.Type.FRAMEWORK;
+                    break;
+                }
+            }
+        }
+        // 3. If no card-drawers or framework, prefer best money: DOGECOIN > ETHEREUM > BITCOIN
         if (targetType == null) {
             Card.Type[] moneyPriority = {Card.Type.DOGECOIN, Card.Type.ETHEREUM, Card.Type.BITCOIN};
             for (Card.Type moneyType : moneyPriority) {
@@ -165,7 +175,7 @@ public class StrategyPlayer extends ParentPlayer {
                 if (targetType != null) break;
             }
         }
-        // 3. If neither exists, return EndPhaseDecision for BUY phase
+        // 4. If neither exists, return EndPhaseDecision for BUY phase
         if (targetType == null) {
             for (Decision d : options) {
                 if (d instanceof EndPhaseDecision && ((EndPhaseDecision) d).phase() == GameState.TurnPhase.BUY) return d;
@@ -176,7 +186,7 @@ public class StrategyPlayer extends ParentPlayer {
             // Fallback: pick first option
             return options.get(0);
         }
-        // 4. MATCHING RULE: return the FIRST BuyDecision whose card matches the selected type
+        // 5. MATCHING RULE: return the FIRST BuyDecision whose card matches the selected type
         for (Decision d : options) {
             Card.Type t = getTypeFromDecision(d);
             if (t == targetType) return d;

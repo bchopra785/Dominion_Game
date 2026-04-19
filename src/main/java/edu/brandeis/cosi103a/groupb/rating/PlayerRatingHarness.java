@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Milestone 3 Story 1 harness.
@@ -204,7 +205,10 @@ public class PlayerRatingHarness {
         }
 
         out.println("Raw win counts (ties count as win for each top-ranked player):");
-        for (Map.Entry<String, Integer> entry : wins.entrySet()) {
+        List<Map.Entry<String, Integer>> sortedWins = wins.entrySet().stream()
+            .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
+            .collect(Collectors.toList());
+        for (Map.Entry<String, Integer> entry : sortedWins) {
             out.println("- " + entry.getKey() + ": " + entry.getValue());
         }
         out.println();

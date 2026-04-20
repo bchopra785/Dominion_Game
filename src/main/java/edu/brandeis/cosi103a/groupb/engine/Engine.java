@@ -102,7 +102,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
                 this.availableActions = 1;
                 this.spendableMoney = 0;
                 this.availableBuys = 1;
-                this.buyableCards = boardCards.getPlayableCards(0);
+                this.buyableCards = boardCards.getCardsLeft();
 
                 
                 //ACTION PHASE
@@ -167,7 +167,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         this.availableActions = 1;
         this.spendableMoney = 0;
         this.availableBuys = 1;
-        this.buyableCards = boardCards.getPlayableCards(0);    
+        this.buyableCards = boardCards.getCardsLeft();    
 
         return getState();
     }
@@ -220,7 +220,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
             this.spendableMoney += playedCard.value();
             this.handObject = playerCardsMap.get(currentPlayer).getHand();
-            this.buyableCards = boardCards.getPlayableCards(this.spendableMoney);
+            this.buyableCards = boardCards.getCardsLeft();
         }
 
         return getState();
@@ -232,8 +232,9 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
         // Create a list of BuyDecision for each card type available
         ImmutableList.Builder<Decision> optionsBuilder = new ImmutableList.Builder<>();
+        CardStacks affordableCards = boardCards.getAffordableCards(this.spendableMoney);
         if (this.availableBuys > 0) {
-            for (Card.Type cardType : this.buyableCards.getCardTypes()) {
+            for (Card.Type cardType : affordableCards.getCardTypes()) {
                 optionsBuilder.add(new BuyDecision(cardType));
             }
         }
@@ -269,7 +270,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
             this.spendableMoney -= gainedCard.cost() - (costReductionActive ? 1 : 0);
             this.availableBuys -= 1;
-            this.buyableCards = boardCards.getPlayableCards(this.spendableMoney);
+            this.buyableCards = boardCards.getCardsLeft();
             
         }
 

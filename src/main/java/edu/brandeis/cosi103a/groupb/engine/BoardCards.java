@@ -66,6 +66,14 @@ public class BoardCards {
         return builder.build();
     }
 
+    public CardStacks getCardsLeft() {
+        ImmutableMap.Builder<Card.Type, Integer> builder = ImmutableMap.builder();
+        for (Map.Entry<Card.Type, List<Card>> entry : cardMap.entrySet()) {
+            builder.put(entry.getKey(), entry.getValue().size());
+        }
+        return new CardStacks(builder.build());
+    }
+
     // Draws a card, should be returned to engine
     public Card drawDeckCard(Card.Type t){
         List<Card> stack = cardMap.get(t);
@@ -82,7 +90,7 @@ public class BoardCards {
 
 
     //shouldn't this be called buyablecards?
-    public CardStacks getPlayableCards(int costInHand) {
+    public CardStacks getAffordableCards(int costInHand) {
         // For now, all cards in hand are playable, but this can be changed to check for action cards and other conditions
         ImmutableMap<Card.Type, Integer> cardStacks = getCardStacks();
 
@@ -90,7 +98,7 @@ public class BoardCards {
         
         for(Card.Type t: cardStacks.keySet()){
             // Need to have the card and have enough cost in hand to play it
-            if ((cardStacks.get(t) > 0) & (costInHand >= t.cost())) {
+            if ((cardStacks.get(t) > 0) && (costInHand >= t.cost())) {
                 playableCardsBuilder.put(t, cardStacks.get(t));
             }
         }

@@ -1,4 +1,4 @@
-package edu.brandeis.cosi103a.groupb.rating;
+package edu.brandeis.cosi103a.groupb.rating.optimization;
 
 /**
  * Encapsulates all tunable weights for WeightedPlayer strategy.

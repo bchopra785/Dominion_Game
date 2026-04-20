@@ -1,8 +1,9 @@
-package edu.brandeis.cosi103a.groupb;
+package edu.brandeis.cosi103a.groupb.optimization;
 
 import edu.brandeis.cosi.atg.engine.PlayerViolationException;
-import edu.brandeis.cosi103a.groupb.rating.WeightConfig;
-import edu.brandeis.cosi103a.groupb.rating.WeightedPlayerOptimizer;
+import edu.brandeis.cosi103a.groupb.WeightedPlayer;
+import edu.brandeis.cosi103a.groupb.rating.optimization.WeightConfig;
+import edu.brandeis.cosi103a.groupb.rating.optimization.WeightedPlayerOptimizer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Disabled;
 
@@ -18,7 +19,7 @@ import org.junit.jupiter.api.Disabled;
  */
 
 
-public class WeightOptimizationTest {
+public class WeightedPlayerOptimizationTest {
     
     /**
      * Simple test to verify System.out works in test harness.
@@ -34,8 +35,12 @@ public class WeightOptimizationTest {
     /**
      * Quick optimization run (3 generations, 2 configs, small games).
      * Good for testing the optimization framework.
+     * NOTE: Increased from 2 to 5 games per matchup to account for random card selection variance.
      */
-    @Disabled("Optimization tests are computationally expensive. Run manually when tuning weights.")
+    //@Disabled("Optimization tests are computationally expensive. Run manually when tuning weights.")
+    
+    // mvn test -Dtest=WeightedPlayerOptimizationTest#testQuickWeightOptimization
+    
     @Test
     public void testQuickWeightOptimization() throws PlayerViolationException {
         System.out.println("\n>>> Starting testQuickWeightOptimization");
@@ -44,7 +49,7 @@ public class WeightOptimizationTest {
         try {
             WeightedPlayerOptimizer optimizer = new WeightedPlayerOptimizer(
                 3,              // generations
-                2,              // games per matchup (small for quick test)
+                5,              // games per matchup (increased from 2 for random card variance)
                 2,              // configs per generation (small)
                 0.15f           // mutation rate (15% variation)
             );
@@ -62,16 +67,19 @@ public class WeightOptimizationTest {
     }
     
     /**
-     * Medium optimization run (5 generations, 5 configs, moderate games).
-     * Good for initial exploring of the weight space.
+     * Medium optimization run (7 generations, 6 configs, moderate games).
+     * Good for exploring the weight space with better convergence than quick.
+     * NOTE: Increased from 5 gen/5 configs/20 games to reduce variance with random card selection.
+     * Total games: ~1,050 (manageable but more robust than smaller settings).
      */
     @Disabled("Optimization tests are computationally expensive. Run manually when tuning weights.")
+    // mvn test -Dtest=WeightedPlayerOptimizationTest#testMediumWeightOptimization
     @Test
     public void testMediumWeightOptimization() throws PlayerViolationException {
         WeightedPlayerOptimizer optimizer = new WeightedPlayerOptimizer(
-            5,              // generations
-            10,             // games per matchup
-            5,              // configs per generation
+            7,              // generations (increased from 5)
+            25,             // games per matchup (increased from 20 for better noise reduction)
+            6,              // configs per generation (increased from 5 for more diversity)
             0.20f           // mutation rate (20% variation)
         );
         
@@ -79,16 +87,19 @@ public class WeightOptimizationTest {
     }
     
     /**
-     * Full optimization run (10 generations, 8 configs, thorough games).
-     * Takes significant time but may find well-optimized weights.
+     * Full optimization run (8 generations, 7 configs, thorough games).
+     * Takes reasonable time and explores weight space thoroughly.
+     * NOTE: More thorough than medium (1,400 games vs 1,050) but still manageable.
+     * Total games: ~1,400.
      */
     @Disabled("Optimization tests are computationally expensive. Run manually when tuning weights.")
+    // mvn test -Dtest=WeightedPlayerOptimizationTest#testFullWeightOptimization
     @Test
     public void testFullWeightOptimization() throws PlayerViolationException {
         WeightedPlayerOptimizer optimizer = new WeightedPlayerOptimizer(
-            10,             // generations
-            25,             // games per matchup
-            8,              // configs per generation
+            8,              // generations (more than medium's 7)
+            25,             // games per matchup (same as medium)
+            7,              // configs per generation (more than medium's 6)
             0.15f           // mutation rate
         );
         

@@ -7,6 +7,7 @@ import edu.brandeis.cosi103a.groupb.BigMoneyPlayer;
 import edu.brandeis.cosi103a.groupb.ParentPlayer;
 import edu.brandeis.cosi103a.groupb.StrategyPlayer;
 import edu.brandeis.cosi103a.groupb.WeightedPlayer;
+import edu.brandeis.cosi103a.groupb.WeightedPlayer2;
 import edu.brandeis.cosi103a.groupb.engine.Engine;
 
 import java.io.PrintStream;
@@ -109,7 +110,7 @@ public class PlayerRatingHarness {
                 currentRank = i + 1;
             }
             boolean winner = currentRank == 1;
-            raw.add(new GameRecord.PlayerRecord(pr.playerName(), pr.score(), currentRank, winner));
+            raw.add(new GameRecord.PlayerRecord(pr.playerName(), pr.score(), currentRank, winner, 0, 0));
             previousScore = pr.score();
         }
 
@@ -196,12 +197,24 @@ public class PlayerRatingHarness {
         out.println("Games simulated: " + rawResults.size());
 
         Map<String, Integer> wins = new LinkedHashMap<>();
+        Map<String, Integer> moneyTotals = new LinkedHashMap<>();
+        Map<String, Integer> actionCardTotals = new LinkedHashMap<>();
+        Map<String, Integer> gameCounts = new LinkedHashMap<>();
+        
         for (GameRecord game : rawResults) {
             for (GameRecord.PlayerRecord playerResult : game.playerResults()) {
-                wins.putIfAbsent(playerResult.playerName(), 0);
+                String name = playerResult.playerName();
+                wins.putIfAbsent(name, 0);
+                moneyTotals.putIfAbsent(name, 0);
+                actionCardTotals.putIfAbsent(name, 0);
+                gameCounts.putIfAbsent(name, 0);
+                
                 if (playerResult.winner()) {
-                    wins.put(playerResult.playerName(), wins.get(playerResult.playerName()) + 1);
+                    wins.put(name, wins.get(name) + 1);
                 }
+                moneyTotals.put(name, moneyTotals.get(name) + playerResult.money());
+                actionCardTotals.put(name, actionCardTotals.get(name) + playerResult.actionCardCount());
+                gameCounts.put(name, gameCounts.get(name) + 1);
             }
         }
 
@@ -212,8 +225,17 @@ public class PlayerRatingHarness {
         for (Map.Entry<String, Integer> entry : sortedWins) {
             out.println("- " + entry.getKey() + ": " + entry.getValue());
         }
+        
         out.println();
-        out.println("Raw game records are available in-memory for metric computation.");
+        out.println("=== Average Metrics Per Game ===");
+        for (Map.Entry<String, Integer> entry : sortedWins) {
+            String playerName = entry.getKey();
+            int gameCount = gameCounts.get(playerName);
+            double avgMoney = gameCount > 0 ? (double) moneyTotals.get(playerName) / gameCount : 0;
+            double avgActionCards = gameCount > 0 ? (double) actionCardTotals.get(playerName) / gameCount : 0;
+            out.printf("- %s: %.1f money, %.1f action cards%n", playerName, avgMoney, avgActionCards);
+        }
+        out.println();
     }
 
     private static List<Template> defaultTemplates() {
@@ -229,9 +251,14 @@ public class PlayerRatingHarness {
             StrategyPlayer::new
         ));
         templates.add(new Template(
-            "Weighted",
-            "Weight-based AI with dynamic threat detection and lookahead",
+            "Weighted-V1",
+            "Category-based weights (original version)",
             WeightedPlayer::new
+        ));
+        templates.add(new Template(
+            "Weighted-V2",
+            "Individual card weights (new version)",
+            WeightedPlayer2::new
         ));
         return templates;
     }

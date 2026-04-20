@@ -29,8 +29,10 @@ public class GameHarness {
         List<Integer> selectedPlayers = new ArrayList<>();
         Map<Integer, String> playerOptions = new HashMap<>();
             playerOptions.put(1, "Console Player");
-            playerOptions.put(2, "Automated Player");
-            playerOptions.put(3, "Remote Player");
+            playerOptions.put(2, "BigMoney Player");
+            playerOptions.put(3, "Strategy Player");
+            playerOptions.put(4, "Weighted Player (Optimized AI)");
+            playerOptions.put(5, "Remote Player");
 
         System.out.println("Welcome to the Dominion Game Harness!");
         System.out.println("You must have a minimum of " + minPlayers + " players to start a game.");
@@ -64,8 +66,12 @@ public class GameHarness {
             if(choice == 1) {
                 players.add(new ConsolePlayer(scanner, System.out));
             } else if (choice == 2) {
-                players.add(new BigMoneyPlayer());
+                players.add(new BigMoneyPlayer("BigMoney Player"));
             } else if (choice == 3) {
+                players.add(new StrategyPlayer("Strategy Player"));
+            } else if (choice == 4) {
+                players.add(new WeightedPlayer("Weighted Player"));
+            } else if (choice == 5) {
                 String uuid = java.util.UUID.randomUUID().toString();
                 players.add(new PlayerClient("Remote Player", uuid, "http://localhost:8080"));
             }

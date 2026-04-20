@@ -17,6 +17,8 @@ public record GameRecord(
         String playerName,
         int score,
         int rank,
-        boolean winner
+        boolean winner,
+        int money,
+        int actionCardCount
     ) {}
 }

@@ -22,18 +22,18 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Strategy player for Milestone 3 Story 2.
  *
  */
-public class WeightedPlayer extends ParentPlayer {
+public class WeightedPlayer2 extends ParentPlayer {
 
     private static final AtomicInteger COUNTER = new AtomicInteger(1);
     private final Map<Card.Type, Integer> acquiredCards = new HashMap<>();  // Tracks both gained and purchased cards
-    private static final Map<String, List<String>> referenceCards = new HashMap<>();  // Reference map
-    private static final Map<String, Float> weights = new HashMap<>();  // Reference map (static defaults)
+    private static final Map<String, List<String>> referenceCards = new HashMap<>();  // Reference map for attack card detection
+    private static final Map<Card.Type, Float> cardWeights = new HashMap<>();  // Individual card weights
     private final Map<Card.Type, Integer> opponentAttackCards = new HashMap<>();  // Tracks opponent attack card acquisitions
     private int lastProcessedEventCount = 0;  // Track which events we've already processed
     private final String playerName;  // Store player name to identify own events
 
     // Instance-level configurable weights (override static defaults if set)
-    private Map<String, Float> instanceWeights = null;
+    private Map<Card.Type, Float> instanceCardWeights = null;
     private Integer instanceThreatMinorThreshold = null;
     private Integer instanceThreatModerateThreshold = null;
     private Float instanceDefenseWeightNoThreat = null;
@@ -48,73 +48,57 @@ public class WeightedPlayer extends ParentPlayer {
     private static final float DEFENSE_WEIGHT_MINOR = 1.0f;
     private static final float DEFENSE_WEIGHT_MODERATE = 2.0f;
     private static final float DEFENSE_WEIGHT_HIGH = 3.0f;
-    
-    // Action card effect values (estimate of cards drawn or actions enabled)
-    // Used in ACTION phase to prioritize which actions to play
-    private static final Map<Card.Type, Float> actionCardValues = new HashMap<>();
-    
-    // Priority orderings for card acquisition within categories
-    private static final Map<Card.Type, Integer> pointsPriority = new HashMap<>();
-    private static final Map<Card.Type, Integer> moneyPriority = new HashMap<>();
 
     // Static initializer block - runs once when class loads
     static {
-        referenceCards.put("money", Arrays.asList("BITCOIN", "ETHEREUM", "DOGECOIN"));
-        referenceCards.put("points", Arrays.asList("FRAMEWORK", "MODULE", "METHOD"));
+        referenceCards.put("circulation", Arrays.asList("DAILY_SCRUM", "BACKLOG", "PARALLELIZATION"));
         referenceCards.put("bridging", Arrays.asList("IPO", "CODE_REVIEW", "SPRINT_PLANNING", "DEPLOYMENT_PIPELINE", "TECH_DEBT", "UNIT_TEST"));
-        referenceCards.put("attack", Arrays.asList("EVERGREEN_TEST", "HACK", "RANSOMWARE"));
-        referenceCards.put("defense", Arrays.asList("MONITORING", "MERGE_CONFLICT", "REFACTOR"));
-        referenceCards.put("circulation", Arrays.asList("BACKLOG", "DAILY_SCRUM", "PARALLELIZATION"));
-
-        // Weight strategy: evolved from medium optimization with random card selection
-        // Achieved 68% win rate (1,050 games across 7 generations, 6 configs, 25 games each)
-        // Strategy emphasizes circulation (flexibility) over bridging (reliance on specific cards)
-        weights.put("circulation", 5.50f);      // INCREASED - maximize flexibility in random decks
-        weights.put("bridging", 1.61f);         // REDUCED - can't rely on expensive draw cards
-        weights.put("attack", 1.42f);           // Low - attack cards less effective
-        weights.put("money", 1.92f);            // Moderate - resource production important
-        weights.put("defense", 0.99f);          // Low - minimal defense needed
-        weights.put("points", 0.46f);           // Very low - endgame not priority
+        referenceCards.put("attack", Arrays.asList("EVERGREEN_TEST", "HACK", "RANSOMWARE"));  // For threat detection
         
-        // Action card values (estimate of effectiveness for drawing/chaining)
-        // Circulation cards (most valuable - enable filtering/cycling)
-        actionCardValues.put(Card.Type.DAILY_SCRUM, 5.0f);        // High card draw
-        actionCardValues.put(Card.Type.BACKLOG, 5.0f);            // High card draw
-        actionCardValues.put(Card.Type.PARALLELIZATION, 4.0f);    // Good card draw
+        // Individual card weights - optimized from 300-game evolutionary optimization (73.3% win rate)
+        // Discovered through medium optimization: 4 generations × 5 configs × 15 games
         
-        // Bridging cards (very valuable - draw cards and enable chains)
-        actionCardValues.put(Card.Type.IPO, 4.5f);               // Card draw + actions
-        actionCardValues.put(Card.Type.CODE_REVIEW, 4.0f);       // Card draw
-        actionCardValues.put(Card.Type.SPRINT_PLANNING, 3.5f);   // Card draw + actions
-        actionCardValues.put(Card.Type.DEPLOYMENT_PIPELINE, 3.0f); // Card draw + tempo
-        actionCardValues.put(Card.Type.TECH_DEBT, 2.5f);         // Minor card draw
-        actionCardValues.put(Card.Type.UNIT_TEST, 2.5f);         // Minor card draw
+        // Circulation cards (flexibility/card draw)
+        cardWeights.put(Card.Type.DAILY_SCRUM, 3.62f);            // Excellent card draw
+        cardWeights.put(Card.Type.BACKLOG, 3.376064f);            // Excellent card draw (optimized down slightly)
+        cardWeights.put(Card.Type.PARALLELIZATION, 2.3897896f);   // Good card draw (optimized down)
         
-        // Attack/Defense (situational)
-        actionCardValues.put(Card.Type.EVERGREEN_TEST, 2.0f);    // Attack
-        actionCardValues.put(Card.Type.HACK, 2.0f);              // Attack
-        actionCardValues.put(Card.Type.RANSOMWARE, 2.0f);        // Attack
-        actionCardValues.put(Card.Type.MONITORING, 1.5f);        // Defense
-        actionCardValues.put(Card.Type.MERGE_CONFLICT, 1.5f);    // Defense
-        actionCardValues.put(Card.Type.REFACTOR, 1.5f);          // Defense
+        // Bridging cards (draw and actions)
+        cardWeights.put(Card.Type.IPO, 2.93f);                    // Good draw + actions
+        cardWeights.put(Card.Type.CODE_REVIEW, 2.9575925f);       // Strongest bridging card (optimized up!)
+        cardWeights.put(Card.Type.SPRINT_PLANNING, 2.56f);        // Decent draw + action
+        cardWeights.put(Card.Type.DEPLOYMENT_PIPELINE, 2.001893f);// Some draw (optimized up)
+        cardWeights.put(Card.Type.TECH_DEBT, 1.47f);              // Minor draw
+        cardWeights.put(Card.Type.UNIT_TEST, 1.4571187f);         // Minor draw
         
-        // Priority orderings for card acquisition (lower number = higher priority)
-        pointsPriority.put(Card.Type.FRAMEWORK, 1);  // Best points card
-        pointsPriority.put(Card.Type.MODULE, 2);     // Second best
-        pointsPriority.put(Card.Type.METHOD, 3);     // Third best
+        // Money cards (resources) - ETHEREUM now strongest
+        cardWeights.put(Card.Type.BITCOIN, 1.936853f);            // Money card (optimized down)
+        cardWeights.put(Card.Type.ETHEREUM, 2.4113789f);          // Strongest money card (optimized up!)
+        cardWeights.put(Card.Type.DOGECOIN, 2.3845406f);          // Second strongest (optimized up)
         
-        moneyPriority.put(Card.Type.DOGECOIN, 1);    // Best money card
-        moneyPriority.put(Card.Type.ETHEREUM, 2);    // Second best
-        moneyPriority.put(Card.Type.BITCOIN, 3);     // Third best
+        // Attack cards - HACK is strongest
+        cardWeights.put(Card.Type.EVERGREEN_TEST, 2.1362183f);    // Attack (optimized down)
+        cardWeights.put(Card.Type.HACK, 2.6675334f);              // Strongest attack (optimized up!)
+        cardWeights.put(Card.Type.RANSOMWARE, 2.057161f);         // Attack (optimized down)
+        
+        // Defense cards - better diversity
+        cardWeights.put(Card.Type.MONITORING, 1.67f);             // Defense
+        cardWeights.put(Card.Type.MERGE_CONFLICT, 1.9406875f);    // Defense (optimized up)
+        cardWeights.put(Card.Type.REFACTOR, 1.8754771f);          // Defense (optimized up)
+        
+        // Point cards - better differentiation
+        cardWeights.put(Card.Type.FRAMEWORK, 0.9208751f);         // Victory points (optimized down)
+        cardWeights.put(Card.Type.MODULE, 0.5901168f);            // Points (optimized up)
+        cardWeights.put(Card.Type.METHOD, 0.36834785f);           // Points (optimized down)
     }
 
 
-    public WeightedPlayer() {
+    public WeightedPlayer2() {
         super("WeightedPlayer-" + COUNTER.getAndIncrement());
         this.playerName = super.toString();
     }
 
-    public WeightedPlayer(String name) {
+    public WeightedPlayer2(String name) {
         super(name);
         this.playerName = name;
     }
@@ -122,7 +106,7 @@ public class WeightedPlayer extends ParentPlayer {
     /**
      * Create a WeightedPlayer with custom weight configuration for optimization.
      */
-    public WeightedPlayer(String name, WeightConfig config) {
+    public WeightedPlayer2(String name, WeightConfig config) {
         super(name);
         this.playerName = name;
         if (config != null) {
@@ -134,14 +118,48 @@ public class WeightedPlayer extends ParentPlayer {
      * Apply a WeightConfig to this player instance, overriding default weights.
      */
     private void applyWeightConfig(WeightConfig config) {
-        // Create instance-level weight maps from config
-        this.instanceWeights = new HashMap<>();
-        this.instanceWeights.put("circulation", config.circulation);
-        this.instanceWeights.put("bridging", config.bridging);
-        this.instanceWeights.put("attack", config.attack);
-        this.instanceWeights.put("money", config.money);
-        this.instanceWeights.put("defense", config.defense);
-        this.instanceWeights.put("points", config.points);
+        // Create instance-level weight map from config - converting category weights to per-card weights
+        this.instanceCardWeights = new HashMap<>();
+        
+        // Map each card to its corresponding category weight from config
+        // Circulation cards
+        float circulationWeight = config.circulation;
+        this.instanceCardWeights.put(Card.Type.DAILY_SCRUM, circulationWeight);
+        this.instanceCardWeights.put(Card.Type.BACKLOG, circulationWeight);
+        this.instanceCardWeights.put(Card.Type.PARALLELIZATION, circulationWeight * 0.75f);  // Slightly lower
+        
+        // Bridging cards
+        float bridgingWeight = config.bridging;
+        this.instanceCardWeights.put(Card.Type.IPO, bridgingWeight);
+        this.instanceCardWeights.put(Card.Type.CODE_REVIEW, bridgingWeight);
+        this.instanceCardWeights.put(Card.Type.SPRINT_PLANNING, bridgingWeight);
+        this.instanceCardWeights.put(Card.Type.DEPLOYMENT_PIPELINE, bridgingWeight * 0.6f);
+        this.instanceCardWeights.put(Card.Type.TECH_DEBT, bridgingWeight * 0.4f);
+        this.instanceCardWeights.put(Card.Type.UNIT_TEST, bridgingWeight * 0.4f);
+        
+        // Money cards - preserve hierarchy (DOGECOIN > ETHEREUM > BITCOIN)
+        float moneyWeight = config.money;
+        this.instanceCardWeights.put(Card.Type.DOGECOIN, moneyWeight * 1.015f);  // Best money card
+        this.instanceCardWeights.put(Card.Type.ETHEREUM, moneyWeight);           // Second best
+        this.instanceCardWeights.put(Card.Type.BITCOIN, moneyWeight * 0.985f);   // Third best
+        
+        // Attack cards
+        float attackWeight = config.attack;
+        this.instanceCardWeights.put(Card.Type.EVERGREEN_TEST, attackWeight);
+        this.instanceCardWeights.put(Card.Type.HACK, attackWeight);
+        this.instanceCardWeights.put(Card.Type.RANSOMWARE, attackWeight);
+        
+        // Defense cards
+        float defenseWeight = config.defense;
+        this.instanceCardWeights.put(Card.Type.MONITORING, defenseWeight);
+        this.instanceCardWeights.put(Card.Type.MERGE_CONFLICT, defenseWeight);
+        this.instanceCardWeights.put(Card.Type.REFACTOR, defenseWeight);
+        
+        // Points cards - preserve hierarchy (FRAMEWORK > MODULE > METHOD)
+        float pointsWeight = config.points;
+        this.instanceCardWeights.put(Card.Type.FRAMEWORK, pointsWeight * 1.02f);   // Best points card
+        this.instanceCardWeights.put(Card.Type.MODULE, pointsWeight * 1.01f);      // Second best
+        this.instanceCardWeights.put(Card.Type.METHOD, pointsWeight);              // Third best
         
         // Store threat thresholds
         this.instanceThreatMinorThreshold = config.threatMinorThreshold;
@@ -155,16 +173,17 @@ public class WeightedPlayer extends ParentPlayer {
     }
 
     /**
-     * Get weight for a category, using instance config if available, otherwise defaults.
+     * Get weight for a specific card, using instance config if available, otherwise defaults.
+     * Protected so subclasses can override for custom weight strategies.
      */
-    private float getWeight(String category) {
-        if (instanceWeights != null) {
-            Float weight = instanceWeights.get(category);
+    protected float getWeight(Card.Type cardType) {
+        if (instanceCardWeights != null) {
+            Float weight = instanceCardWeights.get(cardType);
             if (weight != null) {
                 return weight;
             }
         }
-        Float weight = weights.get(category);
+        Float weight = cardWeights.get(cardType);
         return weight != null ? weight : 0.0f;
     }
 
@@ -202,25 +221,31 @@ public class WeightedPlayer extends ParentPlayer {
 
     @Override
     public Decision makeDecision(GameState state, ImmutableList<Decision> options) {
-        updateCardCount(); // Keep track of cards gained so far
-        updateDefenseWeightBasedOnOpponents();  // Adjust defense weight based on opponent threats
-        if (state == null || options == null || options.isEmpty()) {
-            return null;
-        }
+        try {
+            updateCardCount(); // Keep track of cards gained so far
+            updateDefenseWeightBasedOnOpponents();  // Adjust defense weight based on opponent threats
+            if (state == null || options == null || options.isEmpty()) {
+                return null;
+            }
 
-        if (state.phase() == GameState.TurnPhase.ACTION) {
-            return chooseActionDecision(state, options);
-        }
+            if (state.phase() == GameState.TurnPhase.ACTION) {
+                return chooseActionDecision(state, options);
+            }
 
-        if (state.phase() == GameState.TurnPhase.MONEY) {
-            return chooseMoneyDecision(state, options);
-        }
+            if (state.phase() == GameState.TurnPhase.MONEY) {
+                return chooseMoneyDecision(state, options);
+            }
 
-        if (state.phase() == GameState.TurnPhase.BUY) {
-            return chooseBuyDecision(state, options);
-        }
+            if (state.phase() == GameState.TurnPhase.BUY) {
+                return chooseBuyDecision(state, options);
+            }
 
-        return findBestFallback(options, state.phase());
+            return findBestFallback(options, state.phase());
+        } catch (Exception e) {
+            System.err.println("ERROR in " + playerName + " makeDecision: " + e.getMessage());
+            e.printStackTrace();
+            return options.isEmpty() ? null : options.get(0);
+        }
     }
 
     /**
@@ -416,81 +441,68 @@ public class WeightedPlayer extends ParentPlayer {
     }
 
     /**
-    * Weight-based BUY phase logic: Buy cards based on weight priorities and what's missing from deck.
-    * Strategy: Prioritize categories with highest weights, prefer acquiring cards from under-represented categories.
+    * Weight-based BUY phase logic: Buy cards based on individual card weights.
+    * Each card has its own weight representing its strategic value.
      */
     public Decision chooseBuyDecision(GameState state, ImmutableList<Decision> options) {
-        // PRIORITY 1: Always buy FRAMEWORK if available (victory points matter late game)
-        for (Decision option : options) {
-            Card.Type cardType = getTypeFromDecision(option);
-            if (cardType == Card.Type.FRAMEWORK) {
-                return option;
-            }
-        }
-        
-        Decision bestDecision = null;
-        Float bestScore = -1.0f;
-        
-        // Evaluate each option
-        for (Decision option : options) {
-            if (option instanceof EndPhaseDecision && ((EndPhaseDecision) option).phase() == GameState.TurnPhase.BUY) {
-                // Lower priority than buying cards, but keep as fallback
-                continue;
-            }
-            
-            // Get card type from decision
-            Card.Type cardType = getTypeFromDecision(option);
-            if (cardType == null) {
-                continue;
-            }
-            
-            // Find which category this card belongs to
-            String category = findCardCategory(cardType);
-            if (category == null) {
-                continue;
-            }
-            
-            // Calculate score: base weight + priority bonus for within-category preference
-            Float weight = getWeight(category);
-            
-            // Add priority bonus: prefer better cards within each category
-            float priorityBonus = 0.0f;
-            if ("money".equals(category)) {
-                Integer priority = moneyPriority.get(cardType);
-                if (priority != null) {
-                    priorityBonus = (4.0f - priority) * 0.1f;  // 0.3, 0.2, 0.1 for priorities 1, 2, 3
-                }
-            } else if ("points".equals(category)) {
-                Integer priority = pointsPriority.get(cardType);
-                if (priority != null) {
-                    priorityBonus = (4.0f - priority) * 0.1f;  // 0.3, 0.2, 0.1 for priorities 1, 2, 3
+        try {
+            // PRIORITY 1: Always buy FRAMEWORK if available (victory points matter late game)
+            for (Decision option : options) {
+                Card.Type cardType = getTypeFromDecision(option);
+                if (cardType == Card.Type.FRAMEWORK) {
+                    System.out.println(playerName + " BUYING FRAMEWORK (highest priority)");
+                    return option;
                 }
             }
             
-            // Decrement score if we already have many of this card
-            int currentCount = acquiredCards.getOrDefault(cardType, 0);
-            float score = (weight + priorityBonus) / (1.0f + (currentCount * 0.5f));  // Diminishing returns for duplicates
+            Decision bestDecision = null;
+            Float bestScore = -1.0f;
             
-            if (score > bestScore) {
-                bestScore = score;
-                bestDecision = option;
+            // Evaluate each option
+            for (Decision option : options) {
+                if (option instanceof EndPhaseDecision && ((EndPhaseDecision) option).phase() == GameState.TurnPhase.BUY) {
+                    // Lower priority than buying cards, but keep as fallback
+                    continue;
+                }
+                
+                // Get card type from decision
+                Card.Type cardType = getTypeFromDecision(option);
+                if (cardType == null) {
+                    continue;
+                }
+                
+                // Get weight for this specific card
+                Float weight = getWeight(cardType);
+                
+                // Decrement score if we already have many of this card (diminishing returns for duplicates)
+                int currentCount = acquiredCards.getOrDefault(cardType, 0);
+                float score = weight / (1.0f + (currentCount * 0.5f));
+                
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestDecision = option;
+                }
             }
-        }
-        
-        // If we found a good card to buy, return it
-        if (bestDecision != null) {
-            return bestDecision;
-        }
-        
-        // Fallback: try to end the BUY phase
-        for (Decision d : options) {
-            if (d instanceof EndPhaseDecision && ((EndPhaseDecision) d).phase() == GameState.TurnPhase.BUY) {
-                return d;
+            
+            // If we found a good card to buy, return it
+            if (bestDecision != null) {
+                return bestDecision;
             }
+            
+            // Fallback: try to end the BUY phase
+            for (Decision d : options) {
+                if (d instanceof EndPhaseDecision && ((EndPhaseDecision) d).phase() == GameState.TurnPhase.BUY) {
+                    return d;
+                }
+            }
+            
+            // Last resort: return first option
+            return options.get(0);
+        } catch (Exception e) {
+            System.err.println("ERROR in " + playerName + " chooseBuyDecision: " + e.getMessage());
+            e.printStackTrace();
+            return options.isEmpty() ? null : options.get(0);
         }
-        
-        // Last resort: return first option
-        return options.get(0);
     }
     
     /**
@@ -544,24 +556,17 @@ public class WeightedPlayer extends ParentPlayer {
             newDefenseWeight = getDefenseWeight("high");
         }
         
-        // Update weights in both static map and instance map (if configured)
-        weights.put("defense", newDefenseWeight);
-        if (instanceWeights != null) {
-            instanceWeights.put("defense", newDefenseWeight);
+        // Update individual defense card weights based on threat level
+        cardWeights.put(Card.Type.MONITORING, newDefenseWeight);
+        cardWeights.put(Card.Type.MERGE_CONFLICT, newDefenseWeight);
+        cardWeights.put(Card.Type.REFACTOR, newDefenseWeight);
+        
+        // Also update instance weights if configured
+        if (instanceCardWeights != null) {
+            instanceCardWeights.put(Card.Type.MONITORING, newDefenseWeight);
+            instanceCardWeights.put(Card.Type.MERGE_CONFLICT, newDefenseWeight);
+            instanceCardWeights.put(Card.Type.REFACTOR, newDefenseWeight);
         }
-    }
-
-    /**
-     * Find which category a card type belongs to
-     */
-    private String findCardCategory(Card.Type cardType) {
-        for (String category : referenceCards.keySet()) {
-            List<String> cardNames = referenceCards.get(category);
-            if (cardNames.contains(cardType.toString())) {
-                return category;
-            }
-        }
-        return null;
     }
 
     // Helper: extract Card.Type from Decision if possible

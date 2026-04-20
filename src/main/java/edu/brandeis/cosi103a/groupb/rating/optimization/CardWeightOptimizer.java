@@ -1,29 +1,28 @@
-package edu.brandeis.cosi103a.groupb.rating;
+package edu.brandeis.cosi103a.groupb.rating.optimization;
 
 import edu.brandeis.cosi.atg.engine.PlayerViolationException;
 import edu.brandeis.cosi.atg.state.GameResult;
 import edu.brandeis.cosi.atg.state.PlayerResult;
 import edu.brandeis.cosi103a.groupb.ParentPlayer;
-import edu.brandeis.cosi103a.groupb.WeightedPlayer;
+import edu.brandeis.cosi103a.groupb.WeightedPlayer2;
+import edu.brandeis.cosi103a.groupb.WeightedPlayer2CardWeightAdapter;
 import edu.brandeis.cosi103a.groupb.engine.Engine;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 /**
- * Automated optimization framework for WeightedPlayer.
- * Runs multiple generations of weight configurations competing against each other,
- * automatically evolving toward optimal weights through tournament play.
+ * Automated optimization framework for individual card weights in WeightedPlayer2.
+ * Optimizes per-card weights rather than category weights.
+ * Runs multiple generations of card weight configurations competing against each other.
  */
-public class WeightedPlayerOptimizer {
+public class CardWeightOptimizer {
     
     private final int generationCount;
     private final int gamesPerMatchup;
     private final int configsPerGeneration;
     private final float mutationRate;
     
-    public WeightedPlayerOptimizer(int generationCount, int gamesPerMatchup, int configsPerGeneration, float mutationRate) {
+    public CardWeightOptimizer(int generationCount, int gamesPerMatchup, int configsPerGeneration, float mutationRate) {
         this.generationCount = generationCount;
         this.gamesPerMatchup = gamesPerMatchup;
         this.configsPerGeneration = configsPerGeneration;
@@ -31,27 +30,29 @@ public class WeightedPlayerOptimizer {
     }
     
     /**
-     * Run the optimization process, evolving weights over multiple generations.
+     * Run the optimization process for individual card weights.
      */
     public void optimize() throws PlayerViolationException {
-        System.err.println("[OPTIMIZER] Starting optimization...");
+        System.err.println("[CARD OPTIMIZER] Starting individual card weight optimization...");
         System.err.flush();
         
-        System.out.println("\n=== WeightedPlayer Weight Optimization ===");
+        System.out.println("\n╔════════════════════════════════════════════════════════════╗");
+        System.out.println("║  WeightedPlayer2 - Individual Card Weight Optimization");
+        System.out.println("╚════════════════════════════════════════════════════════════╝");
         System.out.println("Generations: " + generationCount);
         System.out.println("Configs per generation: " + configsPerGeneration);
         System.out.println("Games per matchup: " + gamesPerMatchup);
         System.out.println("Mutation rate: " + mutationRate + "\n");
         System.out.flush();
         
-        WeightConfig baseConfig = WeightConfig.createDefault();
-        List<ConfigRating> currentGeneration = new ArrayList<>();
+        CardWeightConfig baseConfig = CardWeightConfig.createDefault();
+        List<CardConfigRating> currentGeneration = new ArrayList<>();
         
         // Generation 0: Create initial population from default
         System.out.println("Generation 0: Creating " + configsPerGeneration + " variants from default config...");
         for (int i = 0; i < configsPerGeneration; i++) {
-            WeightConfig variant = (i == 0) ? baseConfig : baseConfig.mutate(mutationRate);
-            currentGeneration.add(new ConfigRating(variant, i));
+            CardWeightConfig variant = (i == 0) ? baseConfig : baseConfig.mutate(mutationRate);
+            currentGeneration.add(new CardConfigRating(variant, i));
         }
         
         // Run generations
@@ -62,7 +63,7 @@ public class WeightedPlayerOptimizer {
             runTournament(currentGeneration, gen);
             
             // Sort by win rate
-            currentGeneration.sort(Comparator.comparingDouble(ConfigRating::getWinRate).reversed());
+            currentGeneration.sort(Comparator.comparingDouble(CardConfigRating::getWinRate).reversed());
             
             // Print results
             printGenerationResults(currentGeneration, gen);
@@ -80,24 +81,25 @@ public class WeightedPlayerOptimizer {
     /**
      * Run tournament for all configs in current generation.
      */
-    private void runTournament(List<ConfigRating> generation, int generationNumber) throws PlayerViolationException {
-        for (ConfigRating config : generation) {
-            // Create players: one with this config vs two standard baselines
+    private void runTournament(List<CardConfigRating> generation, int generationNumber) throws PlayerViolationException {
+        for (CardConfigRating config : generation) {
+            // Create players: one with this config vs baseline
             List<SelectedPlayer> matchup = new ArrayList<>();
-            matchup.add(new SelectedPlayer("WeightedOpt-" + config.configId, () -> new WeightedPlayer("WeightedOpt-" + config.configId, config.config)));
-            matchup.add(new SelectedPlayer("BigMoney-baseline", () -> new WeightedPlayer("BigMoney-baseline")));  // Using default weighted player
+            matchup.add(new SelectedPlayer("CardWeightOpt-" + config.configId, 
+                () -> new WeightedPlayer2CardWeightAdapter("CardWeightOpt-" + config.configId, config.config)));
+            matchup.add(new SelectedPlayer("baseline", 
+                () -> new WeightedPlayer2("baseline")));
             
             System.out.print("Testing config " + config.configId + "... ");
             
-            // Run games (smaller set for speed)
-            int gamesThisConfig = Math.max(1, gamesPerMatchup / 5);  // Reduced for speed
+            int gamesThisConfig = gamesPerMatchup;
             for (int game = 0; game < gamesThisConfig; game++) {
                 try {
                     GameRecord record = runSingleGame(matchup);
                     
                     // Check if our config won
                     for (String winner : record.winners) {
-                        if (winner.startsWith("WeightedOpt-" + config.configId)) {
+                        if (winner.startsWith("CardWeightOpt-" + config.configId)) {
                             config.wins++;
                             break;
                         }
@@ -108,7 +110,8 @@ public class WeightedPlayerOptimizer {
                 }
             }
             
-            System.out.println("Result: " + config.wins + "/" + config.gamesPlayed + " wins (" + String.format("%.1f%%", config.getWinRate() * 100) + ")");
+            System.out.println("Result: " + config.wins + "/" + config.gamesPlayed + " wins (" + 
+                String.format("%.1f%%", config.getWinRate() * 100) + ")");
         }
     }
     
@@ -151,28 +154,28 @@ public class WeightedPlayerOptimizer {
     /**
      * Evolve next generation from top performers.
      */
-    private List<ConfigRating> evolveNextGeneration(List<ConfigRating> current) {
-        List<ConfigRating> nextGen = new ArrayList<>();
+    private List<CardConfigRating> evolveNextGeneration(List<CardConfigRating> current) {
+        List<CardConfigRating> nextGen = new ArrayList<>();
         
         // Keep top 25% of configs
         int keepCount = Math.max(2, configsPerGeneration / 4);
         for (int i = 0; i < keepCount && i < current.size(); i++) {
             // Keep top config as-is
             if (i == 0) {
-                ConfigRating elite = current.get(i);
-                nextGen.add(new ConfigRating(elite.config, nextGen.size()));
+                CardConfigRating elite = current.get(i);
+                nextGen.add(new CardConfigRating(elite.config, nextGen.size()));
             } else {
                 // Mutate other top configs
-                ConfigRating top = current.get(i);
-                nextGen.add(new ConfigRating(top.config.mutate(mutationRate), nextGen.size()));
+                CardConfigRating top = current.get(i);
+                nextGen.add(new CardConfigRating(top.config.mutate(mutationRate), nextGen.size()));
             }
         }
         
         // Fill rest with mutations of top performer
-        ConfigRating topPerformer = current.get(0);
+        CardConfigRating topPerformer = current.get(0);
         while (nextGen.size() < configsPerGeneration) {
-            WeightConfig mutated = topPerformer.config.mutate(mutationRate * 1.5f);  // Larger mutations for exploration
-            nextGen.add(new ConfigRating(mutated, nextGen.size()));
+            CardWeightConfig mutated = topPerformer.config.mutate(mutationRate * 1.5f);
+            nextGen.add(new CardConfigRating(mutated, nextGen.size()));
         }
         
         return nextGen;
@@ -181,18 +184,17 @@ public class WeightedPlayerOptimizer {
     /**
      * Print results for a generation.
      */
-    private void printGenerationResults(List<ConfigRating> generation, int generationNumber) {
+    private void printGenerationResults(List<CardConfigRating> generation, int generationNumber) {
         System.out.println("\nGeneration " + generationNumber + " Results:");
-        System.out.println("Rank | Config ID | Win Rate | Details");
-        System.out.println("-----|-----------|----------|----------------------------------------");
+        System.out.println("Rank | Config ID | Win Rate");
+        System.out.println("-----|-----------|----------");
         
         for (int i = 0; i < Math.min(5, generation.size()); i++) {
-            ConfigRating rating = generation.get(i);
-            System.out.printf("%4d | %9d | %7.1f%% | %s\n",
+            CardConfigRating rating = generation.get(i);
+            System.out.printf("%4d | %9d | %7.1f%%\n",
                 i + 1,
                 rating.configId,
-                rating.getWinRate() * 100,
-                rating.config
+                rating.getWinRate() * 100
             );
         }
     }
@@ -200,84 +202,81 @@ public class WeightedPlayerOptimizer {
     /**
      * Print final optimization results.
      */
-    private void printFinalResults(List<ConfigRating> topConfigs) {
-        System.out.println("\n\n=== OPTIMIZATION COMPLETE ===");
+    private void printFinalResults(List<CardConfigRating> topConfigs) {
+        System.out.println("\n\n╔════════════════════════════════════════════════════════════╗");
+        System.out.println("║  WeightedPlayer2 - Individual Card Weight Optimization");
+        System.out.println("║  OPTIMIZATION COMPLETE");
+        System.out.println("╚════════════════════════════════════════════════════════════╝");
+        
         System.out.println("\nTop 5 Evolved Configurations:");
-        System.out.println("Rank | Win Rate | Configuration");
-        System.out.println("-----|----------|---------------------------------------------");
+        System.out.println("Rank | Win Rate");
+        System.out.println("-----|----------");
         
         for (int i = 0; i < Math.min(5, topConfigs.size()); i++) {
-            ConfigRating rating = topConfigs.get(i);
-            System.out.printf("%4d | %7.1f%% | %s\n",
+            CardConfigRating rating = topConfigs.get(i);
+            System.out.printf("%4d | %7.1f%%\n",
                 i + 1,
-                rating.getWinRate() * 100,
-                rating.config
+                rating.getWinRate() * 100
             );
         }
         
         // Print best config in detail
         if (!topConfigs.isEmpty()) {
-            ConfigRating best = topConfigs.get(0);
-            System.out.println("\n=== BEST CONFIGURATION ===");
+            CardConfigRating best = topConfigs.get(0);
+            System.out.println("\n=== BEST CARD WEIGHT CONFIGURATION ===");
             System.out.println("Win Rate: " + String.format("%.1f%%", best.getWinRate() * 100));
-            System.out.println("Category Weights:");
-            System.out.println("  Circulation: " + best.config.circulation);
-            System.out.println("  Bridging: " + best.config.bridging);
-            System.out.println("  Attack: " + best.config.attack);
-            System.out.println("  Money: " + best.config.money);
-            System.out.println("  Defense: " + best.config.defense);
-            System.out.println("  Points: " + best.config.points);
-            System.out.println("\nThreat Thresholds:");
-            System.out.println("  Minor: " + best.config.threatMinorThreshold);
-            System.out.println("  Moderate: " + best.config.threatModerateThreshold);
+            System.out.println("\nCard Weights:");
+            best.config.printWeights();
         }
     }
     
     /**
-     * Inner class tracking a configuration and its performance.
+     * Inner class to track card config ratings.
      */
-    private static class ConfigRating {
-        WeightConfig config;
+    static class CardConfigRating {
+        CardWeightConfig config;
         int configId;
         int wins = 0;
         int gamesPlayed = 0;
         
-        ConfigRating(WeightConfig config, int configId) {
+        CardConfigRating(CardWeightConfig config, int configId) {
             this.config = config;
             this.configId = configId;
         }
         
         double getWinRate() {
-            return gamesPlayed > 0 ? (double) wins / gamesPlayed : 0.0;
+            return gamesPlayed == 0 ? 0 : (double) wins / gamesPlayed;
         }
     }
     
     /**
-     * Inner class for tournament results (simplified).
+     * Inner class for selected players in tournament.
      */
-    private static class GameRecord {
-        List<String> winners = new ArrayList<>();
-        
-        GameRecord(int matchupNumber, int gameNumber, List<SelectedPlayer> matchup) {
-            // Stores matchup info for reference if needed in future extensions
-        }
-    }
-    
-    @FunctionalInterface
-    public interface PlayerFactory {
-        ParentPlayer create();
-    }
-    
-    /**
-     * Selected player wrapper.
-     */
-    public static class SelectedPlayer {
+    static class SelectedPlayer {
         String name;
-        PlayerFactory factory;
+        Factory factory;
         
-        public SelectedPlayer(String name, PlayerFactory factory) {
+        SelectedPlayer(String name, Factory factory) {
             this.name = name;
             this.factory = factory;
+        }
+        
+        interface Factory {
+            ParentPlayer create();
+        }
+    }
+    
+    /**
+     * Inner class for game records.
+     */
+    static class GameRecord {
+        int wins;
+        int losses;
+        List<String> winners = new ArrayList<>();
+        
+        GameRecord(int wins, int losses, List<SelectedPlayer> matchup) {
+            this.wins = wins;
+            this.losses = losses;
         }
     }
 }

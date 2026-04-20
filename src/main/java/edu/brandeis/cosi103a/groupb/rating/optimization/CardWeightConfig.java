@@ -19,7 +19,7 @@ public class CardWeightConfig {
     /**
      * Create a card weight config with all weights set to a value.
      */
-    private CardWeightConfig(Map<Card.Type, Float> cardWeights) {
+    CardWeightConfig(Map<Card.Type, Float> cardWeights) {
         this.cardWeights = new HashMap<>(cardWeights);
     }
     

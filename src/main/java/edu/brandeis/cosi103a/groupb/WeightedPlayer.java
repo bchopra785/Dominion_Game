@@ -3,8 +3,11 @@ package edu.brandeis.cosi103a.groupb;
 import com.google.common.collect.ImmutableList;
 import edu.brandeis.cosi.atg.cards.Card;
 import edu.brandeis.cosi.atg.decisions.Decision;
+import edu.brandeis.cosi.atg.decisions.DiscardCardDecision;
 import edu.brandeis.cosi.atg.decisions.EndPhaseDecision;
+import edu.brandeis.cosi.atg.decisions.GainCardDecision;
 import edu.brandeis.cosi.atg.decisions.PlayCardDecision;
+import edu.brandeis.cosi.atg.decisions.TrashCardDecision;
 import edu.brandeis.cosi.atg.event.Event;
 import edu.brandeis.cosi.atg.event.GainCardEvent;
 import edu.brandeis.cosi.atg.state.GameState;
@@ -220,7 +223,126 @@ public class WeightedPlayer extends ParentPlayer {
             return chooseBuyDecision(state, options);
         }
 
+        // Check if this is a trash decision (not tied to a specific phase)
+        if (!options.isEmpty() && options.get(0) instanceof TrashCardDecision) {
+            return chooseTrashDecision(options);
+        }
+
+        // Check if this is a discard decision (not tied to a specific phase)
+        if (!options.isEmpty() && options.get(0) instanceof DiscardCardDecision) {
+            return chooseDiscardDecision(options);
+        }
+
+        // Check if this is a gain card decision (not tied to a specific phase)
+        if (!options.isEmpty() && options.get(0) instanceof GainCardDecision) {
+            return chooseGainCardDecision(options);
+        }
+
         return findBestFallback(options, state.phase());
+    }
+
+    /**
+     * Trash strategy: Prioritize trashing the BUG card, fall back to first option.
+     */
+    public Decision chooseTrashDecision(ImmutableList<Decision> options) {
+        if (options == null || options.isEmpty()) {
+            return null;
+        }
+
+        // Try to find and trash the BUG card first
+        for (Decision option : options) {
+            if (option instanceof TrashCardDecision) {
+                Card cardToTrash = ((TrashCardDecision) option).card();
+                if (cardToTrash.type() == Card.Type.BUG) {
+                    return option;
+                }
+            }
+        }
+
+        // Fallback: return first trash option
+        return options.get(0);
+    }
+
+    /**
+     * Discard strategy: Prioritize discarding in this order:
+     * 1. BUG card
+     * 2. Point cards (METHOD, MODULE, FRAMEWORK)
+     * 3. Fallback to first option
+     */
+    public Decision chooseDiscardDecision(ImmutableList<Decision> options) {
+        if (options == null || options.isEmpty()) {
+            return null;
+        }
+
+        // Priority 1: Try to find and discard the BUG card first
+        for (Decision option : options) {
+            if (option instanceof DiscardCardDecision) {
+                Card cardToDiscard = ((DiscardCardDecision) option).card();
+                if (cardToDiscard.type() == Card.Type.BUG) {
+                    return option;
+                }
+            }
+        }
+
+        // Priority 2: Try to discard point cards (low-value)
+        List<Card.Type> pointCards = Arrays.asList(Card.Type.METHOD, Card.Type.MODULE, Card.Type.FRAMEWORK);
+        for (Decision option : options) {
+            if (option instanceof DiscardCardDecision) {
+                Card cardToDiscard = ((DiscardCardDecision) option).card();
+                if (pointCards.contains(cardToDiscard.type())) {
+                    return option;
+                }
+            }
+        }
+
+        // Fallback: return first discard option
+        return options.get(0);
+    }
+
+    /**
+     * Gain card strategy: Use weight-based logic to select best card.
+     * Select the card with the highest weight, with diminishing returns for duplicates.
+     */
+    public Decision chooseGainCardDecision(ImmutableList<Decision> options) {
+        if (options == null || options.isEmpty()) {
+            return null;
+        }
+
+        Decision bestDecision = null;
+        Float bestScore = -1.0f;
+
+        // Evaluate each option by weight
+        for (Decision option : options) {
+            if (!(option instanceof GainCardDecision)) {
+                continue;
+            }
+
+            Card.Type cardType = ((GainCardDecision) option).cardType();
+            if (cardType == null) {
+                continue;
+            }
+
+            // Get weight for this card
+            String cardTypeKey = cardType.toString();
+            Float weight = getWeight(cardTypeKey);
+
+            // Decrement score if we already have many of this card (diminishing returns for duplicates)
+            int currentCount = acquiredCards.getOrDefault(cardType, 0);
+            float score = weight / (1.0f + (currentCount * 0.5f));
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestDecision = option;
+            }
+        }
+
+        // If we found a good card to gain, return it
+        if (bestDecision != null) {
+            return bestDecision;
+        }
+
+        // Fallback: return first option
+        return options.get(0);
     }
 
     /**

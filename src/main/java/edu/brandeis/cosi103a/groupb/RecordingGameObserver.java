@@ -12,24 +12,32 @@ public class RecordingGameObserver implements GameObserver {
 
     private final List<Event> observedEvents = new ArrayList<>();
     private final PrintStream out;
+    private boolean verbose = false;  // Control event logging verbosity (default: false to reduce output)
 
     public RecordingGameObserver() {
-        this(System.out);
+        this(System.out, false);
     }
 
     public RecordingGameObserver(PrintStream out) {
+        this(out, false);
+    }
+
+    public RecordingGameObserver(PrintStream out, boolean verbose) {
         this.out = out == null ? System.out : out;
+        this.verbose = verbose;
     }
 
     @Override
     public synchronized void notifyEvent(GameState state, Event event) {
         if (event != null) {
             observedEvents.add(event);
-            String prefix = "[EVENT] ";
-            if (state != null) {
-                prefix = "[" + state.currentPlayerName() + " | " + state.phase() + "] ";
+            if (verbose) {
+                String prefix = "[EVENT] ";
+                if (state != null) {
+                    prefix = "[" + state.currentPlayerName() + " | " + state.phase() + "] ";
+                }
+                out.println(prefix + event);
             }
-            out.println(prefix + event);
         }
     }
 
@@ -39,5 +47,13 @@ public class RecordingGameObserver implements GameObserver {
 
     public synchronized void clear() {
         observedEvents.clear();
+    }
+
+    public boolean isVerbose() {
+        return verbose;
+    }
+
+    public void setVerbose(boolean verbose) {
+        this.verbose = verbose;
     }
 }

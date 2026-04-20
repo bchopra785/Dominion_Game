@@ -12,6 +12,8 @@ import edu.brandeis.cosi.atg.event.Event;
 import edu.brandeis.cosi.atg.event.GainCardEvent;
 import edu.brandeis.cosi.atg.state.GameState;
 import edu.brandeis.cosi103a.groupb.rating.optimization.WeightConfig;
+import edu.brandeis.cosi103a.groupb.rating.optimization.CardWeightOptimizer3;
+import edu.brandeis.cosi103a.groupb.rating.optimization.CardWeightConfig;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,22 +21,28 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Strategy player for Milestone 3 Story 2.
  *
  */
-public class WeightedPlayer2 extends ParentPlayer {
+public class WeightedPlayer3 extends ParentPlayer {
 
     private static final AtomicInteger COUNTER = new AtomicInteger(1);
     private final Map<Card.Type, Integer> acquiredCards = new HashMap<>();  // Tracks both gained and purchased cards
     private static final Map<String, List<String>> referenceCards = new HashMap<>();  // Reference map for attack card detection
     private static final Map<Card.Type, Float> cardWeights = new HashMap<>();  // Individual card weights
+    private static final Map<String, CardWeightConfig> DECK_AWARE_WEIGHTS = new HashMap<>();  // Deck-aware optimized weights for each board config
     private final Map<Card.Type, Integer> opponentAttackCards = new HashMap<>();  // Tracks opponent attack card acquisitions
     private int lastProcessedEventCount = 0;  // Track which events we've already processed
     private final String playerName;  // Store player name to identify own events
-    private boolean verbose = false;  // Control console output verbosity (default: true for backward compatibility)
+    private boolean verbose = false;  // Control console output verbosity (default: false for optimization)
+    
+    // Deck-aware detection: track which action cards we've seen to detect the missing one
+    private final java.util.Set<Card.Type> seenActionCards = new java.util.HashSet<>();
+    private String detectedMissingActionCard = null;  // Cached once detected
 
     // Instance-level configurable weights (override static defaults if set)
     private Map<Card.Type, Float> instanceCardWeights = null;
@@ -56,7 +64,7 @@ public class WeightedPlayer2 extends ParentPlayer {
     // Static initializer block - runs once when class loads
     static {
         referenceCards.put("circulation", Arrays.asList("DAILY_SCRUM", "BACKLOG", "PARALLELIZATION"));
-        referenceCards.put("bridging", Arrays.asList("IPO", "CODE_REVIEW", "SPRINT_PLANNING", "DEPLOYMENT_PIPELINE", "TECH_DEBT", "UNIT_TEST"));
+        referenceCards.put("bridging", Arrays.asList("IPO", "CODE_REVIEW", "SPRINT_PLANNING", "UNIT_TEST"));
         referenceCards.put("attack", Arrays.asList("EVERGREEN_TEST", "HACK", "RANSOMWARE"));  // For threat detection
         
         // Individual card weights - optimized from 300-game evolutionary optimization (73.3% win rate)
@@ -71,8 +79,6 @@ public class WeightedPlayer2 extends ParentPlayer {
         cardWeights.put(Card.Type.IPO, 2.93f);                    // Good draw + actions
         cardWeights.put(Card.Type.CODE_REVIEW, 2.9575925f);       // Strongest bridging card (optimized up!)
         cardWeights.put(Card.Type.SPRINT_PLANNING, 2.56f);        // Decent draw + action
-        cardWeights.put(Card.Type.DEPLOYMENT_PIPELINE, 2.001893f);// Some draw (optimized up)
-        cardWeights.put(Card.Type.TECH_DEBT, 1.47f);              // Minor draw
         cardWeights.put(Card.Type.UNIT_TEST, 1.4571187f);         // Minor draw
         
         // Money cards (resources) - ETHEREUM now strongest
@@ -87,29 +93,39 @@ public class WeightedPlayer2 extends ParentPlayer {
         
         // Defense cards - better diversity
         cardWeights.put(Card.Type.MONITORING, 1.67f);             // Defense
-        cardWeights.put(Card.Type.MERGE_CONFLICT, 1.9406875f);    // Defense (optimized up)
         cardWeights.put(Card.Type.REFACTOR, 1.8754771f);          // Defense (optimized up)
         
         // Point cards - better differentiation
         cardWeights.put(Card.Type.FRAMEWORK, 0.9208751f);         // Victory points (optimized down)
         cardWeights.put(Card.Type.MODULE, 0.5901168f);            // Points (optimized up)
         cardWeights.put(Card.Type.METHOD, 0.36834785f);           // Points (optimized down)
+        
+        // Try to load deck-aware weights from file (if they've been optimized)
+        try {
+            String configFile = "deckaware_weights.txt";
+            Map<String, CardWeightConfig> loadedConfigs = CardWeightOptimizer3.loadConfigsFromFile(configFile);
+            DECK_AWARE_WEIGHTS.putAll(loadedConfigs);
+            // System.err.println("[WeightedPlayer3 DEBUG] Loaded " + DECK_AWARE_WEIGHTS.size() + " deck-aware weight configurations");
+        } catch (Exception e) {
+            // File doesn't exist yet (first run) - that's fine, we'll use defaults
+            // System.err.println("[WeightedPlayer3 DEBUG] No deck-aware weights file found, using default weights");
+        }
     }
 
 
-    public WeightedPlayer2() {
+    public WeightedPlayer3() {
         super("WeightedPlayer-" + COUNTER.getAndIncrement());
         this.playerName = super.toString();
         this.verbose = false;
     }
 
-    public WeightedPlayer2(String name) {
+    public WeightedPlayer3(String name) {
         super(name);
         this.playerName = name;
         this.verbose = false;
     }
 
-    public WeightedPlayer2(String name, boolean verbose) {
+    public WeightedPlayer3(String name, boolean verbose) {
         super(name);
         this.playerName = name;
         this.verbose = verbose;
@@ -118,7 +134,7 @@ public class WeightedPlayer2 extends ParentPlayer {
     /**
      * Create a WeightedPlayer with custom weight configuration for optimization.
      */
-    public WeightedPlayer2(String name, WeightConfig config) {
+    public WeightedPlayer3(String name, WeightConfig config) {
         super(name);
         this.playerName = name;
         this.verbose = false;
@@ -130,7 +146,7 @@ public class WeightedPlayer2 extends ParentPlayer {
     /**
      * Create a WeightedPlayer with custom weight configuration and verbose control.
      */
-    public WeightedPlayer2(String name, WeightConfig config, boolean verbose) {
+    public WeightedPlayer3(String name, WeightConfig config, boolean verbose) {
         super(name);
         this.playerName = name;
         this.verbose = verbose;
@@ -199,6 +215,7 @@ public class WeightedPlayer2 extends ParentPlayer {
 
     /**
      * Get weight for a specific card, using instance config if available, otherwise defaults.
+     * If the missing action card has been detected, uses deck-aware weights optimized for that board.
      * Protected so subclasses can override for custom weight strategies.
      */
     protected float getWeight(Card.Type cardType) {
@@ -208,7 +225,23 @@ public class WeightedPlayer2 extends ParentPlayer {
                 return weight;
             }
         }
+        
+        // Use deck-aware weights if we've detected the missing card
+        if (detectedMissingActionCard != null) {
+            Map<Card.Type, Float> deckWeights = getDeckAwareWeights(detectedMissingActionCard);
+            Float deckWeight = deckWeights.get(cardType);
+            if (deckWeight != null) {
+                if (verbose) {
+                    System.out.println("[" + playerName + "] Using DECK-AWARE weight for " + cardType + ": " + deckWeight + " (config: " + detectedMissingActionCard + ")");
+                }
+                return deckWeight;
+            }
+        }
+        
         Float weight = cardWeights.get(cardType);
+        if (verbose && detectedMissingActionCard != null) {
+            System.out.println("[" + playerName + "] Using DEFAULT weight for " + cardType + ": " + weight);
+        }
         return weight != null ? weight : 0.0f;
     }
 
@@ -249,6 +282,12 @@ public class WeightedPlayer2 extends ParentPlayer {
         try {
             updateCardCount(); // Keep track of cards gained so far
             updateDefenseWeightBasedOnOpponents();  // Adjust defense weight based on opponent threats
+            
+            // Detect deck configuration on first turn (when we first see the board)
+            if (detectedMissingActionCard == null && state != null) {
+                detectBoardConfiguration(state);
+            }
+            
             if (state == null || options == null || options.isEmpty()) {
                 return null;
             }
@@ -301,12 +340,18 @@ public class WeightedPlayer2 extends ParentPlayer {
             if (option instanceof TrashCardDecision) {
                 Card cardToTrash = ((TrashCardDecision) option).card();
                 if (cardToTrash.type() == Card.Type.BUG) {
+                    if (verbose) {
+                        System.out.println(playerName + " TRASHING BUG card");
+                    }
                     return option;
                 }
             }
         }
 
         // Fallback: return first trash option
+        if (verbose) {
+            System.out.println(playerName + " No BUG card to trash, using fallback");
+        }
         return options.get(0);
     }
 
@@ -326,6 +371,9 @@ public class WeightedPlayer2 extends ParentPlayer {
             if (option instanceof DiscardCardDecision) {
                 Card cardToDiscard = ((DiscardCardDecision) option).card();
                 if (cardToDiscard.type() == Card.Type.BUG) {
+                    if (verbose) {
+                        System.out.println(playerName + " DISCARDING BUG card");
+                    }
                     return option;
                 }
             }
@@ -337,12 +385,18 @@ public class WeightedPlayer2 extends ParentPlayer {
             if (option instanceof DiscardCardDecision) {
                 Card cardToDiscard = ((DiscardCardDecision) option).card();
                 if (pointCards.contains(cardToDiscard.type())) {
+                    if (verbose) {
+                        System.out.println(playerName + " DISCARDING point card: " + cardToDiscard.type());
+                    }
                     return option;
                 }
             }
         }
 
         // Fallback: return first discard option
+        if (verbose) {
+            System.out.println(playerName + " No BUG or point cards to discard, using fallback");
+        }
         return options.get(0);
     }
 
@@ -384,6 +438,10 @@ public class WeightedPlayer2 extends ParentPlayer {
 
         // If we found a good card to gain, return it
         if (bestDecision != null) {
+            if (verbose) {
+                Card.Type gainType = ((GainCardDecision) bestDecision).cardType();
+                System.out.println(playerName + " GAINING: " + gainType + " (weight: " + bestScore + ")");
+            }
             return bestDecision;
         }
 
@@ -565,6 +623,120 @@ public class WeightedPlayer2 extends ParentPlayer {
         }
     }
 
+    /**
+     * Detect which 2 action cards are missing from the board by tracking seen cards.
+     * The board randomly selects 10 of 12 possible action cards each game (5 out of 12 are missing).
+     * This method tracks all action cards seen in buyableCards() and finds which 2 are NOT present.
+     * 
+     * @param state Current game state with buyableCards available
+     * @return A sorted pair key like "BACKLOG_CODE_REVIEW" representing the first 2 missing cards, or null if not yet determined
+     */
+    private String detectMissingActionCard(GameState state) {
+        // If already detected, return cached result
+        if (detectedMissingActionCard != null) {
+            return detectedMissingActionCard;
+        }
+        
+        // Add any action cards from buyableCards to our seen set
+        if (state != null && state.buyableCards() != null) {
+            for (Card.Type cardType : state.buyableCards().getCardTypes()) {
+                // Check if this is an action card (not money, not victory)
+                Card.Type.Category category = cardType.category();
+                if (category != Card.Type.Category.MONEY && category != Card.Type.Category.VICTORY) {
+                    seenActionCards.add(cardType);
+                }
+            }
+        }
+        
+        // List of the 12 action cards we consider (removed: DEPLOYMENT_PIPELINE, TECH_DEBT, MERGE_CONFLICT)
+        Card.Type[] allActionCards = {
+            Card.Type.BACKLOG, Card.Type.CODE_REVIEW, Card.Type.SPRINT_PLANNING, Card.Type.UNIT_TEST,
+            Card.Type.HACK, Card.Type.REFACTOR, Card.Type.PARALLELIZATION, Card.Type.MONITORING,
+            Card.Type.IPO, Card.Type.EVERGREEN_TEST, Card.Type.DAILY_SCRUM, Card.Type.RANSOMWARE
+        };
+        
+        // Find which cards are NOT in our seen set
+        List<Card.Type> missingCards = new ArrayList<>();
+        for (Card.Type actionCard : allActionCards) {
+            if (!seenActionCards.contains(actionCard)) {
+                missingCards.add(actionCard);
+            }
+        }
+        
+        // If we've found at least 1 missing card, generate a key from the first 2
+        if (missingCards.size() >= 1) {
+            // Sort the missing cards for consistent key generation
+            missingCards.sort((a, b) -> a.toString().compareTo(b.toString()));
+            
+            // Create key using first 2 missing cards (or just 1 if only 1 found)
+            if (missingCards.size() >= 2) {
+                detectedMissingActionCard = missingCards.get(0).toString() + "_" + missingCards.get(1).toString();
+                // System.err.println("[WeightedPlayer3 DEBUG] " + playerName + " detected missing action card pair: " + detectedMissingActionCard);
+                if (verbose) {
+                    System.out.println(playerName + " detected missing action card pair: " + detectedMissingActionCard);
+                }
+            } else {
+                // If we've only seen 11 cards, just use the 1 missing card as key
+                detectedMissingActionCard = missingCards.get(0).toString();
+                System.err.println("[WeightedPlayer3 DEBUG] " + playerName + " detected missing action card: " + detectedMissingActionCard);
+                if (verbose) {
+                    System.out.println(playerName + " detected missing action card: " + detectedMissingActionCard);
+                }
+            }
+            return detectedMissingActionCard;
+        }
+        
+        return null;  // Not yet determined (we haven't seen enough cards)
+    }
+    
+    /**
+     * Detect the board configuration by comparing available cards to all 12 action cards.
+     * Call this early in the game to identify which cards are missing.
+     */
+    private void detectBoardConfiguration(GameState state) {
+        if (state == null || state.buyableCards() == null) {
+            return;
+        }
+        
+        // List of all 12 action cards
+        Set<Card.Type> allActionCards = new java.util.HashSet<>();
+        allActionCards.add(Card.Type.BACKLOG);
+        allActionCards.add(Card.Type.CODE_REVIEW);
+        allActionCards.add(Card.Type.SPRINT_PLANNING);
+        allActionCards.add(Card.Type.UNIT_TEST);
+        allActionCards.add(Card.Type.HACK);
+        allActionCards.add(Card.Type.REFACTOR);
+        allActionCards.add(Card.Type.PARALLELIZATION);
+        allActionCards.add(Card.Type.MONITORING);
+        allActionCards.add(Card.Type.IPO);
+        allActionCards.add(Card.Type.EVERGREEN_TEST);
+        allActionCards.add(Card.Type.DAILY_SCRUM);
+        allActionCards.add(Card.Type.RANSOMWARE);
+        
+        // Get cards available on the board
+        Set<Card.Type> availableCards = new java.util.HashSet<>(state.buyableCards().getCardTypes());
+        
+        // Find which action cards are NOT available
+        List<Card.Type> missingCards = new ArrayList<>();
+        for (Card.Type actionCard : allActionCards) {
+            if (!availableCards.contains(actionCard)) {
+                missingCards.add(actionCard);
+            }
+        }
+        
+        // If we found exactly 2 missing cards, set the configuration key
+        if (missingCards.size() == 2) {
+            missingCards.sort((a, b) -> a.toString().compareTo(b.toString()));
+            detectedMissingActionCard = missingCards.get(0).toString() + "_" + missingCards.get(1).toString();
+            System.err.println("[WeightedPlayer3 DEBUG] Board config detected at game start: " + detectedMissingActionCard);
+            if (verbose) {
+                System.out.println(playerName + " detected board configuration: " + detectedMissingActionCard);
+            }
+        } else if (missingCards.size() == 1) {
+            detectedMissingActionCard = missingCards.get(0).toString();
+            System.err.println("[WeightedPlayer3 DEBUG] Board config detected (1 missing): " + detectedMissingActionCard);
+        }
+    }
 
     public Decision chooseMoneyDecision(GameState state, ImmutableList<Decision> options) {
         // Play any available money card (will repeat until all are played)
@@ -589,6 +761,9 @@ public class WeightedPlayer2 extends ParentPlayer {
      */
     public Decision chooseBuyDecision(GameState state, ImmutableList<Decision> options) {
         try {
+            // Detect which action card is missing from this game's board
+            detectMissingActionCard(state);
+            
             // PRIORITY 1: Always buy FRAMEWORK if available (victory points matter late game)
             for (Decision option : options) {
                 Card.Type cardType = getTypeFromDecision(option);
@@ -785,6 +960,57 @@ public class WeightedPlayer2 extends ParentPlayer {
     @Override
     public Decision makeDecision(GameState state, ImmutableList<Decision> options, Optional<Event> reason) {
         return makeDecision(state, options);
+    }
+
+    /**
+     * ============================================================================
+     * DECK-AWARE WEIGHTS CACHE
+     * ============================================================================
+     * 
+     * The board randomly selects 10 of 12 action cards each game.
+     * There are C(12,2) = 66 possible board configurations (all pairs of 2 missing cards).
+     * 
+     * This map stores optimized weights computed offline for each configuration.
+     * Keys are sorted pairs: "CARD1_CARD2" where CARD1 < CARD2 alphabetically.
+     * Values are weight maps optimized for that specific board configuration.
+     * 
+     * To populate this cache:
+     * 1. Create 66 CardWeightConfig objects representing each pair combination
+     * 2. Run CardWeightOptimizer against each configuration (5-10 min each)
+     * 3. Export the optimized weights as JSON
+     * 4. Load and populate this map at initialization
+     * 
+     * FUTURE: Implement JSON loading from external config file for easier management.
+     */
+
+    // TODO: Implement configuration loading from external JSON file
+    // For now, this map is empty and will be populated during optimization phase
+    
+
+    /**
+     * Get optimized card weights for a specific board configuration.
+     * The board randomly selects 10 of 12 action cards each game (5 missing total, but we cache for 2-card pairs).
+     * This method returns pre-optimized weights if the configuration is in the cache.
+     * 
+     * @param configKey A sorted pair like "BACKLOG_CODE_REVIEW" representing the missing cards,
+     *                  or a single card name if only 1 missing card has been detected
+     * @return Map of card weights optimized for this configuration, or default weights if not cached
+     */
+    public static Map<Card.Type, Float> getDeckAwareWeights(String configKey) {
+        if (configKey == null) {
+            return new HashMap<>(cardWeights);
+        }
+        
+        CardWeightConfig deckConfig = DECK_AWARE_WEIGHTS.get(configKey);
+        if (deckConfig != null) {
+            // System.err.println("[WeightedPlayer3 DEBUG] Found deck-aware config: " + configKey);
+            return new HashMap<>(deckConfig.cardWeights);  // Return a copy to prevent external modifications
+        }
+        
+        // Fallback to default weights if configuration not found
+        // This may happen early in the game before all cards are seen
+        // System.err.println("[WeightedPlayer3 DEBUG] Deck config NOT FOUND: " + configKey + ". Available: " + DECK_AWARE_WEIGHTS.keySet().size() + " configs");
+        return new HashMap<>(cardWeights);
     }
 }
 

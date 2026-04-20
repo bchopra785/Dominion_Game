@@ -1,4 +1,4 @@
-package edu.brandeis.cosi103a.groupb;
+git package edu.brandeis.cosi103a.groupb;
 
 import com.google.common.collect.ImmutableList;
 import edu.brandeis.cosi.atg.decisions.BuyDecision;

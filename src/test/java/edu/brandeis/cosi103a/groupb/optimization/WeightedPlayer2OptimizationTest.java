@@ -47,7 +47,7 @@ public class WeightedPlayer2OptimizationTest {
      * Good for exploring the weight space with better convergence than quick.
      * Total games: ~300 (balanced speed and robustness).
      */
-    //@Disabled("Optimization tests are computationally expensive. Run manually when tuning weights.")
+    @Disabled("Optimization tests are computationally expensive. Run manually when tuning weights.")
     // mvn test -Dtest=WeightedPlayer2OptimizationTest#testMediumCardWeightOptimization
     @Test
     public void testMediumCardWeightOptimization() throws PlayerViolationException {

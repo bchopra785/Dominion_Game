@@ -37,7 +37,7 @@ public class WeightedPlayerOptimizationTest {
      * Good for testing the optimization framework.
      * NOTE: Increased from 2 to 5 games per matchup to account for random card selection variance.
      */
-    //@Disabled("Optimization tests are computationally expensive. Run manually when tuning weights.")
+    @Disabled("Optimization tests are computationally expensive. Run manually when tuning weights.")
     
     // mvn test -Dtest=WeightedPlayerOptimizationTest#testQuickWeightOptimization
     

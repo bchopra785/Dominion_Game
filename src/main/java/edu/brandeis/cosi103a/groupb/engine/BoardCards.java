@@ -116,7 +116,7 @@ public class BoardCards {
         
         for(Card.Type t: cardStacks.keySet()){
             // Need to have the card and have enough cost in hand to play it
-            if ((cardStacks.get(t) > 0) & (costInHand >= t.cost())) {
+            if ((cardStacks.get(t) > 0) && (costInHand >= t.cost())) {
                 playableCardsBuilder.put(t, cardStacks.get(t));
             }
         }

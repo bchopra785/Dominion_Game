@@ -84,7 +84,7 @@ public class CardTest {
             1,
             5,
             1,
-            boardCards.getPlayableCards(5)
+            boardCards.getCardsLeft()
         );
         
         
@@ -115,7 +115,7 @@ public class CardTest {
             1,
             5,
             1,
-            boardCards.getPlayableCards(5)
+            boardCards.getCardsLeft()
         );
         GameState newstate = ActionCards.playActionCard(
             new Card(Card.Type.CODE_REVIEW, 0),

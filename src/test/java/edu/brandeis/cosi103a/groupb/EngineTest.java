@@ -87,21 +87,6 @@ public class EngineTest {
         assertEquals("Engine supports at most 4 players", exception.getMessage());
     }
 
-    // @Test
-    // public void testEngineInitializesPlayerCardsMap() {
-    //     // Test that engine properly initializes player cards for each player
-    //     Scanner scanner = new Scanner(System.in);
-    //     List<ParentPlayer> players = new ArrayList<>();
-    //     players.add(new ConsolePlayer(scanner, System.out));
-    //     players.add(new ConsolePlayer(scanner, System.out));
-    //     players.add(new BigMoneyPlayer());
-    //     players.add(new BigMoneyPlayer());
-    //     Engine engine = new Engine(players);
-    //     GameState state = engine.getState(); // trigger initialization
-    //     assertNotNull(state.currentPlayerName());
-    //     assertNotNull(state.currentPlayerHand()); // trigger player cards map access
-    // }
-
 
     @Test
     public void testEngineWithEmptyPlayersList() {
@@ -270,6 +255,8 @@ public class EngineTest {
         assertNotNull(state.buyableCards());
 
     }
+
+    
 
     
 }

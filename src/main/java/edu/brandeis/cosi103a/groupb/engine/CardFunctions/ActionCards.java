@@ -93,7 +93,7 @@ public final class ActionCards {
         handObject = playerCards.getHand();
         actionAmt += 2;
         totalMoney = playerCards.getCostInHand();
-        buyableCards = boardCards.getPlayableCards(playerCards.getCostInHand());
+        buyableCards = boardCards.getCardsLeft();
 
         return new GameState(playerName, handObject, phase, actionAmt, totalMoney, availableBuys, buyableCards);
     }
@@ -119,7 +119,7 @@ public final class ActionCards {
         handObject = playerCards.getHand();
 
         totalMoney = playerCards.getCostInHand();
-        buyableCards = boardCards.getPlayableCards(playerCards.getCostInHand());
+        buyableCards = boardCards.getCardsLeft();
 
         for (ParentPlayer otherPlayer : players) {
             if (!otherPlayer.getName().equals(player.getName())) {
@@ -162,11 +162,11 @@ public final class ActionCards {
         playerCards.trashCard(cardToTrash);
         handObject = playerCards.getHand();
         totalMoney = playerCards.getCostInHand();
-        buyableCards = boardCards.getPlayableCards(playerCards.getCostInHand());
+        buyableCards = boardCards.getCardsLeft();
 
         GameState newState = new GameState(playerName, handObject, phase, actionAmt, totalMoney, availableBuys, buyableCards);
 
-        CardStacks newBuyableCards = boardCards.getPlayableCards(trashedValue);
+        CardStacks newBuyableCards = boardCards.getAffordableCards(trashedValue);
         ImmutableList.Builder<Decision> optionsBuilder = new ImmutableList.Builder<>();
         for (Card.Type cardType : newBuyableCards.getCardTypes()) {
             optionsBuilder.add(new GainCardDecision(cardType));
@@ -227,7 +227,7 @@ public final class ActionCards {
 
         handObject = playerCards.getHand();
         totalMoney = playerCards.getCostInHand();
-        buyableCards = boardCards.getPlayableCards(totalMoney);
+        buyableCards = boardCards.getCardsLeft();
 
         return new GameState(playerName, handObject, phase, actionAmt, totalMoney, availableBuys, buyableCards);
     }
@@ -246,7 +246,7 @@ public final class ActionCards {
         handObject = playerCards.getHand();
 
         totalMoney = playerCards.getCostInHand();
-        buyableCards = boardCards.getPlayableCards(totalMoney);
+        buyableCards = boardCards.getCardsLeft();
 
         return new GameState(playerName, handObject, phase, actionAmt, totalMoney, availableBuys, buyableCards);
     }
@@ -264,7 +264,7 @@ public final class ActionCards {
         playerCards.drawToHand();
         handObject = playerCards.getHand();
 
-        buyableCards = boardCards.getPlayableCards(totalMoney);
+        buyableCards = boardCards.getCardsLeft();
 
         return new GameState(playerName, handObject, phase, actionAmt, totalMoney, availableBuys, buyableCards);
     }
@@ -300,7 +300,7 @@ public final class ActionCards {
         }
 
         totalMoney = playerCards.getCostInHand();
-        buyableCards = boardCards.getPlayableCards(totalMoney);
+        buyableCards = boardCards.getCardsLeft();
 
         return new GameState(playerName, handObject, phase, actionAmt, totalMoney, availableBuys, buyableCards);
     }
@@ -318,7 +318,7 @@ public final class ActionCards {
         handObject = playerCards.getHand();
 
         totalMoney = playerCards.getCostInHand();
-        buyableCards = boardCards.getPlayableCards(totalMoney);
+        buyableCards = boardCards.getCardsLeft();
 
         return new GameState(playerName, handObject, phase, actionAmt, totalMoney, availableBuys, buyableCards);
     }
@@ -334,7 +334,7 @@ public final class ActionCards {
 
         playerCards.drawToHand();
         handObject = playerCards.getHand();
-        buyableCards = boardCards.getPlayableCards(totalMoney);
+        buyableCards = boardCards.getCardsLeft();
 
         Map<Card.Type, Integer> stacks = boardCards.getCardStacks();
         int empty = 0;
@@ -393,13 +393,13 @@ public final class ActionCards {
             actionAmt += 2;
         } else if (index == 1) {
             totalMoney += 2;
-            buyableCards = boardCards.getPlayableCards(totalMoney);
+            buyableCards = boardCards.getCardsLeft();
         } else if (index == 2) {
             playerCards.drawToHand();
             playerCards.drawToHand();
             handObject = playerCards.getHand();
             totalMoney = playerCards.getCostInHand();
-            buyableCards = boardCards.getPlayableCards(totalMoney);
+            buyableCards = boardCards.getCardsLeft();
         }
 
         return new GameState(playerName, handObject, phase, actionAmt, totalMoney, availableBuys, buyableCards);
@@ -420,7 +420,7 @@ public final class ActionCards {
         int availableBuys = state.availableBuys();
         CardStacks buyableCards = state.buyableCards();
 
-        buyableCards = boardCards.getPlayableCards(totalMoney);
+        buyableCards = boardCards.getCardsLeft();
 
         for (ParentPlayer other : players) {
             if (!other.getName().equals(player.getName())) {
@@ -475,7 +475,7 @@ public final class ActionCards {
 
         handObject = playerCards.getHand();
         totalMoney = playerCards.getCostInHand();
-        buyableCards = boardCards.getPlayableCards(totalMoney);
+        buyableCards = boardCards.getCardsLeft();
 
         for (ParentPlayer other : players) {
             if (!other.getName().equals(player.getName())) {
@@ -538,7 +538,7 @@ public final class ActionCards {
 
         handObject = playerCards.getHand();
         totalMoney = playerCards.getCostInHand();
-        buyableCards = boardCards.getPlayableCards(totalMoney);
+        buyableCards = boardCards.getCardsLeft();
 
         for (ParentPlayer otherPlayer : players) {
             if (!otherPlayer.getName().equals(player.getName())) {
@@ -626,7 +626,7 @@ public final class ActionCards {
         }
 
         totalMoney = playerCards.getCostInHand();
-        buyableCards = boardCards.getPlayableCards(totalMoney);
+        buyableCards = boardCards.getCardsLeft();
 
         return new GameState(playerName, handObject, phase, actionAmt, totalMoney, availableBuys, buyableCards);
     }
@@ -638,7 +638,7 @@ public final class ActionCards {
         int actionAmt = state.availableActions();
         int totalMoney = state.spendableMoney() + 1;
         int availableBuys = state.availableBuys() + 1;
-        CardStacks buyableCards = boardCards.getPlayableCards(totalMoney + 1);
+        CardStacks buyableCards = boardCards.getCardsLeft();
 
         return new GameState(playerName, handObject, phase, actionAmt, totalMoney, availableBuys, buyableCards);
     }

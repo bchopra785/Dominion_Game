@@ -22,7 +22,7 @@ public class BoardCardsTest {
     @Test
     public void testGetPlayableCardsWithZeroCost() {
         // With 0 cost, only free cards should be playable: Bug(0) and Bitcoin(0)
-        CardStacks playableCards = boardCards.getPlayableCards(0);
+        CardStacks playableCards = boardCards.getAffordableCards(0);
         assertTrue(playableCards.getCardTypes().contains(Card.Type.BUG));
         assertTrue(playableCards.getCardTypes().contains(Card.Type.BITCOIN));
         assertEquals(2, playableCards.getCardTypes().size());
@@ -31,7 +31,7 @@ public class BoardCardsTest {
     @Test
     public void testGetPlayableCardsWithCostTwo() {
         // With cost 2, playable: Bug(0), Bitcoin(0), Method(2)
-        CardStacks playableCards = boardCards.getPlayableCards(2);
+        CardStacks playableCards = boardCards.getAffordableCards(2);
         assertTrue(playableCards.getCardTypes().contains(Card.Type.BUG));
         assertTrue(playableCards.getCardTypes().contains(Card.Type.BITCOIN));
         assertTrue(playableCards.getCardTypes().contains(Card.Type.METHOD));
@@ -41,7 +41,7 @@ public class BoardCardsTest {
     @Test
     public void testGetPlayableCardsWithCostThree() {
         // With cost 3, playable: Bug(0), Bitcoin(0), Method(2), Ethereum(3), Code Review(3)
-        CardStacks playableCards = boardCards.getPlayableCards(3);
+        CardStacks playableCards = boardCards.getAffordableCards(3);
         assertTrue(playableCards.getCardTypes().contains(Card.Type.BUG));
         assertTrue(playableCards.getCardTypes().contains(Card.Type.BITCOIN));
         assertTrue(playableCards.getCardTypes().contains(Card.Type.METHOD));
@@ -53,7 +53,7 @@ public class BoardCardsTest {
     @Test
     public void testGetPlayableCardsWithCostFour() {
         // With cost 4, playable: Bug(0), Bitcoin(0), Method(2), Ethereum(3), Code Review(3), Refactor(4)
-        CardStacks playableCards = boardCards.getPlayableCards(4);
+        CardStacks playableCards = boardCards.getAffordableCards(4);
         assertTrue(playableCards.getCardTypes().contains(Card.Type.BUG));
         assertTrue(playableCards.getCardTypes().contains(Card.Type.BITCOIN));
         assertTrue(playableCards.getCardTypes().contains(Card.Type.METHOD));
@@ -66,7 +66,7 @@ public class BoardCardsTest {
     @Test
     public void testGetPlayableCardsWithCostFive() {
         // With cost 5, playable: Bug(0), Bitcoin(0), Method(2), Ethereum(3), Code Review(3), Refactor(4), Module(5), Evergreen Test(5)
-        CardStacks playableCards = boardCards.getPlayableCards(5);
+        CardStacks playableCards = boardCards.getAffordableCards(5);
         assertEquals(8, playableCards.getCardTypes().size());
         assertFalse(playableCards.getCardTypes().contains(Card.Type.FRAMEWORK)); // Framework costs 8
         assertFalse(playableCards.getCardTypes().contains(Card.Type.DOGECOIN)); // Dogecoin costs 6
@@ -75,7 +75,7 @@ public class BoardCardsTest {
     @Test
     public void testGetPlayableCardsWithCostSix() {
         // With cost 6, all cards except Framework(8) should be playable
-        CardStacks playableCards = boardCards.getPlayableCards(6);
+        CardStacks playableCards = boardCards.getAffordableCards(6);
         assertTrue(playableCards.getCardTypes().contains(Card.Type.DOGECOIN)); // Dogecoin costs 6
         assertFalse(playableCards.getCardTypes().contains(Card.Type.FRAMEWORK)); // Framework costs 8
         assertEquals(9, playableCards.getCardTypes().size());
@@ -84,7 +84,7 @@ public class BoardCardsTest {
     @Test
     public void testGetPlayableCardsWithCostEight() {
         // With cost 8, all cards should be playable
-        CardStacks playableCards = boardCards.getPlayableCards(8);
+        CardStacks playableCards = boardCards.getAffordableCards(8);
         assertTrue(playableCards.getCardTypes().contains(Card.Type.BUG));
         assertTrue(playableCards.getCardTypes().contains(Card.Type.METHOD));
         assertTrue(playableCards.getCardTypes().contains(Card.Type.MODULE));
@@ -106,14 +106,14 @@ public class BoardCardsTest {
             boardCards.drawDeckCard(Card.Type.BITCOIN);
             stacks = boardCards.getCardStacks();
         }
-        CardStacks playableCards = boardCards.getPlayableCards(8);
+        CardStacks playableCards = boardCards.getAffordableCards(8);
         assertFalse(playableCards.getCardTypes().contains(Card.Type.BITCOIN));
     }
 
     @Test
     public void testGetPlayableCardsDoesNotExceedBudget() {
         // No cards with cost > budget should be returned
-        CardStacks playableCards = boardCards.getPlayableCards(3);
+        CardStacks playableCards = boardCards.getAffordableCards(3);
         for (Card.Type cardType : playableCards.getCardTypes()) {
             assertTrue(cardType.cost() <= 3,
                       "Card " + cardType + " costs " + cardType.cost() + " exceeds budget of 3");

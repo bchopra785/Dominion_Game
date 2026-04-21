@@ -52,7 +52,7 @@ BITCOIN
   Description: Basic currency card included in starting hand. Free to acquire 
                from board. Grants 1 spendable money when played in MONEY phase.
                Foundation for all money production strategy.
-
+               
 ETHEREUM
   Cost: 3
   Value: 2 money
@@ -80,7 +80,7 @@ DOGECOIN
 BACKLOG
   Cost: 2
   Effect: +1 Action
-  Type: Cantrip (Action with no cost)
+  Type: Cantrip
   Description: Discard any number of cards, then draw that many. Flexible card 
                cycling and deck management. Can help draw key cards or discard 
                bad cards like Bugs.

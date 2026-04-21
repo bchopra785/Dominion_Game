@@ -12,14 +12,14 @@ public class RecordingGameObserver implements GameObserver {
 
     private final List<Event> observedEvents = new ArrayList<>();
     private final PrintStream out;
-    private boolean verbose = false;  // Control event logging verbosity (default: false to reduce output)
+    private boolean verbose = true;  // Control event logging verbosity (default: false to reduce output)
 
     public RecordingGameObserver() {
-        this(System.out, false);
+        this(System.out, true);
     }
 
     public RecordingGameObserver(PrintStream out) {
-        this(out, false);
+        this(out, true);
     }
 
     public RecordingGameObserver(PrintStream out, boolean verbose) {

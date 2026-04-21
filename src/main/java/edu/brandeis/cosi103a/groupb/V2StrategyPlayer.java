@@ -39,20 +39,29 @@ public class V2StrategyPlayer extends ParentPlayer {
     int spendableMoney = 0;
     int availableBuys = 0;
     CardStacks buyableCards = null;
-    List<Card> deck = new ArrayList<>();
+    List<Card.Type> deck = new ArrayList<>();
     
-    float moneyCardProp = 0.5f;
-    float actionCardProp = 0.4f;
+    float moneyCardProp = 0.6f;
+    float actionCardProp = 0.3f;
     float pointCardProp = 0.1f;
+
+    float moneyCardProp_end = 0.6f;
+    float actionCardProp_end = 0.1f;
+    float pointCardProp_end = 0.3f;
+
+    int permutation_cap = 5;
+    int end_game_threshold = 5;
+
+
 
     
 
     public V2StrategyPlayer() {
         super("StrategyPlayer-" + COUNTER.getAndIncrement());
         for(int i = 0; i < 7; i++) {
-            deck.add(new Card(Card.Type.BITCOIN, i));
+            deck.add(Card.Type.BITCOIN);
             if (i < 3) {
-                deck.add(new Card(Card.Type.METHOD, i));
+                deck.add(Card.Type.METHOD);
             }
         };
 
@@ -62,9 +71,9 @@ public class V2StrategyPlayer extends ParentPlayer {
     public V2StrategyPlayer(String name) {
         super(name);
         for(int i = 0; i < 7; i++) {
-            deck.add(new Card(Card.Type.BITCOIN, i));
+            deck.add(Card.Type.BITCOIN);
             if (i < 3) {
-                deck.add(new Card(Card.Type.METHOD, i));
+                deck.add(Card.Type.METHOD);
             }
         };
     }
@@ -72,9 +81,9 @@ public class V2StrategyPlayer extends ParentPlayer {
     public V2StrategyPlayer(String name, PrintStream out) {
         super(name);
         for(int i = 0; i < 7; i++) {
-            deck.add(new Card(Card.Type.BITCOIN, i));
+            deck.add(Card.Type.BITCOIN);
             if (i < 3) {
-                deck.add(new Card(Card.Type.METHOD, i));
+                deck.add(Card.Type.METHOD);
             }
         };
     }
@@ -88,6 +97,12 @@ public class V2StrategyPlayer extends ParentPlayer {
         this.spendableMoney = state.spendableMoney();
         this.availableBuys = state.availableBuys();
         this.buyableCards = state.buyableCards();
+
+        if(this.buyableCards.getNumAvailable(Card.Type.FRAMEWORK) <= end_game_threshold) {
+            moneyCardProp = moneyCardProp_end;
+            actionCardProp = actionCardProp_end;
+            pointCardProp = pointCardProp_end;
+        }
 
         try {
             
@@ -135,16 +150,31 @@ public class V2StrategyPlayer extends ParentPlayer {
         List<Card.Type> actionCards = CardInfo.getActionCards();
         
         ImmutableCollection<Card> hand = state.currentPlayerHand().unplayedCards();
+        List<Card.Type> handTypes = new ArrayList<>();
         List<Card.Type> actionHand = new ArrayList<>();
         for (Card c : hand) {
+            handTypes.add(c.type());
             if(actionCards.contains(c.type())) {
                 actionHand.add(c.type());
             }
         }
 
+        //remove cards you definitely dont want to play
+        // if(actionHand.contains(Card.Type.REFACTOR)) {
+        //     if(!handTypes.contains(Card.Type.BUG)) {
+        //         actionHand.remove(Card.Type.REFACTOR);
+        //     }
+        // }
+        // if(actionHand.contains(Card.Type.MERGE_CONFLICT)) {
+        //     if(!handTypes.contains(Card.Type.BUG)) {
+        //         actionHand.remove(Card.Type.MERGE_CONFLICT);
+        //     }
+        // }
+        
+
         if(actionHand.isEmpty()) {
             return findBestFallback(options, GameState.TurnPhase.ACTION);
-        } else if (actionHand.size() > 3) {
+        } else if (actionHand.size() > permutation_cap) {
             Card.Type bestAction = null;
             int actions = 0;
 
@@ -171,6 +201,8 @@ public class V2StrategyPlayer extends ParentPlayer {
                     }
                 }
             }
+            
+            return findBestFallback(options, GameState.TurnPhase.ACTION);
         }
 
         Collection<List<Card.Type>> permutations = Collections2.permutations(actionHand);
@@ -241,6 +273,18 @@ public class V2StrategyPlayer extends ParentPlayer {
     * Person B: BUY-phase logic. Prefer card draw (DAILY_SCRUM > IPO), then best money (DOGECOIN > ETHEREUM > BITCOIN), then EndPhaseDecision. Tie-break: first matching BuyDecision in options.
      */
     public Decision chooseBuyDecision(GameState state, ImmutableList<Decision> options) {
+        // Auto-buy FRAMEWORK whenever possible
+        for (Decision d : options) {
+            if (d instanceof BuyDecision) {
+                BuyDecision bd = (BuyDecision) d;
+                if (bd.cardType() == Card.Type.FRAMEWORK) {
+                    deck.add(Card.Type.FRAMEWORK);
+                    return d;
+                }
+            }
+        }
+
+        
         //evaluated deck prop
         int total = deck.size();
         int moneyCardsNum = 0;
@@ -250,12 +294,12 @@ public class V2StrategyPlayer extends ParentPlayer {
         List<Type> actionCards = CardInfo.getActionCards();
         List<Type> moneyCards = CardInfo.getMoneyCards();
         List<Type> pointCards = Arrays.asList(Card.Type.METHOD, Card.Type.MODULE, Card.Type.FRAMEWORK);
-        for (Card c : deck) {
-            if (actionCards.contains(c.type())) {
+        for (Card.Type c : deck) {
+            if (actionCards.contains(c)) {
                 actionCardsNum++;
-            } else if (moneyCards.contains(c.type())) {
+            } else if (moneyCards.contains(c)) {
                 moneyCardsNum++;
-            } else if (pointCards.contains(c.type())) {
+            } else if (pointCards.contains(c)) {
                 pointCardsNum++;
             }
         }
@@ -264,24 +308,19 @@ public class V2StrategyPlayer extends ParentPlayer {
         float actionPropDiff = (float) (actionCardProp - actionCardsNum / (float) total);
         float pointPropDiff = (float) (pointCardProp - pointCardsNum / (float) total);
 
-        
+        // Create category map and sort by diff value (highest to lowest)
+        Map<String, Float> diffs = new HashMap<>();
+        diffs.put("money", moneyPropDiff);
+        diffs.put("action", actionPropDiff);
+        diffs.put("point", pointPropDiff);
 
-        List<Float> priorities= Arrays.asList(moneyPropDiff, actionPropDiff, pointPropDiff);
-        priorities.sort(null);
-        Map<String, Float> categoryPriorityMap = new HashMap<>();
-        categoryPriorityMap.put("money", moneyPropDiff);
-        categoryPriorityMap.put("action", actionPropDiff);
-        categoryPriorityMap.put("point", pointPropDiff);
+        List<String> categoryOrder = Arrays.asList("money", "action", "point");
+        categoryOrder.sort((a, b) -> Float.compare(diffs.get(b), diffs.get(a))); // reverse order
 
-        int index = 0;
-        while(true){
-            if(index >= priorities.size()) {
-                break;
-            }
-            float category = priorities.get(index);
+        for (String category : categoryOrder) {
             PlayCardDecision pcd = null;
 
-            if(category == moneyPropDiff){
+            if("action".equals(category)){
                 BuyDecision best = null;
                 int degree = 0;
                 for (Decision d : options) {
@@ -309,61 +348,69 @@ public class V2StrategyPlayer extends ParentPlayer {
                 }
 
                 if (best != null) {
+                    deck.add(best.cardType());
                     return best;
-                } else{
-                    index++;
-                    continue;
                 }
 
-            } else if(category == moneyPropDiff){
+            } else if("money".equals(category)){
                 BuyDecision best = null;
-                for (Decision d : options) {
-                    if (d instanceof BuyDecision) { // Add this check!
-                        Card.Type type = ((BuyDecision) d).cardType();
+                int bestPriority = 0;  // Track money priority: DOGECOIN=1, ETHEREUM=2, BITCOIN=3
                 
+                for (Decision d : options) {
+                    if (d instanceof BuyDecision) {
+                        Card.Type type = ((BuyDecision) d).cardType();
+                        int priority = -1;
+                        
                         if (type == Card.Type.DOGECOIN) {
-                            if (best == null || best.cardType() != Card.Type.DOGECOIN) {
+                            if(priority == 0){
+                                priority = 1;
                                 best = (BuyDecision) d;
                             }
+                            
                         } else if (type == Card.Type.ETHEREUM) {
-                            if (best == null || best.cardType() != Card.Type.ETHEREUM) {
+                            if(priority == 0 || priority < 2){
+                                priority = 2;
+                                best = (BuyDecision) d;
+                            }
+                        } else if (type == Card.Type.BITCOIN) {
+                           if(priority == 0){
+                                priority = 3;
                                 best = (BuyDecision) d;
                             }
                         }
                     }
-                     
                 }
 
                 if (best != null) {
+                    deck.add(best.cardType());
                     return best;
-                } else{
-                    index++;
-                    continue;
                 }
             }
-            else if(category == pointPropDiff){
+            else if("point".equals(category)){
                 BuyDecision best = null;
+                int bestPriority = -1;  // Track point priority: FRAMEWORK=1, MODULE=0
+                
                 for (Decision d : options) {
-                    if (d instanceof BuyDecision) { // Add this check!
+                    if (d instanceof BuyDecision) {
                         Card.Type type = ((BuyDecision) d).cardType();
+                        int priority = -1;
+                        
                         if (type == Card.Type.FRAMEWORK) {
-                            if (best == null || best.cardType() != Card.Type.FRAMEWORK) {
-                                best = (BuyDecision) d;
-                            }
+                            priority = 1;
                         } else if (type == Card.Type.MODULE) {
-                            if (best == null || best.cardType() != Card.Type.FRAMEWORK) {
-                                best = (BuyDecision) d;
-                            }
-                        } 
+                            priority = 0;
+                        }
+                        
+                        if (priority >= 0 && priority > bestPriority) {
+                            bestPriority = priority;
+                            best = (BuyDecision) d;
+                        }
                     }
-                    
                 }
 
                 if (best != null) {
+                    deck.add(best.cardType());
                     return best;
-                } else{
-                    index++;
-                    continue;
                 }
             }
         }
@@ -374,7 +421,8 @@ public class V2StrategyPlayer extends ParentPlayer {
 
     public Decision chooseTrashDecision(ImmutableList<Decision> options) {
         if (options == null || options.isEmpty()) {
-            return null;
+            System.out.println(playerName + " No trash options available");
+            return options.get(0);
         }
 
         // Try to find and trash the BUG card first
@@ -383,6 +431,7 @@ public class V2StrategyPlayer extends ParentPlayer {
                 Card cardToTrash = ((TrashCardDecision) option).card();
                 if (cardToTrash.type() == Card.Type.BUG) {
                     System.out.println(playerName + " TRASHING BUG card");
+                    deck.remove(Card.Type.BUG);
                     return option;
                 }
             }
@@ -421,13 +470,47 @@ public class V2StrategyPlayer extends ParentPlayer {
             }
         }
 
+        //if its possible to discard cards but no BUG or point cards, just end the phase
+        for (Decision option : options) {
+            if (option instanceof EndPhaseDecision) {
+                System.out.println(playerName + " ENDING PHASE");
+                return option;
+            }
+        }
+
         // Fallback: return first discard option
         System.out.println(playerName + " No BUG or point cards to discard, using fallback");
         return options.get(0);
     }
 
     public Decision chooseGainCardDecision(ImmutableList<Decision> options) {
-
+        for (Decision option : options) {
+            if (option instanceof GainCardDecision) {
+                Card.Type type = ((GainCardDecision) option).cardType();
+                if (type == Card.Type.FRAMEWORK) {
+                    deck.add(Card.Type.FRAMEWORK);
+                    return option;
+                } else if (type == Card.Type.DOGECOIN) {
+                    deck.add(Card.Type.DOGECOIN);
+                    return option;
+                } else if  (type == Card.Type.IPO) {
+                    deck.add(Card.Type.IPO);
+                    return option;
+                } else if (type == Card.Type.ETHEREUM || type == Card.Type.EVERGREEN_TEST || type == Card.Type.MONITORING) {
+                    deck.add(Card.Type.ETHEREUM);
+                    return option;
+                } else if (type == Card.Type.CODE_REVIEW || type == Card.Type.RANSOMWARE || type == Card.Type.REFACTOR || type == Card.Type.PARALLELIZATION) {
+                    deck.add(type);
+                    return option;
+                } else if (type == Card.Type.SPRINT_PLANNING || type == Card.Type.HACK || type == Card.Type.BACKLOG || type == Card.Type.DAILY_SCRUM || type == Card.Type.UNIT_TEST ) {
+                    deck.add(type);
+                    return option;
+                } else if (type == Card.Type.BITCOIN) {
+                    deck.add(Card.Type.BITCOIN);
+                    return option;
+                }
+            }
+        }
         return findBestFallback(options, this.phase);
 
     }
@@ -445,14 +528,14 @@ public class V2StrategyPlayer extends ParentPlayer {
     }
 
     private Decision findBestFallback(ImmutableList<Decision> options, GameState.TurnPhase preferredPhase) {
-        for (Decision option : options) {
-            if (option instanceof EndPhaseDecision) {
-                EndPhaseDecision end = (EndPhaseDecision) option;
-                if (end.phase() == preferredPhase) {
-                    return option;
-                }
-            }
-        }
+        // for (Decision option : options) {
+        //     if (option instanceof EndPhaseDecision) {
+        //         EndPhaseDecision end = (EndPhaseDecision) option;
+        //         if (end.phase() == preferredPhase) {
+        //             return option;
+        //         }
+        //     }
+        // }
 
         for (Decision option : options) {
             if (option instanceof EndPhaseDecision) {

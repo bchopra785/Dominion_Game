@@ -31,17 +31,17 @@ public class V2StrategyPlayerTest {
     @Test
     public void testDeckInitialization(){
         V2StrategyPlayer player = new V2StrategyPlayer("TestPlayer");
-        List<Card> deck = player.deck;
+        List<Card.Type> deck = player.deck;
 
         assertEquals(10, deck.size(), "Deck should have 10 cards");
 
         long bitcoinCount = player.deck.stream()
-            .filter(card -> card.type() == Card.Type.BITCOIN)
+            .filter(card -> card == Card.Type.BITCOIN)
             .count();
         assertEquals(7, bitcoinCount, "Deck should have 7 BITCOIN cards");
     
         long methodCount = player.deck.stream()
-            .filter(card -> card.type() == Card.Type.METHOD)
+            .filter(card -> card == Card.Type.METHOD)
             .count();
         assertEquals(3, methodCount, "Deck should have 3 METHOD cards");
     }

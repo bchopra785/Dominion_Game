@@ -1,0 +1,129 @@
+float moneyCardProp = 0.5f;
+float actionCardProp = 0.4f;
+float pointCardProp = 0.1f;
+
+float moneyCardProp_end = 0.6f;
+float actionCardProp_end = 0.1f;
+float pointCardProp_end = 0.3f;
+
+int permutation_cap = 5;
+int end_game_threshold = 5;
+
+
+=== Raw Tournament Summary === 30%
+Games simulated: 50
+Raw win counts (ties count as win for each top-ranked player):
+- Strategy-V2#1: 36
+- BigMoney#1: 18
+
+=== Raw Tournament Summary ===
+Games simulated: 300
+Raw win counts (ties count as win for each top-ranked player):
+- BigMoney#1: 241
+- Strategy-V2#1: 71
+
+
+conclusion: gets lucky sometimes
+
+************************************************************************************
+-choose end discard when possible
+
+=== Raw Tournament Summary === 37%
+Games simulated: 50
+Raw win counts (ties count as win for each top-ranked player):
+- BigMoney#1: 42
+- Strategy-V2#1: 9
+
+=== Raw Tournament Summary ===
+Games simulated: 300
+Raw win counts (ties count as win for each top-ranked player):
+- Strategy-V2#1: 190
+- BigMoney#1: 142
+
+=== Raw Tournament Summary ===
+Games simulated: 500
+Raw win counts (ties count as win for each top-ranked player):
+- BigMoney#1: 384
+- Strategy-V2#1: 123
+
+Conclusion: really all over the place
+
+************************************************************************************
+- buy framework whenever possible
+- updated gain card to actually contain logic
+
+=== Raw Tournament Summary === 45%
+Games simulated: 500
+Raw win counts (ties count as win for each top-ranked player):
+- BigMoney#1: 378
+- Strategy-V2#1: 208
+
+Games simulated: 500
+Raw win counts (ties count as win for each top-ranked player):
+- BigMoney#1: 355
+- Strategy-V2#1: 243
+
+Conclusion: stable but room for improvement
+
+************************************************************************************
+- don't play cards that trash if you have nothing to trash
+
+=== Raw Tournament Summary === 37%
+Games simulated: 500
+Raw win counts (ties count as win for each top-ranked player):
+- BigMoney#1: 386
+- Strategy-V2#1: 187
+
+=== Raw Tournament Summary ===
+Games simulated: 500
+Raw win counts (ties count as win for each top-ranked player):
+- BigMoney#1: 426
+- Strategy-V2#1: 188
+
+Conclusion: well obviously that was a bad idea
+
+************************************************************************************
+- removed the trash constraints
+
+    float moneyCardProp = 0.5;
+    float actionCardProp = 0.5f;
+    float pointCardProp = 0.0f;
+
+    float moneyCardProp_end = 0.4f;
+    float actionCardProp_end = 0.1f;
+    float pointCardProp_end = 0.5f;
+
+    int permutation_cap = 5;
+    int end_game_threshold = 5;
+
+=== Raw Tournament Summary === 43%
+Games simulated: 1000
+Raw win counts (ties count as win for each top-ranked player):
+- BigMoney#1: 636
+- Strategy-V2#1: 437
+
+************************************************************************************
+    float moneyCardProp = 0.6f;
+    float actionCardProp = 0.3f;
+    float pointCardProp = 0.1f;
+
+    float moneyCardProp_end = 0.6f;
+    float actionCardProp_end = 0.1f;
+    float pointCardProp_end = 0.3f;
+
+    int permutation_cap = 5;
+    int end_game_threshold = 5;
+
+=== Raw Tournament Summary ===
+Games simulated: 1000
+Raw win counts (ties count as win for each top-ranked player):
+- Strategy-V2#1: 780
+- BigMoney#1: 317
+
+=== Raw Tournament Summary ===
+Games simulated: 1000
+Raw win counts (ties count as win for each top-ranked player):
+- Strategy-V2#1: 849
+- BigMoney#1: 365
+
+Conclusion: huH did I crack the code?

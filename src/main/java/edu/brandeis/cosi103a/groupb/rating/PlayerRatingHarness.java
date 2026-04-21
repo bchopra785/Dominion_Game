@@ -12,10 +12,14 @@ import edu.brandeis.cosi103a.groupb.engine.Engine;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.Scanner;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -48,6 +52,8 @@ public class PlayerRatingHarness {
             PlayerRatingHarness harness = new PlayerRatingHarness();
             List<GameRecord> rawResults = harness.runTournament(selected, gamesPerMatchup);
             printRawSummary(rawResults, System.out);
+            List<PlayerPerformance> ratings = harness.computePerformanceRatings(rawResults);
+            printPerformanceSummary(ratings, System.out);
         }
     }
 
@@ -196,6 +202,9 @@ public class PlayerRatingHarness {
         out.println("=== Raw Tournament Summary ===");
         out.println("Games simulated: " + rawResults.size());
 
+        // Additional context for the new metrics
+        out.println("=== Additional Metrics ===");
+
         Map<String, Integer> wins = new LinkedHashMap<>();
         Map<String, Integer> moneyTotals = new LinkedHashMap<>();
         Map<String, Integer> actionCardTotals = new LinkedHashMap<>();
@@ -236,6 +245,461 @@ public class PlayerRatingHarness {
             out.printf("- %s: %.1f money, %.1f action cards%n", playerName, avgMoney, avgActionCards);
         }
         out.println();
+    }
+
+    /**
+     * Computes advanced rating metrics using only raw GameRecord data.
+     *
+     * Notes:
+     * - This method does not change simulation behavior.
+     * - Ties are handled by rank values as already encoded in GameRecord.
+     * - Head-to-head records compare each player against every opponent per game.
+     */
+    public List<PlayerPerformance> computePerformanceRatings(List<GameRecord> rawResults) {
+        if (rawResults == null || rawResults.isEmpty()) {
+            return List.of();
+        }
+
+        Map<String, MutablePlayerStats> statsByPlayer = new LinkedHashMap<>();
+        int maxPlayersInAnyGame = 0;
+
+        // Pass 1: Aggregate all per-player totals directly from raw game records.
+        for (GameRecord game : rawResults) {
+            List<GameRecord.PlayerRecord> results = game.playerResults();
+            if (results == null || results.isEmpty()) {
+                continue;
+            }
+
+            int gameSize = results.size();
+            if (gameSize > maxPlayersInAnyGame) {
+                maxPlayersInAnyGame = gameSize;
+            }
+
+            int worstRank = 1;
+            for (GameRecord.PlayerRecord playerRecord : results) {
+                if (playerRecord.rank() > worstRank) {
+                    worstRank = playerRecord.rank();
+                }
+            }
+
+            for (GameRecord.PlayerRecord playerRecord : results) {
+                MutablePlayerStats stats = statsByPlayer.computeIfAbsent(
+                    playerRecord.playerName(),
+                    ignored -> new MutablePlayerStats(playerRecord.playerName())
+                );
+
+                stats.gamesPlayed++;
+                stats.ranks.add(playerRecord.rank());
+                stats.scoreSum += playerRecord.score();
+
+                if (playerRecord.rank() == 1) {
+                    stats.totalWins++;
+                    stats.firstPlaceCount++;
+                }
+                if (playerRecord.rank() <= 2) {
+                    stats.topTwoCount++;
+                }
+                if (playerRecord.rank() == worstRank) {
+                    stats.lastPlaceCount++;
+                }
+
+                // Matchup key is the sorted list of opponents in the same game.
+                String matchupKey = buildMatchupKey(game.matchupPlayers(), playerRecord.playerName());
+                MutableMatchupStats matchupStats = stats.matchupStats.computeIfAbsent(
+                    matchupKey,
+                    ignored -> new MutableMatchupStats()
+                );
+                matchupStats.games++;
+                if (playerRecord.rank() == 1) {
+                    matchupStats.wins++;
+                }
+            }
+
+            int topRankCount = 0;
+            for (GameRecord.PlayerRecord playerRecord : results) {
+                if (playerRecord.rank() == 1) {
+                    topRankCount++;
+                }
+            }
+            boolean sharedWin = topRankCount > 1;
+            for (GameRecord.PlayerRecord playerRecord : results) {
+                if (playerRecord.rank() == 1) {
+                    MutablePlayerStats stats = statsByPlayer.get(playerRecord.playerName());
+                    if (sharedWin) {
+                        stats.sharedWins++;
+                    } else {
+                        stats.outrightWins++;
+                    }
+                }
+            }
+
+            // Pairwise head-to-head records: compare every player against every other player in the game.
+            for (int i = 0; i < results.size(); i++) {
+                GameRecord.PlayerRecord left = results.get(i);
+                MutablePlayerStats leftStats = statsByPlayer.get(left.playerName());
+                for (int j = i + 1; j < results.size(); j++) {
+                    GameRecord.PlayerRecord right = results.get(j);
+                    MutablePlayerStats rightStats = statsByPlayer.get(right.playerName());
+
+                    MutableHeadToHeadStats leftVsRight = leftStats.headToHeadStats.computeIfAbsent(
+                        right.playerName(),
+                        ignored -> new MutableHeadToHeadStats()
+                    );
+                    MutableHeadToHeadStats rightVsLeft = rightStats.headToHeadStats.computeIfAbsent(
+                        left.playerName(),
+                        ignored -> new MutableHeadToHeadStats()
+                    );
+
+                    if (left.rank() < right.rank()) {
+                        leftVsRight.wins++;
+                        rightVsLeft.losses++;
+                    } else if (left.rank() > right.rank()) {
+                        leftVsRight.losses++;
+                        rightVsLeft.wins++;
+                    } else {
+                        leftVsRight.ties++;
+                        rightVsLeft.ties++;
+                    }
+                }
+            }
+        }
+
+        if (statsByPlayer.isEmpty()) {
+            return List.of();
+        }
+
+        // Pass 2: Find score bounds for cross-player average score normalization.
+        double minAverageScore = Double.MAX_VALUE;
+        double maxAverageScore = -Double.MAX_VALUE;
+        for (MutablePlayerStats stats : statsByPlayer.values()) {
+            if (stats.gamesPlayed == 0) {
+                continue;
+            }
+            double avgScore = stats.scoreSum / stats.gamesPlayed;
+            if (avgScore < minAverageScore) {
+                minAverageScore = avgScore;
+            }
+            if (avgScore > maxAverageScore) {
+                maxAverageScore = avgScore;
+            }
+        }
+
+        if (minAverageScore == Double.MAX_VALUE) {
+            minAverageScore = 0.0;
+            maxAverageScore = 0.0;
+        }
+
+        // Pass 3: Compute final metrics, normalized values, and weighted CPR.
+        List<PlayerPerformance> performances = new ArrayList<>();
+        for (MutablePlayerStats stats : statsByPlayer.values()) {
+            if (stats.gamesPlayed == 0) {
+                continue;
+            }
+
+            double games = stats.gamesPlayed;
+            double totalWinRate = stats.totalWins / games;
+            double outrightWinRate = stats.outrightWins / games;
+            double sharedWinRate = stats.sharedWins / games;
+            double topTwoRate = stats.topTwoCount / games;
+            double medianRank = median(stats.ranks);
+            double averageScore = stats.scoreSum / games;
+            double lastPlaceRate = stats.lastPlaceCount / games;
+            double firstPlaceRate = stats.firstPlaceCount / games;
+
+            // Dominion-aware "variance" proxy: frequent extremes (first OR last) => riskier profile.
+            double extremeRankRate = (stats.firstPlaceCount + stats.lastPlaceCount) / games;
+
+            // Median rank normalization: rank 1 is best, so lower median rank should score higher.
+            double normalizedMedianRank;
+            if (maxPlayersInAnyGame <= 1) {
+                normalizedMedianRank = 1.0;
+            } else {
+                normalizedMedianRank = 1.0 - ((medianRank - 1.0) / (maxPlayersInAnyGame - 1.0));
+                normalizedMedianRank = clamp01(normalizedMedianRank);
+            }
+
+            // Average score normalization across all players.
+            double normalizedAverageScore;
+            if (maxAverageScore == minAverageScore) {
+                normalizedAverageScore = 1.0;
+            } else {
+                normalizedAverageScore = (averageScore - minAverageScore) / (maxAverageScore - minAverageScore);
+                normalizedAverageScore = clamp01(normalizedAverageScore);
+            }
+
+            double nonLastRate = 1.0 - lastPlaceRate;
+
+            // CPR is the final weighted score used to rank players across all raw game records.
+            // It blends winning, consistency, score quality, rank quality, and staying out of last place.
+            double cpr =
+                (0.35 * totalWinRate)
+                + (0.25 * topTwoRate)
+                + (0.20 * normalizedAverageScore)
+                + (0.15 * normalizedMedianRank)
+                + (0.05 * nonLastRate);
+
+            Map<String, MatchupWinRate> matchupWinRates = new TreeMap<>();
+            for (Map.Entry<String, MutableMatchupStats> entry : stats.matchupStats.entrySet()) {
+                MutableMatchupStats ms = entry.getValue();
+                double matchupRate = ms.games == 0 ? 0.0 : (double) ms.wins / ms.games;
+                matchupWinRates.put(entry.getKey(), new MatchupWinRate(ms.games, ms.wins, matchupRate));
+            }
+
+            Map<String, HeadToHeadRecord> headToHeadRecords = new TreeMap<>();
+            for (Map.Entry<String, MutableHeadToHeadStats> entry : stats.headToHeadStats.entrySet()) {
+                MutableHeadToHeadStats h2h = entry.getValue();
+                int totalMatchups = h2h.wins + h2h.losses + h2h.ties;
+                double h2hWinRate = totalMatchups == 0 ? 0.0 : (double) h2h.wins / totalMatchups;
+                headToHeadRecords.put(entry.getKey(), new HeadToHeadRecord(h2h.wins, h2h.losses, h2h.ties, h2hWinRate));
+            }
+
+            performances.add(new PlayerPerformance(
+                stats.playerName,
+                stats.gamesPlayed,
+                stats.totalWins,
+                stats.outrightWins,
+                stats.sharedWins,
+                totalWinRate,
+                outrightWinRate,
+                sharedWinRate,
+                topTwoRate,
+                medianRank,
+                averageScore,
+                lastPlaceRate,
+                Collections.unmodifiableMap(matchupWinRates),
+                Collections.unmodifiableMap(headToHeadRecords),
+                firstPlaceRate,
+                extremeRankRate,
+                normalizedMedianRank,
+                normalizedAverageScore,
+                cpr
+            ));
+        }
+
+        // Final ordering: CPR desc, then total win rate desc, then median rank asc, then average score desc.
+        performances.sort(
+            Comparator
+                .comparingDouble(PlayerPerformance::compositePerformanceRating).reversed()
+                .thenComparing(Comparator.comparingDouble(PlayerPerformance::totalWinRate).reversed())
+                .thenComparingDouble(PlayerPerformance::medianRank)
+                .thenComparing(Comparator.comparingDouble(PlayerPerformance::averageScore).reversed())
+        );
+
+        return performances;
+    }
+
+    private static String buildMatchupKey(List<String> matchupPlayers, String playerName) {
+        if (matchupPlayers == null || matchupPlayers.isEmpty()) {
+            return "(unknown matchup)";
+        }
+
+        List<String> opponents = new ArrayList<>();
+        for (String slot : matchupPlayers) {
+            if (!slot.equals(playerName)) {
+                opponents.add(slot);
+            }
+        }
+
+        if (opponents.isEmpty()) {
+            return "(solo)";
+        }
+
+        opponents.sort(String::compareTo);
+        return String.join(" | ", opponents);
+    }
+
+    private static double clamp01(double value) {
+        if (value < 0.0) {
+            return 0.0;
+        }
+        if (value > 1.0) {
+            return 1.0;
+        }
+        return value;
+    }
+
+    static void printPerformanceSummary(List<PlayerPerformance> performances, PrintStream out) {
+        out.println();
+        out.println("=== Composite Player Rating Summary ===");
+        if (performances == null || performances.isEmpty()) {
+            out.println("No player metrics available.");
+            return;
+        }
+
+        for (PlayerPerformance player : performances) {
+            out.println();
+            out.println("=== " + player.playerName() + " ===");
+
+            out.println();
+            out.println("[Volume]");
+            printMetric(out, "Games Played", String.valueOf(player.gamesPlayed()));
+
+            out.println();
+            out.println("[Win Profile]");
+            printMetric(out, "Total Wins", String.valueOf(player.totalWins()));
+            printMetric(out, "Total Win Rate", formatPercent(player.totalWinRate()));
+            printMetric(
+                out,
+                "Outright Wins",
+                player.outrightWins() + " (" + formatPercent(player.outrightWinRate()) + ")"
+            );
+            printMetric(
+                out,
+                "Shared Wins",
+                player.sharedWins() + " (" + formatPercent(player.sharedWinRate()) + ")"
+            );
+
+            out.println();
+            out.println("[Placement Profile]");
+            printMetric(out, "Top-Two Rate", formatPercent(player.topTwoRate()));
+            printMetric(out, "Median Rank", formatDouble(player.medianRank(), 3));
+            printMetric(out, "Average Score", formatDouble(player.averageScore(), 3));
+            printMetric(out, "First Place Rate", formatPercent(player.firstPlaceRate()));
+            printMetric(out, "Last Place Rate", formatPercent(player.lastPlaceRate()));
+
+            out.println();
+            out.println("[Direct Comparisons]");
+            out.println("Head-to-Head Record:");
+            if (player.headToHeadRecords().isEmpty()) {
+                out.println("- (none)");
+            } else {
+                for (Map.Entry<String, HeadToHeadRecord> entry : player.headToHeadRecords().entrySet()) {
+                    HeadToHeadRecord record = entry.getValue();
+                    out.println(
+                        "- vs [" + entry.getKey() + "]: "
+                        + record.wins() + "-" + record.losses() + "-" + record.ties()
+                        + " (win rate " + formatPercent(record.winRate()) + ")"
+                    );
+                }
+            }
+
+            out.println();
+            out.println("Matchup Win Rate:");
+            if (player.matchupWinRates().isEmpty()) {
+                out.println("- (none)");
+            } else {
+                for (Map.Entry<String, MatchupWinRate> entry : player.matchupWinRates().entrySet()) {
+                    MatchupWinRate rate = entry.getValue();
+                    out.println(
+                        "- vs [" + entry.getKey() + "]: "
+                        + formatPercent(rate.winRate())
+                        + " (" + rate.wins() + "/" + rate.games() + ")"
+                    );
+                }
+            }
+
+            out.println();
+            out.println("[Composite Rating]");
+            out.println();
+            printMetric(out, "Composite Performance Rating (CPR)", formatDouble(player.compositePerformanceRating(), 4));
+        }
+
+        out.println();
+        out.println("=== Interpretation Guide ===");
+        printGuideLine(out, "High Total Win Rate", "strong ability to win");
+        printGuideLine(out, "High Outright Win Rate", "wins without sharing first place");
+        printGuideLine(out, "High Shared Win Rate", "often tied for first");
+        printGuideLine(out, "High Top-Two Rate", "consistent strategy across games");
+        printGuideLine(out, "Low Median Rank", "better finish position (Rank 1 is best)");
+        printGuideLine(out, "High Average Score", "strong performance even in losses");
+        printGuideLine(out, "Low Last Place Rate", "stable, lower-risk profile");
+        printGuideLine(out, "Head-to-Head W-L-T", "Wins-Losses-Ties against one opponent across shared games");
+        printGuideLine(out, "CPR scale", "0.0000 to 1.0000, where 1.0000 is the best possible score");
+        printGuideLine(out, "CPR meaning", "weighted overall strength across wins, consistency, score, rank, and not-last finishes");
+    }
+
+    private static String formatPercent(double value) {
+        return String.format(Locale.US, "%.2f%%", value * 100.0);
+    }
+
+    private static String formatDouble(double value, int decimals) {
+        return String.format(Locale.US, "%1$." + decimals + "f", value);
+    }
+
+    private static void printMetric(PrintStream out, String label, String value) {
+        out.println(String.format(Locale.US, "%-32s : %s", label, value));
+    }
+
+    private static void printGuideLine(PrintStream out, String metric, String meaning) {
+        out.println(String.format(Locale.US, "%-26s -> %s", metric, meaning));
+    }
+
+    /**
+     * Immutable final output for one player's computed rating profile.
+     */
+    public record PlayerPerformance(
+        String playerName,
+        int gamesPlayed,
+        int totalWins,
+        int outrightWins,
+        int sharedWins,
+        double totalWinRate,
+        double outrightWinRate,
+        double sharedWinRate,
+        double topTwoRate,
+        double medianRank,
+        double averageScore,
+        double lastPlaceRate,
+        Map<String, MatchupWinRate> matchupWinRates,
+        Map<String, HeadToHeadRecord> headToHeadRecords,
+        double firstPlaceRate,
+        double extremeRankRate,
+        double normalizedMedianRank,
+        double normalizedAverageScore,
+        double compositePerformanceRating
+    ) {}
+
+    public record MatchupWinRate(int games, int wins, double winRate) {}
+
+    public record HeadToHeadRecord(int wins, int losses, int ties, double winRate) {}
+
+    /**
+     * Mutable accumulator used only during aggregation.
+     */
+    private static final class MutablePlayerStats {
+        private final String playerName;
+        private int gamesPlayed;
+        private int totalWins;
+        private int outrightWins;
+        private int sharedWins;
+        private int topTwoCount;
+        private int firstPlaceCount;
+        private int lastPlaceCount;
+        private double scoreSum;
+        private final List<Integer> ranks;
+        private final Map<String, MutableMatchupStats> matchupStats;
+        private final Map<String, MutableHeadToHeadStats> headToHeadStats;
+
+        private MutablePlayerStats(String playerName) {
+            this.playerName = playerName;
+            this.ranks = new ArrayList<>();
+            this.matchupStats = new LinkedHashMap<>();
+            this.headToHeadStats = new LinkedHashMap<>();
+        }
+    }
+
+    private static final class MutableMatchupStats {
+        private int games;
+        private int wins;
+    }
+
+    private static final class MutableHeadToHeadStats {
+        private int wins;
+        private int losses;
+        private int ties;
+    }
+
+    private static double median(List<Integer> values) {
+        if (values == null || values.isEmpty()) {
+            return 0.0;
+        }
+        List<Integer> sorted = new ArrayList<>(values);
+        sorted.sort(Integer::compareTo);
+        int middle = sorted.size() / 2;
+        if (sorted.size() % 2 == 1) {
+            return sorted.get(middle);
+        }
+        return (sorted.get(middle - 1) + sorted.get(middle)) / 2.0;
     }
 
     private static List<Template> defaultTemplates() {

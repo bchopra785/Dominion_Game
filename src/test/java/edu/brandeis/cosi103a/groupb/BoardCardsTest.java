@@ -22,7 +22,7 @@ public class BoardCardsTest {
     @Test
     public void testGetPlayableCardsWithZeroCost() {
         // With 0 cost, only free cards should be playable: Bug(0) and Bitcoin(0)
-        CardStacks playableCards = boardCards.getPlayableCards(0);
+        CardStacks playableCards = boardCards.getAffordableCards(0);
         assertTrue(playableCards.getCardTypes().contains(Card.Type.BUG));
         assertTrue(playableCards.getCardTypes().contains(Card.Type.BITCOIN));
         assertEquals(2, playableCards.getCardTypes().size());
@@ -148,14 +148,14 @@ public class BoardCardsTest {
             boardCards.drawDeckCard(Card.Type.BITCOIN);
             stacks = boardCards.getCardStacks();
         }
-        CardStacks playableCards = boardCards.getPlayableCards(8);
+        CardStacks playableCards = boardCards.getAffordableCards(8);
         assertFalse(playableCards.getCardTypes().contains(Card.Type.BITCOIN));
     }
 
     @Test
     public void testGetPlayableCardsDoesNotExceedBudget() {
         // No cards with cost > budget should be returned
-        CardStacks playableCards = boardCards.getPlayableCards(3);
+        CardStacks playableCards = boardCards.getAffordableCards(3);
         for (Card.Type cardType : playableCards.getCardTypes()) {
             assertTrue(cardType.cost() <= 3,
                       "Card " + cardType + " costs " + cardType.cost() + " exceeds budget of 3");

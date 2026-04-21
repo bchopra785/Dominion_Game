@@ -1,7 +1,8 @@
-package edu.brandeis.cosi103a.groupb;
+package edu.brandeis.cosi103a.groupb.optimization;
 
 import org.junit.jupiter.api.Test;
-import edu.brandeis.cosi103a.groupb.rating.optimization.CardWeightOptimizer3;
+
+import edu.brandeis.cosi103a.groupb.rating.optimization.optimizers.V3Optimizer;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -27,7 +28,7 @@ public class CardWeightOptimizer3FullBatchTest {
             "FULL BATCH OPTIMIZATION: 66 Board Configurations (STRONGER PARAMS)\n" +
             "======================================================================\n");
 
-        CardWeightOptimizer3 optimizer = new CardWeightOptimizer3(
+        V3Optimizer optimizer = new V3Optimizer(
             20,  // generations (increased from 10)
             20,  // games per matchup (increased from 10)
             5,   // configs per generation (same as validation)
@@ -57,7 +58,7 @@ public class CardWeightOptimizer3FullBatchTest {
             
             // Save results to file
             System.out.println("\nSaving results to file...");
-            CardWeightOptimizer3.saveConfigsToFile(allConfigs, "deckaware_weights.txt");
+            V3Optimizer.saveConfigsToFile(allConfigs, "deckaware_weights.txt");
             
             // Verify results
             assertNotNull(allConfigs, "Optimization should return results");

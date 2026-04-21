@@ -6,6 +6,7 @@ import edu.brandeis.cosi.atg.state.PlayerResult;
 import edu.brandeis.cosi103a.groupb.BigMoneyPlayer;
 import edu.brandeis.cosi103a.groupb.ParentPlayer;
 import edu.brandeis.cosi103a.groupb.StrategyPlayer;
+import edu.brandeis.cosi103a.groupb.V2StrategyPlayer;
 import edu.brandeis.cosi103a.groupb.WeightedPlayer;
 import edu.brandeis.cosi103a.groupb.WeightedPlayer2;
 import edu.brandeis.cosi103a.groupb.WeightedPlayer3;
@@ -730,6 +731,12 @@ public class PlayerRatingHarness {
             "Deck-aware weights (board-specific optimization)",
             WeightedPlayer3::new
         ));
+        templates.add(new Template(
+            "Strategy-V2", 
+            "Version 2 of Strategy Player",
+            V2StrategyPlayer::new
+        ));
+
         return templates;
     }
 

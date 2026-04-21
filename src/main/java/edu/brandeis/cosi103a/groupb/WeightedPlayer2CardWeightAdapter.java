@@ -1,7 +1,7 @@
 package edu.brandeis.cosi103a.groupb;
 
 import edu.brandeis.cosi.atg.cards.Card;
-import edu.brandeis.cosi103a.groupb.rating.optimization.CardWeightConfig;
+import edu.brandeis.cosi103a.groupb.rating.optimization.data_classes.CardWeights;
 
 /**
  * Adapter for WeightedPlayer2 that uses CardWeightConfig for individual card weights.
@@ -9,9 +9,9 @@ import edu.brandeis.cosi103a.groupb.rating.optimization.CardWeightConfig;
  */
 public class WeightedPlayer2CardWeightAdapter extends WeightedPlayer2 {
     
-    private final CardWeightConfig cardWeightConfig;
+    private final CardWeights cardWeightConfig;
     
-    public WeightedPlayer2CardWeightAdapter(String name, CardWeightConfig cardWeightConfig) {
+    public WeightedPlayer2CardWeightAdapter(String name, CardWeights cardWeightConfig) {
         super(name);
         this.cardWeightConfig = cardWeightConfig;
     }

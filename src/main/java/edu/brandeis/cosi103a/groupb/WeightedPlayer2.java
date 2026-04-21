@@ -11,7 +11,7 @@ import edu.brandeis.cosi.atg.decisions.TrashCardDecision;
 import edu.brandeis.cosi.atg.event.Event;
 import edu.brandeis.cosi.atg.event.GainCardEvent;
 import edu.brandeis.cosi.atg.state.GameState;
-import edu.brandeis.cosi103a.groupb.rating.optimization.WeightConfig;
+import edu.brandeis.cosi103a.groupb.rating.optimization.data_classes.CategoryWeights;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -118,7 +118,7 @@ public class WeightedPlayer2 extends ParentPlayer {
     /**
      * Create a WeightedPlayer with custom weight configuration for optimization.
      */
-    public WeightedPlayer2(String name, WeightConfig config) {
+    public WeightedPlayer2(String name, CategoryWeights config) {
         super(name);
         this.playerName = name;
         this.verbose = false;
@@ -130,7 +130,7 @@ public class WeightedPlayer2 extends ParentPlayer {
     /**
      * Create a WeightedPlayer with custom weight configuration and verbose control.
      */
-    public WeightedPlayer2(String name, WeightConfig config, boolean verbose) {
+    public WeightedPlayer2(String name, CategoryWeights config, boolean verbose) {
         super(name);
         this.playerName = name;
         this.verbose = verbose;
@@ -142,7 +142,7 @@ public class WeightedPlayer2 extends ParentPlayer {
     /**
      * Apply a WeightConfig to this player instance, overriding default weights.
      */
-    private void applyWeightConfig(WeightConfig config) {
+    private void applyWeightConfig(CategoryWeights config) {
         // Create instance-level weight map from config - converting category weights to per-card weights
         this.instanceCardWeights = new HashMap<>();
         

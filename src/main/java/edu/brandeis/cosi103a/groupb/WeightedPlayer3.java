@@ -11,9 +11,9 @@ import edu.brandeis.cosi.atg.decisions.TrashCardDecision;
 import edu.brandeis.cosi.atg.event.Event;
 import edu.brandeis.cosi.atg.event.GainCardEvent;
 import edu.brandeis.cosi.atg.state.GameState;
-import edu.brandeis.cosi103a.groupb.rating.optimization.WeightConfig;
-import edu.brandeis.cosi103a.groupb.rating.optimization.CardWeightOptimizer3;
-import edu.brandeis.cosi103a.groupb.rating.optimization.CardWeightConfig;
+import edu.brandeis.cosi103a.groupb.rating.optimization.data_classes.CardWeights;
+import edu.brandeis.cosi103a.groupb.rating.optimization.data_classes.CategoryWeights;
+import edu.brandeis.cosi103a.groupb.rating.optimization.optimizers.V3Optimizer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,7 +34,7 @@ public class WeightedPlayer3 extends ParentPlayer {
     private final Map<Card.Type, Integer> acquiredCards = new HashMap<>();  // Tracks both gained and purchased cards
     private static final Map<String, List<String>> referenceCards = new HashMap<>();  // Reference map for attack card detection
     private static final Map<Card.Type, Float> cardWeights = new HashMap<>();  // Individual card weights
-    private static final Map<String, CardWeightConfig> DECK_AWARE_WEIGHTS = new HashMap<>();  // Deck-aware optimized weights for each board config
+    private static final Map<String, CardWeights> DECK_AWARE_WEIGHTS = new HashMap<>();  // Deck-aware optimized weights for each board config
     private final Map<Card.Type, Integer> opponentAttackCards = new HashMap<>();  // Tracks opponent attack card acquisitions
     private int lastProcessedEventCount = 0;  // Track which events we've already processed
     private final String playerName;  // Store player name to identify own events
@@ -103,7 +103,7 @@ public class WeightedPlayer3 extends ParentPlayer {
         // Try to load deck-aware weights from file (if they've been optimized)
         try {
             String configFile = "deckaware_weights.txt";
-            Map<String, CardWeightConfig> loadedConfigs = CardWeightOptimizer3.loadConfigsFromFile(configFile);
+            Map<String, CardWeights> loadedConfigs = V3Optimizer.loadConfigsFromFile(configFile);
             DECK_AWARE_WEIGHTS.putAll(loadedConfigs);
             // System.err.println("[WeightedPlayer3 DEBUG] Loaded " + DECK_AWARE_WEIGHTS.size() + " deck-aware weight configurations");
         } catch (Exception e) {
@@ -134,7 +134,7 @@ public class WeightedPlayer3 extends ParentPlayer {
     /**
      * Create a WeightedPlayer with custom weight configuration for optimization.
      */
-    public WeightedPlayer3(String name, WeightConfig config) {
+    public WeightedPlayer3(String name, CategoryWeights config) {
         super(name);
         this.playerName = name;
         this.verbose = false;
@@ -146,7 +146,7 @@ public class WeightedPlayer3 extends ParentPlayer {
     /**
      * Create a WeightedPlayer with custom weight configuration and verbose control.
      */
-    public WeightedPlayer3(String name, WeightConfig config, boolean verbose) {
+    public WeightedPlayer3(String name, CategoryWeights config, boolean verbose) {
         super(name);
         this.playerName = name;
         this.verbose = verbose;
@@ -158,7 +158,7 @@ public class WeightedPlayer3 extends ParentPlayer {
     /**
      * Apply a WeightConfig to this player instance, overriding default weights.
      */
-    private void applyWeightConfig(WeightConfig config) {
+    private void applyWeightConfig(CategoryWeights config) {
         // Create instance-level weight map from config - converting category weights to per-card weights
         this.instanceCardWeights = new HashMap<>();
         
@@ -1001,7 +1001,7 @@ public class WeightedPlayer3 extends ParentPlayer {
             return new HashMap<>(cardWeights);
         }
         
-        CardWeightConfig deckConfig = DECK_AWARE_WEIGHTS.get(configKey);
+        CardWeights deckConfig = DECK_AWARE_WEIGHTS.get(configKey);
         if (deckConfig != null) {
             // System.err.println("[WeightedPlayer3 DEBUG] Found deck-aware config: " + configKey);
             return new HashMap<>(deckConfig.cardWeights);  // Return a copy to prevent external modifications

@@ -1,10 +1,10 @@
-package edu.brandeis.cosi103a.groupb.rating.optimization;
+package edu.brandeis.cosi103a.groupb.rating.optimization.data_classes;
 
 /**
  * Encapsulates all tunable weights for WeightedPlayer strategy.
  * Used by WeightedPlayerOptimizer to evolve optimal parameters.
  */
-public class WeightConfig {
+public class CategoryWeights {
     
     // Category weights
     public float circulation;
@@ -32,8 +32,8 @@ public class WeightConfig {
     /**
      * Create a config with default values (current known-good settings)
      */
-    public static WeightConfig createDefault() {
-        WeightConfig config = new WeightConfig();
+    public static CategoryWeights createDefault() {
+        CategoryWeights config = new CategoryWeights();
         
         // Default category weights (from current WeightedPlayer)
         config.circulation = 4.0f;
@@ -64,8 +64,8 @@ public class WeightConfig {
     /**
      * Create a mutated copy with small random adjustments
      */
-    public WeightConfig mutate(float mutationRate) {
-        WeightConfig mutated = new WeightConfig();
+    public CategoryWeights mutate(float mutationRate) {
+        CategoryWeights mutated = new CategoryWeights();
         
         // Mutate category weights (±20% variation)
         mutated.circulation = circulation * randomVariation(mutationRate);

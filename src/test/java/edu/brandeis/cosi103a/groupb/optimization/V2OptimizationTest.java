@@ -1,7 +1,8 @@
 package edu.brandeis.cosi103a.groupb.optimization;
 
 import edu.brandeis.cosi.atg.engine.PlayerViolationException;
-import edu.brandeis.cosi103a.groupb.rating.optimization.CardWeightOptimizer;
+import edu.brandeis.cosi103a.groupb.rating.optimization.optimizers.V2Optimizer;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Disabled;
 
@@ -14,7 +15,7 @@ import org.junit.jupiter.api.Disabled;
  * NOTE: This is computationally intensive - runs many games. Start with small
  * generation counts for testing, larger for production optimization.
  */
-public class WeightedPlayer2OptimizationTest {
+public class V2OptimizationTest {
     
     /**
      * Quick optimization run for individual card weights (3 generations, 2 configs, small games).
@@ -27,7 +28,7 @@ public class WeightedPlayer2OptimizationTest {
     public void testQuickCardWeightOptimization() throws PlayerViolationException {
         // Output NOT suppressed for quick test so results are visible
         try {
-            CardWeightOptimizer optimizer = new CardWeightOptimizer(
+            V2Optimizer optimizer = new V2Optimizer(
                 3,              // generations
                 5,              // games per matchup
                 2,              // configs per generation (small)
@@ -52,7 +53,7 @@ public class WeightedPlayer2OptimizationTest {
     @Test
     public void testMediumCardWeightOptimization() throws PlayerViolationException {
         try {
-            CardWeightOptimizer optimizer = new CardWeightOptimizer(
+            V2Optimizer optimizer = new V2Optimizer(
                 4,              // generations
                 15,             // games per matchup
                 5,              // configs per generation
@@ -78,7 +79,7 @@ public class WeightedPlayer2OptimizationTest {
     @Test
     public void testFullCardWeightOptimization() throws PlayerViolationException {
         try {
-            CardWeightOptimizer optimizer = new CardWeightOptimizer(
+            V2Optimizer optimizer = new V2Optimizer(
                 8,              // generations
                 25,             // games per matchup
                 5,              // configs per generation

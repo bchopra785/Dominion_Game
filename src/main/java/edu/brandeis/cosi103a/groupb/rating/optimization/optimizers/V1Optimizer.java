@@ -1,4 +1,4 @@
-package edu.brandeis.cosi103a.groupb.rating.optimization;
+package edu.brandeis.cosi103a.groupb.rating.optimization.optimizers;
 
 import edu.brandeis.cosi.atg.engine.PlayerViolationException;
 import edu.brandeis.cosi.atg.state.GameResult;
@@ -7,6 +7,7 @@ import edu.brandeis.cosi103a.groupb.ParentPlayer;
 import edu.brandeis.cosi103a.groupb.WeightedPlayer;
 import edu.brandeis.cosi103a.groupb.WeightedPlayer2;
 import edu.brandeis.cosi103a.groupb.engine.Engine;
+import edu.brandeis.cosi103a.groupb.rating.optimization.data_classes.CategoryWeights;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -17,7 +18,7 @@ import java.util.List;
  * Runs multiple generations of weight configurations competing against each other,
  * automatically evolving toward optimal weights through tournament play.
  */
-public class WeightedPlayerOptimizer {
+public class V1Optimizer {
     
     private final int generationCount;
     private final int gamesPerMatchup;
@@ -43,11 +44,11 @@ public class WeightedPlayerOptimizer {
         }
     }
     
-    public WeightedPlayerOptimizer(int generationCount, int gamesPerMatchup, int configsPerGeneration, float mutationRate) {
+    public V1Optimizer(int generationCount, int gamesPerMatchup, int configsPerGeneration, float mutationRate) {
         this(generationCount, gamesPerMatchup, configsPerGeneration, mutationRate, PlayerVersion.WEIGHTED_PLAYER_V1);
     }
     
-    public WeightedPlayerOptimizer(int generationCount, int gamesPerMatchup, int configsPerGeneration, float mutationRate, PlayerVersion playerVersion) {
+    public V1Optimizer(int generationCount, int gamesPerMatchup, int configsPerGeneration, float mutationRate, PlayerVersion playerVersion) {
         this.generationCount = generationCount;
         this.gamesPerMatchup = gamesPerMatchup;
         this.configsPerGeneration = configsPerGeneration;
@@ -73,13 +74,13 @@ public class WeightedPlayerOptimizer {
         System.out.println("Player Version: " + playerVersion.name() + "\n");
         System.out.flush();
         
-        WeightConfig baseConfig = WeightConfig.createDefault();
+        CategoryWeights baseConfig = CategoryWeights.createDefault();
         List<ConfigRating> currentGeneration = new ArrayList<>();
         
         // Generation 0: Create initial population from default
         System.out.println("Generation 0: Creating " + configsPerGeneration + " variants from default config...");
         for (int i = 0; i < configsPerGeneration; i++) {
-            WeightConfig variant = (i == 0) ? baseConfig : baseConfig.mutate(mutationRate);
+            CategoryWeights variant = (i == 0) ? baseConfig : baseConfig.mutate(mutationRate);
             currentGeneration.add(new ConfigRating(variant, i));
         }
         
@@ -211,7 +212,7 @@ public class WeightedPlayerOptimizer {
         // Fill rest with mutations of top performer
         ConfigRating topPerformer = current.get(0);
         while (nextGen.size() < configsPerGeneration) {
-            WeightConfig mutated = topPerformer.config.mutate(mutationRate * 1.5f);  // Larger mutations for exploration
+            CategoryWeights mutated = topPerformer.config.mutate(mutationRate * 1.5f);  // Larger mutations for exploration
             nextGen.add(new ConfigRating(mutated, nextGen.size()));
         }
         
@@ -280,12 +281,12 @@ public class WeightedPlayerOptimizer {
      * Inner class tracking a configuration and its performance.
      */
     private static class ConfigRating {
-        WeightConfig config;
+        CategoryWeights config;
         int configId;
         int wins = 0;
         int gamesPlayed = 0;
         
-        ConfigRating(WeightConfig config, int configId) {
+        ConfigRating(CategoryWeights config, int configId) {
             this.config = config;
             this.configId = configId;
         }

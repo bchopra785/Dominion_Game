@@ -2,8 +2,9 @@ package edu.brandeis.cosi103a.groupb.optimization;
 
 import edu.brandeis.cosi.atg.engine.PlayerViolationException;
 import edu.brandeis.cosi103a.groupb.WeightedPlayer;
-import edu.brandeis.cosi103a.groupb.rating.optimization.WeightConfig;
-import edu.brandeis.cosi103a.groupb.rating.optimization.WeightedPlayerOptimizer;
+import edu.brandeis.cosi103a.groupb.rating.optimization.data_classes.CategoryWeights;
+import edu.brandeis.cosi103a.groupb.rating.optimization.optimizers.V1Optimizer;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Disabled;
 
@@ -19,7 +20,7 @@ import org.junit.jupiter.api.Disabled;
  */
 
 
-public class WeightedPlayerOptimizationTest {
+public class V3OptimizationTest {
     
     /**
      * Simple test to verify System.out works in test harness.
@@ -47,7 +48,7 @@ public class WeightedPlayerOptimizationTest {
         System.out.flush();
         
         try {
-            WeightedPlayerOptimizer optimizer = new WeightedPlayerOptimizer(
+            V1Optimizer optimizer = new V1Optimizer(
                 3,              // generations
                 5,              // games per matchup (increased from 2 for random card variance)
                 2,              // configs per generation (small)
@@ -76,7 +77,7 @@ public class WeightedPlayerOptimizationTest {
     // mvn test -Dtest=WeightedPlayerOptimizationTest#testMediumWeightOptimization
     @Test
     public void testMediumWeightOptimization() throws PlayerViolationException {
-        WeightedPlayerOptimizer optimizer = new WeightedPlayerOptimizer(
+        V1Optimizer optimizer = new V1Optimizer(
             7,              // generations (increased from 5)
             25,             // games per matchup (increased from 20 for better noise reduction)
             6,              // configs per generation (increased from 5 for more diversity)
@@ -96,7 +97,7 @@ public class WeightedPlayerOptimizationTest {
     // mvn test -Dtest=WeightedPlayerOptimizationTest#testFullWeightOptimization
     @Test
     public void testFullWeightOptimization() throws PlayerViolationException {
-        WeightedPlayerOptimizer optimizer = new WeightedPlayerOptimizer(
+        V1Optimizer optimizer = new V1Optimizer(
             8,              // generations (more than medium's 7)
             25,             // games per matchup (same as medium)
             7,              // configs per generation (more than medium's 6)
@@ -111,7 +112,7 @@ public class WeightedPlayerOptimizationTest {
      */
     @Test
     public void testWeightedPlayerWithCustomConfig() {
-        WeightConfig config = WeightConfig.createDefault();
+        CategoryWeights config = CategoryWeights.createDefault();
         config.circulation = 5.0f;  // Boost circulation cards
         config.money = 1.5f;        // Reduce money priority
         
@@ -126,11 +127,11 @@ public class WeightedPlayerOptimizationTest {
      */
     @Test
     public void testWeightConfigMutation() {
-        WeightConfig original = WeightConfig.createDefault();
+        CategoryWeights original = CategoryWeights.createDefault();
         float originalCirculation = original.circulation;
         
         // Mutate with 25% variation rate
-        WeightConfig mutated = original.mutate(0.25f);
+        CategoryWeights mutated = original.mutate(0.25f);
         
         // Verify weights changed (probabilistically should be different)
         // Note: with randomness, could theoretically get same values, but very unlikely

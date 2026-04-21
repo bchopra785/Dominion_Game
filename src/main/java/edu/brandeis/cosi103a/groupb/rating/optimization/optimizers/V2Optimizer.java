@@ -1,4 +1,4 @@
-package edu.brandeis.cosi103a.groupb.rating.optimization;
+package edu.brandeis.cosi103a.groupb.rating.optimization.optimizers;
 
 import edu.brandeis.cosi.atg.engine.PlayerViolationException;
 import edu.brandeis.cosi.atg.state.GameResult;
@@ -7,6 +7,7 @@ import edu.brandeis.cosi103a.groupb.ParentPlayer;
 import edu.brandeis.cosi103a.groupb.WeightedPlayer2;
 import edu.brandeis.cosi103a.groupb.WeightedPlayer2CardWeightAdapter;
 import edu.brandeis.cosi103a.groupb.engine.Engine;
+import edu.brandeis.cosi103a.groupb.rating.optimization.data_classes.CardWeights;
 
 import java.util.*;
 
@@ -15,14 +16,14 @@ import java.util.*;
  * Optimizes per-card weights rather than category weights.
  * Runs multiple generations of card weight configurations competing against each other.
  */
-public class CardWeightOptimizer {
+public class V2Optimizer {
     
     private final int generationCount;
     private final int gamesPerMatchup;
     private final int configsPerGeneration;
     private final float mutationRate;
     
-    public CardWeightOptimizer(int generationCount, int gamesPerMatchup, int configsPerGeneration, float mutationRate) {
+    public V2Optimizer(int generationCount, int gamesPerMatchup, int configsPerGeneration, float mutationRate) {
         this.generationCount = generationCount;
         this.gamesPerMatchup = gamesPerMatchup;
         this.configsPerGeneration = configsPerGeneration;
@@ -45,13 +46,13 @@ public class CardWeightOptimizer {
         System.out.println("Mutation rate: " + mutationRate + "\n");
         System.out.flush();
         
-        CardWeightConfig baseConfig = CardWeightConfig.createDefault();
+        CardWeights baseConfig = CardWeights.createDefault();
         List<CardConfigRating> currentGeneration = new ArrayList<>();
         
         // Generation 0: Create initial population from default
         System.out.println("Generation 0: Creating " + configsPerGeneration + " variants from default config...");
         for (int i = 0; i < configsPerGeneration; i++) {
-            CardWeightConfig variant = (i == 0) ? baseConfig : baseConfig.mutate(mutationRate);
+            CardWeights variant = (i == 0) ? baseConfig : baseConfig.mutate(mutationRate);
             currentGeneration.add(new CardConfigRating(variant, i));
         }
         
@@ -174,7 +175,7 @@ public class CardWeightOptimizer {
         // Fill rest with mutations of top performer
         CardConfigRating topPerformer = current.get(0);
         while (nextGen.size() < configsPerGeneration) {
-            CardWeightConfig mutated = topPerformer.config.mutate(mutationRate * 1.5f);
+            CardWeights mutated = topPerformer.config.mutate(mutationRate * 1.5f);
             nextGen.add(new CardConfigRating(mutated, nextGen.size()));
         }
         
@@ -234,12 +235,12 @@ public class CardWeightOptimizer {
      * Inner class to track card config ratings.
      */
     static class CardConfigRating {
-        CardWeightConfig config;
+        CardWeights config;
         int configId;
         int wins = 0;
         int gamesPlayed = 0;
         
-        CardConfigRating(CardWeightConfig config, int configId) {
+        CardConfigRating(CardWeights config, int configId) {
             this.config = config;
             this.configId = configId;
         }

@@ -2,8 +2,8 @@ package edu.brandeis.cosi103a.groupb.optimization;
 
 import edu.brandeis.cosi.atg.cards.Card;
 import edu.brandeis.cosi.atg.engine.PlayerViolationException;
-import edu.brandeis.cosi103a.groupb.rating.optimization.CardWeightConfig;
-import edu.brandeis.cosi103a.groupb.rating.optimization.CardWeightOptimizer3;
+import edu.brandeis.cosi103a.groupb.rating.optimization.data_classes.CardWeights;
+import edu.brandeis.cosi103a.groupb.rating.optimization.optimizers.V3Optimizer;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -29,7 +29,7 @@ public class CardWeightOptimizer3SingleConfigTest {
         System.out.println("=".repeat(70));
         
         // Use medium parameters for realistic optimization (10 generations, 10 games, 5 configs)
-        CardWeightOptimizer3 optimizer = new CardWeightOptimizer3(
+        V3Optimizer optimizer = new V3Optimizer(
             10,     // generations (medium test)
             10,     // games per matchup (medium test)
             5,      // configs per generation
@@ -50,11 +50,11 @@ public class CardWeightOptimizer3SingleConfigTest {
         Set<Card.Type> excludeCards = new HashSet<>();
         excludeCards.add(Card.Type.BACKLOG);
         excludeCards.add(Card.Type.CODE_REVIEW);
-        CardWeightOptimizer3.setForcedExcludeCards(excludeCards);
+        V3Optimizer.setForcedExcludeCards(excludeCards);
         
         try {
             // Run optimization for a single config pair
-            CardWeightConfig bestConfig = optimizer.optimizeForBoardConfiguration("BACKLOG_CODE_REVIEW");
+            CardWeights bestConfig = optimizer.optimizeForBoardConfiguration("BACKLOG_CODE_REVIEW");
             
             System.out.println("\n" + "=".repeat(70));
             System.out.println("✓ Optimization Complete for BACKLOG_CODE_REVIEW");
@@ -104,7 +104,7 @@ public class CardWeightOptimizer3SingleConfigTest {
             System.out.println("\nNext: If results look good, run full 66-config optimization");
         } finally {
             // Clean up
-            CardWeightOptimizer3.setForcedExcludeCards(null);
+            V3Optimizer.setForcedExcludeCards(null);
         }
     }
 }

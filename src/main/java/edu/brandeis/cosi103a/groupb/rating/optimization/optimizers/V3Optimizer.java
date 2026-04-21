@@ -1,4 +1,4 @@
-package edu.brandeis.cosi103a.groupb.rating.optimization;
+package edu.brandeis.cosi103a.groupb.rating.optimization.optimizers;
 
 import edu.brandeis.cosi.atg.cards.Card;
 import edu.brandeis.cosi.atg.engine.PlayerViolationException;
@@ -7,6 +7,7 @@ import edu.brandeis.cosi.atg.state.PlayerResult;
 import edu.brandeis.cosi103a.groupb.ParentPlayer;
 import edu.brandeis.cosi103a.groupb.WeightedPlayer3;
 import edu.brandeis.cosi103a.groupb.engine.Engine;
+import edu.brandeis.cosi103a.groupb.rating.optimization.data_classes.CardWeights;
 
 import java.util.*;
 import java.io.*;
@@ -21,7 +22,7 @@ import java.nio.file.*;
  * Forces the board to specifically exclude the target card pair for each optimization run,
  * ensuring weights are evolved for that exact board configuration.
  */
-public class CardWeightOptimizer3 {
+public class V3Optimizer {
     
     private final int generationCount;
     private final int gamesPerMatchup;
@@ -31,7 +32,7 @@ public class CardWeightOptimizer3 {
     // Static field to control which cards BoardCards will exclude
     private static Set<Card.Type> forcedExcludeCards = null;
     
-    public CardWeightOptimizer3(int generationCount, int gamesPerMatchup, int configsPerGeneration, float mutationRate) {
+    public V3Optimizer(int generationCount, int gamesPerMatchup, int configsPerGeneration, float mutationRate) {
         this.generationCount = generationCount;
         this.gamesPerMatchup = gamesPerMatchup;
         this.configsPerGeneration = configsPerGeneration;
@@ -41,11 +42,11 @@ public class CardWeightOptimizer3 {
     /**
      * Optimize weights for all 66 possible board configurations (all card pairs).
      */
-    public Map<String, CardWeightConfig> optimizeAllConfigurations() throws PlayerViolationException {
+    public Map<String, CardWeights> optimizeAllConfigurations() throws PlayerViolationException {
         System.err.println("[OPTIMIZER3] Starting deck-aware weight optimization for all 66 configurations...");
         System.err.flush();
         
-        Map<String, CardWeightConfig> allResults = new HashMap<>();
+        Map<String, CardWeights> allResults = new HashMap<>();
         
         // List of all 12 action cards we consider
         Card.Type[] actionCards = {
@@ -80,7 +81,7 @@ public class CardWeightOptimizer3 {
                 forcedExcludeCards.add(card2);
                 
                 // Run optimization for this specific configuration
-                CardWeightConfig bestConfig = optimizeForBoardConfiguration(key);
+                CardWeights bestConfig = optimizeForBoardConfiguration(key);
                 allResults.put(key, bestConfig);
                 
                 // Clear forced exclusion
@@ -95,20 +96,20 @@ public class CardWeightOptimizer3 {
      * Optimize weights for a single board configuration.
      * Assumes forcedExcludeCards is already set.
      */
-    public CardWeightConfig optimizeForBoardConfiguration(String configKey) throws PlayerViolationException {
+    public CardWeights optimizeForBoardConfiguration(String configKey) throws PlayerViolationException {
         // System.out.println("\nOptimization Parameters:");
         // System.out.println("  Generations: " + generationCount);
         // System.out.println("  Configs per generation: " + configsPerGeneration);
         // System.out.println("  Games per matchup: " + gamesPerMatchup);
         // System.out.println("  Mutation rate: " + mutationRate);
         
-        CardWeightConfig baseConfig = CardWeightConfig.createDefault();
+        CardWeights baseConfig = CardWeights.createDefault();
         List<CardConfigRating> currentGeneration = new ArrayList<>();
         
         // Generation 0: Create initial population
         // System.out.println("\nGeneration 0: Creating " + configsPerGeneration + " variants from default...");
         for (int i = 0; i < configsPerGeneration; i++) {
-            CardWeightConfig variant = (i == 0) ? baseConfig : baseConfig.mutate(mutationRate);
+            CardWeights variant = (i == 0) ? baseConfig : baseConfig.mutate(mutationRate);
             currentGeneration.add(new CardConfigRating(variant, i));
         }
         
@@ -230,7 +231,7 @@ public class CardWeightOptimizer3 {
         
         CardConfigRating topPerformer = current.get(0);
         while (nextGen.size() < configsPerGeneration) {
-            CardWeightConfig mutated = topPerformer.config.mutate(mutationRate * 1.5f);
+            CardWeights mutated = topPerformer.config.mutate(mutationRate * 1.5f);
             nextGen.add(new CardConfigRating(mutated, nextGen.size()));
         }
         
@@ -259,16 +260,16 @@ public class CardWeightOptimizer3 {
      * Save all optimized configurations to a file in pipe-delimited format.
      * Format: CONFIG_KEY|CARD1:WEIGHT1|CARD2:WEIGHT2|...
      */
-    public static void saveConfigsToFile(Map<String, CardWeightConfig> configs, String filename) throws IOException {
+    public static void saveConfigsToFile(Map<String, CardWeights> configs, String filename) throws IOException {
         Path filePath = Paths.get(filename);
         if (filePath.getParent() != null) {
             Files.createDirectories(filePath.getParent());
         }
         
         try (BufferedWriter writer = Files.newBufferedWriter(filePath)) {
-            for (Map.Entry<String, CardWeightConfig> entry : configs.entrySet()) {
+            for (Map.Entry<String, CardWeights> entry : configs.entrySet()) {
                 String configKey = entry.getKey();
-                CardWeightConfig config = entry.getValue();
+                CardWeights config = entry.getValue();
                 
                 StringBuilder line = new StringBuilder(configKey);
                 
@@ -289,8 +290,8 @@ public class CardWeightOptimizer3 {
      * Load all configurations from file.
      * Returns a map: configKey -> CardWeightConfig
      */
-    public static Map<String, CardWeightConfig> loadConfigsFromFile(String filename) throws IOException {
-        Map<String, CardWeightConfig> configs = new HashMap<>();
+    public static Map<String, CardWeights> loadConfigsFromFile(String filename) throws IOException {
+        Map<String, CardWeights> configs = new HashMap<>();
         Path filePath = Paths.get(filename);
         
         if (!Files.exists(filePath)) {
@@ -328,7 +329,7 @@ public class CardWeightOptimizer3 {
                 }
                 
                 if (!weights.isEmpty()) {
-                    configs.put(configKey, new CardWeightConfig(weights));
+                    configs.put(configKey, new CardWeights(weights));
                 }
             }
         }
@@ -341,12 +342,12 @@ public class CardWeightOptimizer3 {
      * Internal class for tracking config ratings.
      */
     private static class CardConfigRating {
-        CardWeightConfig config;
+        CardWeights config;
         int configId;
         int wins = 0;
         int gamesPlayed = 0;
         
-        CardConfigRating(CardWeightConfig config, int id) {
+        CardConfigRating(CardWeights config, int id) {
             this.config = config;
             this.configId = id;
         }

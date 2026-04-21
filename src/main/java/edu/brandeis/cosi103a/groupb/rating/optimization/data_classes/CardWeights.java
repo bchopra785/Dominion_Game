@@ -1,4 +1,4 @@
-package edu.brandeis.cosi103a.groupb.rating.optimization;
+package edu.brandeis.cosi103a.groupb.rating.optimization.data_classes;
 
 import edu.brandeis.cosi.atg.cards.Card;
 import java.util.HashMap;
@@ -9,7 +9,7 @@ import java.util.Random;
  * Configuration class for individual card weights in WeightedPlayer2.
  * Stores a weight for each card type and supports mutation.
  */
-public class CardWeightConfig {
+public class CardWeights {
     
     private static final Random random = new Random();
     
@@ -19,7 +19,7 @@ public class CardWeightConfig {
     /**
      * Create a card weight config with all weights set to a value.
      */
-    CardWeightConfig(Map<Card.Type, Float> cardWeights) {
+    public CardWeights(Map<Card.Type, Float> cardWeights) {
         this.cardWeights = new HashMap<>(cardWeights);
     }
     
@@ -27,7 +27,7 @@ public class CardWeightConfig {
      * Create default card weight config (optimized weights from medium optimization - 73.3% win rate).
      * Discovered through 300-game evolutionary optimization (4 generations × 5 configs × 15 games).
      */
-    public static CardWeightConfig createDefault() {
+    public static CardWeights createDefault() {
         Map<Card.Type, Float> weights = new HashMap<>();
         
         // Circulation cards (optimized)
@@ -63,14 +63,14 @@ public class CardWeightConfig {
         weights.put(Card.Type.MODULE, 0.5901168f);
         weights.put(Card.Type.METHOD, 0.36834785f);
         
-        return new CardWeightConfig(weights);
+        return new CardWeights(weights);
     }
     
     /**
      * Mutate all card weights with given mutation rate.
      * Returns a new CardWeightConfig with mutated weights.
      */
-    public CardWeightConfig mutate(float mutationRate) {
+    public CardWeights mutate(float mutationRate) {
         Map<Card.Type, Float> mutated = new HashMap<>();
         
         for (Map.Entry<Card.Type, Float> entry : cardWeights.entrySet()) {
@@ -86,7 +86,7 @@ public class CardWeightConfig {
             }
         }
         
-        return new CardWeightConfig(mutated);
+        return new CardWeights(mutated);
     }
     
     /**

@@ -118,7 +118,7 @@ public class PlayerRatingHarness {
                 currentRank = i + 1;
             }
             boolean winner = currentRank == 1;
-            raw.add(new GameRecord.PlayerRecord(pr.playerName(), pr.score(), currentRank, winner, 0, 0));
+            raw.add(new GameRecord.PlayerRecord(pr.playerName(), pr.score(), currentRank, winner));
             previousScore = pr.score();
         }
 
@@ -223,8 +223,6 @@ public class PlayerRatingHarness {
                 if (playerResult.winner()) {
                     wins.put(name, wins.get(name) + 1);
                 }
-                moneyTotals.put(name, moneyTotals.get(name) + playerResult.money());
-                actionCardTotals.put(name, actionCardTotals.get(name) + playerResult.actionCardCount());
                 gameCounts.put(name, gameCounts.get(name) + 1);
             }
         }

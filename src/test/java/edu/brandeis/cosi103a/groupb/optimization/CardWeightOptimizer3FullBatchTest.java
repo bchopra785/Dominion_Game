@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Disabled;
  */
 public class CardWeightOptimizer3FullBatchTest {
 
-    //@Disabled("Full batch optimization is computationally expensive. Run manually when tuning weights.")
+    @Disabled("Full batch optimization is computationally expensive. Run manually when tuning weights.")
     // mvn test -Dtest=CardWeightOptimizer3FullBatchTest -q
     @Test
     public void testOptimizeAllConfigurations() {

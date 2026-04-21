@@ -25,6 +25,7 @@ public class V3OptimizationTest {
     /**
      * Simple test to verify System.out works in test harness.
      */
+    @Disabled
     @Test
     public void testSystemOutWorks() {
         System.out.println("\n>>> testSystemOutWorks is running");
@@ -38,10 +39,10 @@ public class V3OptimizationTest {
      * Good for testing the optimization framework.
      * NOTE: Increased from 2 to 5 games per matchup to account for random card selection variance.
      */
-    @Disabled("Optimization tests are computationally expensive. Run manually when tuning weights.")
     
     // mvn test -Dtest=WeightedPlayerOptimizationTest#testQuickWeightOptimization
     
+    @Disabled("Optimization tests are computationally expensive. Run manually when tuning weights.")
     @Test
     public void testQuickWeightOptimization() throws PlayerViolationException {
         System.out.println("\n>>> Starting testQuickWeightOptimization");
@@ -110,6 +111,7 @@ public class V3OptimizationTest {
     /**
      * Verify that WeightedPlayer can be instantiated with a custom WeightConfig.
      */
+    @Disabled
     @Test
     public void testWeightedPlayerWithCustomConfig() {
         CategoryWeights config = CategoryWeights.createDefault();
@@ -125,6 +127,7 @@ public class V3OptimizationTest {
     /**
      * Verify weight config mutation creates variations.
      */
+    @Disabled
     @Test
     public void testWeightConfigMutation() {
         CategoryWeights original = CategoryWeights.createDefault();

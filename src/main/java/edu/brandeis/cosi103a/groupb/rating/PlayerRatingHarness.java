@@ -6,6 +6,10 @@ import edu.brandeis.cosi.atg.state.PlayerResult;
 import edu.brandeis.cosi103a.groupb.BigMoneyPlayer;
 import edu.brandeis.cosi103a.groupb.ParentPlayer;
 import edu.brandeis.cosi103a.groupb.StrategyPlayer;
+import edu.brandeis.cosi103a.groupb.V2StrategyPlayer;
+import edu.brandeis.cosi103a.groupb.WeightedPlayer;
+import edu.brandeis.cosi103a.groupb.WeightedPlayer2;
+import edu.brandeis.cosi103a.groupb.WeightedPlayer3;
 import edu.brandeis.cosi103a.groupb.engine.Engine;
 
 import java.io.PrintStream;
@@ -20,6 +24,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.Scanner;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Milestone 3 Story 1 harness.
@@ -203,21 +208,43 @@ public class PlayerRatingHarness {
         out.println("=== Additional Metrics ===");
 
         Map<String, Integer> wins = new LinkedHashMap<>();
+        Map<String, Integer> moneyTotals = new LinkedHashMap<>();
+        Map<String, Integer> actionCardTotals = new LinkedHashMap<>();
+        Map<String, Integer> gameCounts = new LinkedHashMap<>();
+        
         for (GameRecord game : rawResults) {
             for (GameRecord.PlayerRecord playerResult : game.playerResults()) {
-                wins.putIfAbsent(playerResult.playerName(), 0);
+                String name = playerResult.playerName();
+                wins.putIfAbsent(name, 0);
+                moneyTotals.putIfAbsent(name, 0);
+                actionCardTotals.putIfAbsent(name, 0);
+                gameCounts.putIfAbsent(name, 0);
+                
                 if (playerResult.winner()) {
-                    wins.put(playerResult.playerName(), wins.get(playerResult.playerName()) + 1);
+                    wins.put(name, wins.get(name) + 1);
                 }
+                gameCounts.put(name, gameCounts.get(name) + 1);
             }
         }
 
-        out.println("Raw win counts (ties count as win for each top-ranked player, so totals can exceed games simulated):");
-        for (Map.Entry<String, Integer> entry : wins.entrySet()) {
+        out.println("Raw win counts (ties count as win for each top-ranked player):");
+        List<Map.Entry<String, Integer>> sortedWins = wins.entrySet().stream()
+            .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
+            .collect(Collectors.toList());
+        for (Map.Entry<String, Integer> entry : sortedWins) {
             out.println("- " + entry.getKey() + ": " + entry.getValue());
         }
+        
         out.println();
-        out.println("Raw game records are available in-memory for metric computation.");
+        out.println("=== Average Metrics Per Game ===");
+        for (Map.Entry<String, Integer> entry : sortedWins) {
+            String playerName = entry.getKey();
+            int gameCount = gameCounts.get(playerName);
+            double avgMoney = gameCount > 0 ? (double) moneyTotals.get(playerName) / gameCount : 0;
+            double avgActionCards = gameCount > 0 ? (double) actionCardTotals.get(playerName) / gameCount : 0;
+            out.printf("- %s: %.1f money, %.1f action cards%n", playerName, avgMoney, avgActionCards);
+        }
+        out.println();
     }
 
     /**
@@ -687,6 +714,27 @@ public class PlayerRatingHarness {
             "Existing action-aware strategy player",
             StrategyPlayer::new
         ));
+        templates.add(new Template(
+            "Weighted-V1",
+            "Category-based weights (original version)",
+            WeightedPlayer::new
+        ));
+        templates.add(new Template(
+            "Weighted-V2",
+            "Individual card weights (new version)",
+            WeightedPlayer2::new
+        ));
+        templates.add(new Template(
+            "Weighted-V3",
+            "Deck-aware weights (board-specific optimization)",
+            WeightedPlayer3::new
+        ));
+        templates.add(new Template(
+            "Strategy-V2", 
+            "Version 2 of Strategy Player",
+            V2StrategyPlayer::new
+        ));
+
         return templates;
     }
 

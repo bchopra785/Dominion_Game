@@ -1,0 +1,309 @@
+================================================================================
+                    ATG GAME - COMPLETE CARD REFERENCE
+================================================================================
+
+Total Cards: 18 unique card types
+Categories: Victory Cards, Money Cards, Action Cards, Attack Cards
+
+================================================================================
+                            VICTORY CARDS (4)
+                  Grant automation points at end of game
+================================================================================
+
+BUG
+  Cost: 0
+  Value: -1 point
+  Category: Victory / Penalty
+  Description: A penalty card that subtracts 1 automation point when the game 
+               ends. Never playable in hand. Created when opponents play attack 
+               cards (Hack, Evergreen Test, Ransomware).
+
+METHOD
+  Cost: 2
+  Value: +1 automation point
+  Category: Victory
+  Description: Grants 1 automation point when the game ends. Base victory card.
+               Purchased mid-game to start building end-game scoring.
+
+MODULE
+  Cost: 5
+  Value: +3 automation points
+  Category: Victory
+  Description: Grants 3 automation points when the game ends. Higher-value 
+               victory card for serious end-game strategy.
+
+FRAMEWORK
+  Cost: 8
+  Value: +6 automation points
+  Category: Victory
+  Description: Grants 6 automation points when the game ends. The highest-value 
+               card in the game. Primary end-game goal.
+
+
+================================================================================
+                        MONEY CARDS (3)
+            Provide spendable currency during the MONEY phase
+================================================================================
+
+BITCOIN
+  Cost: 0
+  Value: 1 money
+  Category: Money / Starter Card
+  Description: Basic currency card included in starting hand. Free to acquire 
+               from board. Grants 1 spendable money when played in MONEY phase.
+               Foundation for all money production strategy.
+               
+ETHEREUM
+  Cost: 3
+  Value: 2 money
+  Category: Money
+  Description: Mid-tier currency card. Costs 3 money to acquire. Grants 2 
+               spendable money per play. Better value than Bitcoin as you scale 
+               your money production.
+
+DOGECOIN
+  Cost: 6
+  Value: 3 money
+  Category: Money / Premium
+  Description: Premium currency card. Costs 6 money to acquire. Grants 3 
+               spendable money per play. Highest money production per card but 
+               expensive to buy.
+
+
+================================================================================
+                        ACTION CARDS (15)
+            Provide special effects during the ACTION phase
+================================================================================
+
+--- BASIC ACTION CARDS ---
+
+BACKLOG
+  Cost: 2
+  Effect: +1 Action
+  Type: Cantrip
+  Description: Discard any number of cards, then draw that many. Flexible card 
+               cycling and deck management. Can help draw key cards or discard 
+               bad cards like Bugs.
+
+CODE_REVIEW
+  Cost: 3
+  Effect: +1 Card, +2 Actions
+  Type: Cantrip Engine
+  Description: Card draw and action acceleration. One of the strongest utility 
+               cards for enabling action chains.
+
+SPRINT_PLANNING
+  Cost: 3
+  Effect: +1 Card, +1 Action, +1 Buy
+  Type: Advanced Cantrip
+  Description: Balanced utility card combining card draw, extra action, and 
+               shopping power. Cascades well with action chains. Enables buying 
+               expensive cards.
+
+UNIT_TEST
+  Cost: 3
+  Effect: Choose 1: +2 Actions OR +2 Money OR +2 Cards
+  Type: Choice Card
+  Description: Flexible choice card allowing strategic decision based on 
+               current needs. Cantrip status means it doesn't consume an action.
+
+--- MID-TIER ACTION CARDS ---
+
+HACK
+  Cost: 4
+  Effect: +2 Money (Attack)
+  Type: Attack Card
+  Description: Attack card that also provides 2 money. Each other player 
+               discards cards down to 3 cards in hand. COUNTERED by Monitoring.
+               Generates opponent Bugs if not blocked.
+
+TECH_DEBT
+  Cost: 4
+  Effect: +1 Card, +1 Action, +1 Money
+  Type: Hybrid Card
+  Description: Discard one card per empty Supply pile (board spaces where cards 
+               are sold out). Scales with game state - becomes stronger as game 
+               progresses and supplies empty.
+
+REFACTOR
+  Cost: 4
+  Effect: Trash a card, gain one costing up to +2 more
+  Type: Recycling / Engine Card
+  Description: Core engine-building card. Trash (remove from game) a card, then 
+               gain a card costing up to 2 more than the trashed card. Enables 
+               deck quality improvement.
+
+PARALLELIZATION
+  Cost: 4
+  Effect: Play an Action card from hand twice
+  Type: Multiplier Card
+  Description: Play an Action card from your hand twice without spending extra 
+               action. Doubles the effect of powerful action cards. Strong 
+               synergy card.
+
+MERGE_CONFLICT
+  Cost: 2
+  Effect: Trash a card, draw cards equal to its cost
+  Type: Scaling Card
+  Description: Trash a card, then draw a number of cards equal to that card's 
+               cost. Scaling effect - trashing expensive cards draws many cards.
+
+MONITORING
+  Cost: 2
+  Effect: +2 Cards (Reaction Defense)
+  Type: Reaction / Defense Card
+  Description: Defensive reaction card that reveals during attack resolution to 
+               negate attack effects. Stays in hand when used for defense. 
+               Counters: Hack, Evergreen Test, Ransomware. Pure defense card.
+
+--- PREMIUM ACTION CARDS ---
+
+IPO
+  Cost: 5
+  Effect: +2 Cards, +1 Action, +2 Money
+  Type: Premium Cantrip
+  Description: One of the strongest cards in the game. Combines card draw (2), 
+               action generation, AND money production. Enables playing multiple 
+               expensive cards in one turn.
+
+DEPLOYMENT_PIPELINE
+  Cost: 5
+  Effect: +1 Buy, +1 Money per empty Supply pile
+  Type: Cost Reduction / Tempo
+  Description: Provides an extra Buy and 1 money. Scales with game progression 
+               as supplies empty. Enables shopping for multiple cards per turn.
+
+EVERGREEN_TEST
+  Cost: 5
+  Effect: +2 Cards (Attack)
+  Type: Attack Card
+  Description: Attack card that also draws 2 cards. Each other player gains a 
+               Bug to their discard pile. COUNTERED by Monitoring.
+
+DAILY_SCRUM
+  Cost: 5
+  Effect: +4 Cards, +1 Buy
+  Type: Premium Draw Card
+  Description: Card draw assault - draw 4 cards and get an extra buy. Each other 
+               player also draws a card (counterintuitively helps them). Strong 
+               action engine card.
+
+--- ULTIMATE ATTACK CARD ---
+
+RANSOMWARE
+  Cost: 6
+  Effect: +3 Cards (Attack)
+  Type: Heavy Attack Card
+  Description: Heavy attack costing 6 money (expensive). Draws 3 cards for you. 
+               Each other player chooses to either discard 2 cards from hand OR 
+               gain a Bug. COUNTERED by Monitoring. Most powerful attack.
+
+
+================================================================================
+                        CARD STATISTICS
+================================================================================
+
+BY COST:
+  Cost 0: BUG, BITCOIN (2 cards)
+  Cost 2: BACKLOG, MONITORING, MERGE_CONFLICT (3 cards)
+  Cost 3: CODE_REVIEW, SPRINT_PLANNING, UNIT_TEST (4 cards)
+  Cost 4: HACK, TECH_DEBT, REFACTOR, PARALLELIZATION (4 cards)
+  Cost 5: METHOD, IPO, DEPLOYMENT_PIPELINE, EVERGREEN_TEST, DAILY_SCRUM (5 cards)
+  Cost 6: DOGECOIN, RANSOMWARE (2 cards)
+  Cost 8: FRAMEWORK (1 card)
+
+BY CATEGORY:
+  Victory Cards: 4 (BUG, METHOD, MODULE, FRAMEWORK)
+  Money Cards: 3 (BITCOIN, ETHEREUM, DOGECOIN)
+  Action Cards: 11 (All others)
+  
+  Attack Cards: 3 (HACK, EVERGREEN_TEST, RANSOMWARE)
+  Defense Cards: 1 (MONITORING)
+
+BY BOARD INITIALIZATION (starting quantities):
+  METHOD: 14 stacks
+  MODULE: 8 stacks
+  FRAMEWORK: 8 stacks
+  BITCOIN: 60 stacks
+  ETHEREUM: 40 stacks
+  DOGECOIN: 30 stacks
+  REFACTOR: 10 stacks
+  EVERGREEN_TEST: 10 stacks
+  CODE_REVIEW: 10 stacks
+  BUG: 10 per player (penalty card generated by attacks)
+
+
+================================================================================
+                            GAME PHASES
+================================================================================
+
+1. ACTION PHASE
+   - Play action cards to get effects (draw cards, generate money, attack)
+   - Limited by action count (usually 1 per turn, can increase with cards)
+
+2. MONEY PHASE
+   - Play money cards to generate spendable currency
+   - Money accumulates (action card effects + money card plays)
+
+3. BUY PHASE
+   - Purchase cards from board using accumulated money
+   - Limited by buy count (usually 1 per turn, can increase with cards)
+
+4. CLEANUP PHASE
+   - All played/unplayed cards go to discard pile
+   - Discarded cards will be shuffled back into hand when deck empties
+   - Bugs stay in deck as permanent penalties
+
+
+================================================================================
+                        STRATEGIC NOTES
+================================================================================
+
+BEGINNER STRATEGY (BigMoney):
+- Focus on money cards (BITCOIN → ETHEREUM → DOGECOIN)
+- Buy victory cards (METHOD → MODULE → FRAMEWORK) only late game
+- Simple and stable but not competitive
+
+INTERMEDIATE STRATEGY (Strategy Player):
+- Include action cards for card generation
+- Balance action chains with money production
+- More interactive but less optimized
+
+================================================================================
+                            GAME RESOURCES
+================================================================================
+
+Victory Points System:
+- Victory cards grant points at game END (not during play)
+- Victory cards provide no gameplay benefit - only final scoring
+- Victory point value: BUG (-1), METHOD (+1), MODULE (+3), FRAMEWORK (+6)
+- Game ends when supply runs out or player can't refill hand
+
+Money System:
+- No persistent "money pool" - money accumulates per turn from cards/effects
+- Unspent money is lost at end of turn
+- Money can only be used in BUY phase
+
+Actions System:
+- Players start with 1 action per turn
+- Action cards can grant more actions
+- Unused actions are lost at end of ACTION phase
+
+Buys System:
+- Players start with 1 buy per turn  
+- Some cards grant extra buys (SPRINT_PLANNING, DEPLOYMENT_PIPELINE, DAILY_SCRUM)
+- Unused buys are lost at end of BUY phase
+
+
+================================================================================
+                          REFERENCE LINKS
+================================================================================
+
+Official Card Documentation:
+https://www.javadoc.io/doc/io.github.brandeis-cosi-103a/atg-api/latest/edu/brandeis/cosi/atg/cards/Card.Type.html
+
+================================================================================
+                        DOCUMENT LAST UPDATED
+                           2026-04-19
+                  Based on ATG API v2.5.3 Documentation
+================================================================================

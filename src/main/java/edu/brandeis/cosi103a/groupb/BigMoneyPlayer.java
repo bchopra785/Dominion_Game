@@ -23,17 +23,26 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class BigMoneyPlayer extends ParentPlayer {
 
     private static final AtomicInteger COUNTER = new AtomicInteger(1);
+    private boolean verbose = false;  // Control console output verbosity (default: false for optimization)
 
     public BigMoneyPlayer() {
         super("BigMoneyPlayer-" + COUNTER.getAndIncrement());
+        this.verbose = false;
     }
 
     public BigMoneyPlayer(String name) {
         super(name);
+        this.verbose = false;
+    }
+
+    public BigMoneyPlayer(String name, boolean verbose) {
+        super(name);
+        this.verbose = verbose;
     }
 
     public BigMoneyPlayer(String name, java.io.PrintStream out) {
         super(name);
+        this.verbose = false;
     }
 
     @Override

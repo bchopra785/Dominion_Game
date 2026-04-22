@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -43,6 +44,17 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
     private Optional<Event> latestEventReason;
 
     public Engine(List<ParentPlayer> players) {
+        this(players, null);
+    }
+
+    /**
+     * Create an Engine with optional forced board card exclusions.
+     * Used for optimization where specific cards must be excluded from the board.
+     * 
+     * @param players List of players
+     * @param forcedExcludeCards Set of card types to exclude from board (null for random selection)
+     */
+    public Engine(List<ParentPlayer> players, Set<Card.Type> forcedExcludeCards) {
         
         //check for valid number of players
         if (players == null) {
@@ -55,7 +67,11 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         this.costReductionActive = false;
 
         //initialize board cards and player cards
-        this.boardCards = new BoardCards(players.size());
+        if (forcedExcludeCards != null) {
+            this.boardCards = new BoardCards(players.size(), forcedExcludeCards);
+        } else {
+            this.boardCards = new BoardCards(players.size());
+        }
         this.playerCardsMap = new HashMap<>();
         this.latestEventReason = Optional.empty();
 
@@ -90,7 +106,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
     }
 
     public GameResult play() throws PlayerViolationException {
-    
+        
         boolean gameOver = false;
         while (!gameOver) {
 

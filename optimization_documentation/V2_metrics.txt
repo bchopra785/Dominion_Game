@@ -127,3 +127,15 @@ Raw win counts (ties count as win for each top-ranked player):
 - BigMoney#1: 365
 
 Conclusion: huH did I crack the code?
+
+*****************************************************************************************
+
+- bug fixes
+
+Games simulated: 500
+=== Additional Metrics === 95%
+Raw win counts (ties count as win for each top-ranked player):
+- Strategy-V2#1: 475
+- BigMoney#1: 68
+
+

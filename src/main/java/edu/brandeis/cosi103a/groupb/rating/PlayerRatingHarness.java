@@ -7,9 +7,7 @@ import edu.brandeis.cosi103a.groupb.BigMoneyPlayer;
 import edu.brandeis.cosi103a.groupb.ParentPlayer;
 import edu.brandeis.cosi103a.groupb.StrategyPlayer;
 import edu.brandeis.cosi103a.groupb.V2StrategyPlayer;
-import edu.brandeis.cosi103a.groupb.WeightedPlayer;
-import edu.brandeis.cosi103a.groupb.WeightedPlayer2;
-import edu.brandeis.cosi103a.groupb.WeightedPlayer3;
+import edu.brandeis.cosi103a.groupb.V3StrategyPlayer;
 import edu.brandeis.cosi103a.groupb.engine.Engine;
 
 import java.io.PrintStream;
@@ -715,24 +713,14 @@ public class PlayerRatingHarness {
             StrategyPlayer::new
         ));
         templates.add(new Template(
-            "Weighted-V1",
-            "Category-based weights (original version)",
-            WeightedPlayer::new
-        ));
-        templates.add(new Template(
-            "Weighted-V2",
-            "Individual card weights (new version)",
-            WeightedPlayer2::new
-        ));
-        templates.add(new Template(
-            "Weighted-V3",
-            "Deck-aware weights (board-specific optimization)",
-            WeightedPlayer3::new
-        ));
-        templates.add(new Template(
             "Strategy-V2", 
             "Version 2 of Strategy Player",
             V2StrategyPlayer::new
+        ));
+        templates.add(new Template(
+            "Strategy-V3", 
+            "Version 3 of Strategy Player",
+            V3StrategyPlayer::new
         ));
 
         return templates;

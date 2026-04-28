@@ -2,6 +2,7 @@ package edu.brandeis.cosi103a.groupb;
 
 import java.util.List;
 
+import org.springframework.boot.SpringApplication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,6 +18,10 @@ import edu.brandeis.cosi103a.groupb.network.LogEventRequest;
 
 @RestController
 public class PlayerServer {
+
+    public static void main(String[] args) {
+        SpringApplication.run(PlayerServer.class, args);
+    }
 
 @PostMapping(value = "/decide", consumes = "application/json", produces = "application/json") 
 public ResponseEntity<DecisionResponse> decide(@RequestBody DecisionRequest request) {

@@ -1,5 +1,6 @@
 package edu.brandeis.cosi103a.groupb;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -136,6 +137,4 @@ public class CardInfo {
             default: return 0;
         }
     }
-
-
 }

@@ -318,7 +318,7 @@ public class V2StrategyPlayer extends ParentPlayer {
         categoryOrder.sort((a, b) -> Float.compare(diffs.get(b), diffs.get(a))); // reverse order
 
         for (String category : categoryOrder) {
-            PlayCardDecision pcd = null;
+            //PlayCardDecision pcd = null;
 
             if("action".equals(category)){
                 BuyDecision best = null;
@@ -327,17 +327,17 @@ public class V2StrategyPlayer extends ParentPlayer {
                     if (d instanceof BuyDecision) {
                         Card.Type type = ((BuyDecision) d).cardType();
                         if (type == Card.Type.IPO || type == Card.Type.EVERGREEN_TEST || type == Card.Type.MONITORING ) {
-                            if (degree == 0 || degree < 1) {
+                            if (degree == 0 || degree > 1) {
                                 degree = 1;
                                 best = (BuyDecision) d;
                             }
                         } else if (type == Card.Type.CODE_REVIEW || type == Card.Type.RANSOMWARE || type == Card.Type.REFACTOR || type == Card.Type.PARALLELIZATION) {
-                            if (degree == 0 || degree < 2) {
+                            if (degree == 0 || degree > 2) {
                                 degree = 2;
                                 best = (BuyDecision) d;
                             }
                         } else if (type == Card.Type.SPRINT_PLANNING || type == Card.Type.HACK || type == Card.Type.BACKLOG || type == Card.Type.DAILY_SCRUM || type == Card.Type.UNIT_TEST ) {
-                            if (degree == 0 || degree < 3) {
+                            if (degree == 0 || degree > 3) {
                                 degree = 3;
                                 best = (BuyDecision) d;
                             }
@@ -354,26 +354,25 @@ public class V2StrategyPlayer extends ParentPlayer {
 
             } else if("money".equals(category)){
                 BuyDecision best = null;
-                int bestPriority = 0;  // Track money priority: DOGECOIN=1, ETHEREUM=2, BITCOIN=3
                 
                 for (Decision d : options) {
                     if (d instanceof BuyDecision) {
                         Card.Type type = ((BuyDecision) d).cardType();
-                        int priority = -1;
+                        int priority = 0;
                         
                         if (type == Card.Type.DOGECOIN) {
-                            if(priority == 0){
+                            if(priority == 0 || priority > 1){
                                 priority = 1;
                                 best = (BuyDecision) d;
                             }
                             
                         } else if (type == Card.Type.ETHEREUM) {
-                            if(priority == 0 || priority < 2){
+                            if(priority == 0 || priority > 2){
                                 priority = 2;
                                 best = (BuyDecision) d;
                             }
                         } else if (type == Card.Type.BITCOIN) {
-                           if(priority == 0){
+                           if(priority == 0 || priority > 3){
                                 priority = 3;
                                 best = (BuyDecision) d;
                             }
@@ -388,22 +387,27 @@ public class V2StrategyPlayer extends ParentPlayer {
             }
             else if("point".equals(category)){
                 BuyDecision best = null;
-                int bestPriority = -1;  // Track point priority: FRAMEWORK=1, MODULE=0
                 
                 for (Decision d : options) {
                     if (d instanceof BuyDecision) {
                         Card.Type type = ((BuyDecision) d).cardType();
-                        int priority = -1;
+                        int priority = 0;
                         
                         if (type == Card.Type.FRAMEWORK) {
-                            priority = 1;
+                            if(priority == 0 || priority > 1){
+                                priority = 1;
+                                best = (BuyDecision) d;
+                            }
                         } else if (type == Card.Type.MODULE) {
-                            priority = 0;
-                        }
-                        
-                        if (priority >= 0 && priority > bestPriority) {
-                            bestPriority = priority;
-                            best = (BuyDecision) d;
+                            if(priority == 0 || priority > 2){
+                                priority = 2;
+                                best = (BuyDecision) d;
+                            }
+                        } else if (type == Card.Type.METHOD) {
+                            if(priority == 0 || priority > 3){
+                                priority = 3;
+                                best = (BuyDecision) d;
+                            }
                         }
                     }
                 }
@@ -528,14 +532,6 @@ public class V2StrategyPlayer extends ParentPlayer {
     }
 
     private Decision findBestFallback(ImmutableList<Decision> options, GameState.TurnPhase preferredPhase) {
-        // for (Decision option : options) {
-        //     if (option instanceof EndPhaseDecision) {
-        //         EndPhaseDecision end = (EndPhaseDecision) option;
-        //         if (end.phase() == preferredPhase) {
-        //             return option;
-        //         }
-        //     }
-        // }
 
         for (Decision option : options) {
             if (option instanceof EndPhaseDecision) {

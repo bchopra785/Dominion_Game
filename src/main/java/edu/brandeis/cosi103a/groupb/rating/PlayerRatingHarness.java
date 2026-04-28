@@ -4,6 +4,7 @@ import edu.brandeis.cosi.atg.engine.PlayerViolationException;
 import edu.brandeis.cosi.atg.state.GameResult;
 import edu.brandeis.cosi.atg.state.PlayerResult;
 import edu.brandeis.cosi103a.groupb.BigMoneyPlayer;
+import edu.brandeis.cosi103a.groupb.FlexiblePlayer;
 import edu.brandeis.cosi103a.groupb.ParentPlayer;
 import edu.brandeis.cosi103a.groupb.StrategyPlayer;
 import edu.brandeis.cosi103a.groupb.V2StrategyPlayer;
@@ -706,6 +707,11 @@ public class PlayerRatingHarness {
             "BigMoney",
             "Baseline money-focused strategy",
             BigMoneyPlayer::new
+        ));
+        templates.add(new Template(
+            "Flexible",
+            "Big-money strategy with occasional BUG buys",
+            FlexiblePlayer::new
         ));
         templates.add(new Template(
             "Strategy",

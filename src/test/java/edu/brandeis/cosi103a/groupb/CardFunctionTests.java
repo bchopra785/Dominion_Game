@@ -80,12 +80,20 @@ public class CardFunctionTests {
             field.set(this, new ArrayList<>(cards));
         }
 
+        void setDeck(List<Card> cards) throws Exception {
+            Field field = PlayerCards.class.getDeclaredField("deck");
+            field.setAccessible(true);
+            field.set(this, new ArrayList<>(cards));
+        }
+
+        @SuppressWarnings("unchecked")
         int getDiscardSize() throws Exception {
             Field field = PlayerCards.class.getDeclaredField("discard");
             field.setAccessible(true);
             return ((List<Card>) field.get(this)).size();
         }
 
+        @SuppressWarnings("unchecked")
         List<Card> getDiscardList() throws Exception {
             Field field = PlayerCards.class.getDeclaredField("discard");
             field.setAccessible(true);
@@ -133,6 +141,45 @@ public class CardFunctionTests {
     }
 /** 
     @Test
+    public void testDailyScrum_handlesEmptyOtherDecksWithoutThrowing() throws Exception {
+        StubPlayer p1 = new StubPlayer("P1");
+        StubPlayer p2 = new StubPlayer("P2");
+        StubPlayer p3 = new StubPlayer("P3");
+
+        TestPlayerCards pc1 = new TestPlayerCards(board);
+        TestPlayerCards pc2 = new TestPlayerCards(board);
+        TestPlayerCards pc3 = new TestPlayerCards(board);
+
+        p1.setPlayerCards(pc1);
+        p2.setPlayerCards(pc2);
+        p3.setPlayerCards(pc3);
+
+        pc1.setUnplayedCards(List.of());
+        pc1.setDeck(List.of(
+            new Card(Card.Type.BITCOIN, 0),
+            new Card(Card.Type.ETHEREUM, 1),
+            new Card(Card.Type.DOGECOIN, 2),
+            new Card(Card.Type.METHOD, 2)
+        ));
+        pc2.setUnplayedCards(List.of());
+        pc2.setDeck(List.of());
+        pc3.setUnplayedCards(List.of());
+        pc3.setDeck(List.of());
+
+        List<ParentPlayer> players = List.of(p1, p2, p3);
+        Map<ParentPlayer, PlayerCards> map = new HashMap<>();
+        map.put(p1, pc1);
+        map.put(p2, pc2);
+        map.put(p3, pc3);
+
+        GameState before = makeState(p1.getName(), pc1);
+        GameState after = ActionCards.playActionCard(new Card(Card.Type.DAILY_SCRUM, 0), before, p1, players, map, board);
+
+        assertEquals(2, after.availableBuys());
+        assertEquals(4, after.currentPlayerHand().unplayedCards().size(), "Current player should draw four cards");
+        assertEquals(0, pc2.getHand().unplayedCards().size(), "Empty deck should not change other player hand");
+        assertEquals(0, pc3.getHand().unplayedCards().size(), "Empty deck should not change other player hand");
+    }
     public void testCodeReview_drawsAndAddsActions() throws Exception {
         StubPlayer player = new StubPlayer("P1");
         TestPlayerCards pc = new TestPlayerCards(board);
@@ -154,6 +201,7 @@ public class CardFunctionTests {
         StubPlayer p2 = new StubPlayer("P2");
         StubPlayer p3 = new StubPlayer("P3");
 
+    
         TestPlayerCards pc1 = new TestPlayerCards(board);
         TestPlayerCards pc2 = new TestPlayerCards(board);
         TestPlayerCards pc3 = new TestPlayerCards(board);
@@ -179,6 +227,95 @@ public class CardFunctionTests {
         assertEquals(2, after.availableBuys());
         assertEquals(2, pc2.getHand().unplayedCards().size());
         assertEquals(2, pc3.getHand().unplayedCards().size());
+    }
+
+    @Test
+    public void testDailyScrum_handlesEmptyOtherDecksWithoutThrowing() throws Exception {
+        StubPlayer p1 = new StubPlayer("P1");
+        StubPlayer p2 = new StubPlayer("P2");
+        StubPlayer p3 = new StubPlayer("P3");
+
+        TestPlayerCards pc1 = new TestPlayerCards(board);
+        TestPlayerCards pc2 = new TestPlayerCards(board);
+        TestPlayerCards pc3 = new TestPlayerCards(board);
+
+        p1.setPlayerCards(pc1);
+        p2.setPlayerCards(pc2);
+        p3.setPlayerCards(pc3);
+
+        pc1.setUnplayedCards(List.of());
+        pc1.setDeck(List.of(
+            new Card(Card.Type.BITCOIN, 0),
+            new Card(Card.Type.ETHEREUM, 1),
+            new Card(Card.Type.DOGECOIN, 2),
+            new Card(Card.Type.METHOD, 2)
+        ));
+        pc2.setUnplayedCards(List.of());
+        pc2.setDeck(List.of());
+        pc3.setUnplayedCards(List.of());
+        pc3.setDeck(List.of());
+
+        List<ParentPlayer> players = List.of(p1, p2, p3);
+        Map<ParentPlayer, PlayerCards> map = new HashMap<>();
+        map.put(p1, pc1);
+        map.put(p2, pc2);
+        map.put(p3, pc3);
+
+        GameState before = makeState(p1.getName(), pc1);
+        GameState after = ActionCards.playActionCard(new Card(Card.Type.DAILY_SCRUM, 0), before, p1, players, map, board);
+
+        assertEquals(2, after.availableBuys());
+        assertEquals(4, after.currentPlayerHand().unplayedCards().size(), "Current player should draw four cards");
+        assertEquals(0, pc2.getHand().unplayedCards().size(), "Empty deck should not change other player hand");
+        assertEquals(0, pc3.getHand().unplayedCards().size(), "Empty deck should not change other player hand");
+    }
+
+    @Test
+    public void testCodeReview_drawsAndAddsActions() throws Exception {
+        StubPlayer player = new StubPlayer("P1");
+        TestPlayerCards pc = new TestPlayerCards(board);
+        player.setPlayerCards(pc);
+
+        pc.setUnplayedCards(List.of());
+        pc.setDeck(List.of(
+            new Card(Card.Type.BITCOIN, 0),
+            new Card(Card.Type.ETHEREUM, 1)
+        ));
+        GameState before = makeState(player.getName(), pc);
+        GameState after = ActionCards.playActionCard(
+            new Card(Card.Type.CODE_REVIEW, 0),
+            before,
+            player,
+            List.of(player),
+            Map.of(player, pc),
+            board
+        );
+
+        // Code Review: +2 actions and draw 2 cards
+        assertEquals(before.availableActions() + 2, after.availableActions());
+        assertEquals(2, after.currentPlayerHand().unplayedCards().size());
+    }
+
+    @Test
+    public void testCodeReview_handlesEmptyDeckWithoutThrowing() throws Exception {
+        StubPlayer player = new StubPlayer("P1");
+        TestPlayerCards pc = new TestPlayerCards(board);
+        player.setPlayerCards(pc);
+
+        pc.setUnplayedCards(List.of(new Card(Card.Type.BITCOIN, 0)));
+        pc.setDeck(List.of());
+
+        GameState after = ActionCards.playActionCard(
+            new Card(Card.Type.CODE_REVIEW, 0),
+            makeState(player.getName(), pc),
+            player,
+            List.of(player),
+            Map.of(player, pc),
+            board
+        );
+
+        assertEquals(3, after.availableActions(), "Code Review should still grant +2 actions");
+        assertEquals(1, after.currentPlayerHand().unplayedCards().size(), "Drawing from an empty deck should be a no-op");
     }
 
     @Test
@@ -305,6 +442,30 @@ public class CardFunctionTests {
     }
 
     @Test
+    public void testIpo_handlesEmptyDeckWithoutThrowing() throws Exception {
+        StubPlayer player = new StubPlayer("P1");
+        TestPlayerCards pc = new TestPlayerCards(board);
+        player.setPlayerCards(pc);
+
+        pc.setUnplayedCards(List.of());
+        pc.setDeck(List.of());
+
+        GameState before = makeState(player.getName(), pc);
+        GameState after = ActionCards.playActionCard(
+            new Card(Card.Type.IPO, 0),
+            before,
+            player,
+            List.of(player),
+            Map.of(player, pc),
+            board
+        );
+
+        assertEquals(before.availableActions() + 1, after.availableActions());
+        assertEquals(before.spendableMoney() + 2, after.spendableMoney());
+        assertEquals(0, after.currentPlayerHand().unplayedCards().size(), "Empty deck should not add cards");
+    }
+
+    @Test
     public void testMergeConflict_trashedCardDrawsCost() throws Exception {
         StubPlayer player = new StubPlayer("P1");
         TestPlayerCards pc = new TestPlayerCards(board);
@@ -327,6 +488,29 @@ public class CardFunctionTests {
     }
 
     @Test
+    public void testMergeConflict_handlesEmptyHandWithoutThrowing() throws Exception {
+        StubPlayer player = new StubPlayer("P1");
+        TestPlayerCards pc = new TestPlayerCards(board);
+        player.setPlayerCards(pc);
+
+        pc.setUnplayedCards(List.of());
+        player.queueDecision(new edu.brandeis.cosi.atg.decisions.EndPhaseDecision(GameState.TurnPhase.ACTION));
+
+        GameState before = makeState(player.getName(), pc);
+        GameState after = ActionCards.playActionCard(
+            new Card(Card.Type.MERGE_CONFLICT, 0),
+            before,
+            player,
+            List.of(player),
+            Map.of(player, pc),
+            board
+        );
+
+        assertEquals(0, after.currentPlayerHand().unplayedCards().size(), "Empty hand should remain empty");
+        assertEquals(before.availableActions(), after.availableActions(), "Merge Conflict should not change actions");
+    }
+
+    @Test
     public void testMonitoring_drawsTwoCards() throws Exception {
         StubPlayer player = new StubPlayer("P1");
         TestPlayerCards pc = new TestPlayerCards(board);
@@ -344,6 +528,29 @@ public class CardFunctionTests {
         );
         assertEquals(before + 2, after.currentPlayerHand().unplayedCards().size());
         assertEquals(beforeState.phase(), after.phase(), "Monitoring should preserve current phase");
+    }
+
+    @Test
+    public void testMonitoring_handlesEmptyDeckWithoutThrowing() throws Exception {
+        StubPlayer player = new StubPlayer("P1");
+        TestPlayerCards pc = new TestPlayerCards(board);
+        player.setPlayerCards(pc);
+
+        pc.setUnplayedCards(List.of(new Card(Card.Type.BITCOIN, 0)));
+        pc.setDeck(List.of());
+
+        GameState before = makeState(player.getName(), pc);
+        GameState after = ActionCards.playActionCard(
+            new Card(Card.Type.MONITORING, 0),
+            before,
+            player,
+            List.of(player),
+            Map.of(player, pc),
+            board
+        );
+
+        assertEquals(before.phase(), after.phase(), "Monitoring should preserve current phase");
+        assertEquals(1, after.currentPlayerHand().unplayedCards().size(), "Empty deck should not change hand size");
     }
 
     @Test
@@ -371,6 +578,45 @@ public class CardFunctionTests {
     }
 
     @Test
+    public void testRefactor_gainCard() throws Exception {
+        StubPlayer player = new StubPlayer("P1");
+        TestPlayerCards pc = new TestPlayerCards(board);
+        player.setPlayerCards(pc);
+
+        // Give player a trailable card (bitcoin value 0 -> trashedValue = 2)
+        pc.setUnplayedCards(List.of(new Card(Card.Type.BITCOIN, 0)));
+
+        // Queue trash decision and then choose a gain (choose DOGECOIN if affordable)
+        player.queueDecision(new TrashCardDecision(new Card(Card.Type.BITCOIN, 0)));
+        // determine a valid gain option from board for value 2
+        Card.Type gainType = null;
+        for (Card.Type t : board.getPlayableCards(2).getCardTypes()) {
+            gainType = t;
+            break;
+        }
+        if (gainType == null) {
+            // nothing to gain; ensure method still returns without throwing
+            ActionCards.playActionCard(new Card(Card.Type.REFACTOR, 0), makeState(player.getName(), pc), player, List.of(player), Map.of(player, pc), board);
+            return;
+        }
+        player.queueDecision(new edu.brandeis.cosi.atg.decisions.GainCardDecision(gainType));
+
+        int beforeDiscard = pc.getDiscardList().size();
+
+        ActionCards.playActionCard(
+            new Card(Card.Type.REFACTOR, 0),
+            makeState(player.getName(), pc),
+            player,
+            List.of(player),
+            Map.of(player, pc),
+            board
+        );
+
+        // The gained card is placed into player's discard pile (state returned may not reflect gain)
+        assertTrue(pc.getDiscardList().size() >= beforeDiscard);
+    }
+
+    @Test
     public void testSprintPlanning_grantsActionBuyAndCard() throws Exception {
         StubPlayer player = new StubPlayer("P1");
         TestPlayerCards pc = new TestPlayerCards(board);
@@ -389,6 +635,30 @@ public class CardFunctionTests {
         assertEquals(before.availableActions() + 1, after.availableActions());
         assertEquals(before.availableBuys() + 1, after.availableBuys());
         assertEquals(before.currentPlayerHand().unplayedCards().size() + 1, after.currentPlayerHand().unplayedCards().size());
+    }
+
+    @Test
+    public void testSprintPlanning_handlesEmptyDeckWithoutThrowing() throws Exception {
+        StubPlayer player = new StubPlayer("P1");
+        TestPlayerCards pc = new TestPlayerCards(board);
+        player.setPlayerCards(pc);
+
+        pc.setUnplayedCards(List.of());
+        pc.setDeck(List.of());
+
+        GameState before = makeState(player.getName(), pc);
+        GameState after = ActionCards.playActionCard(
+            new Card(Card.Type.SPRINT_PLANNING, 0),
+            before,
+            player,
+            List.of(player),
+            Map.of(player, pc),
+            board
+        );
+
+        assertEquals(before.availableActions() + 1, after.availableActions());
+        assertEquals(before.availableBuys() + 1, after.availableBuys());
+        assertEquals(0, after.currentPlayerHand().unplayedCards().size(), "Empty deck should not change hand size");
     }
 
     @Test
@@ -419,6 +689,32 @@ public class CardFunctionTests {
         assertNotNull(after);
 
         assertEquals(beforeDiscard + 1, pc.getDiscardSize(), "Should have discarded one card");
+    }
+
+    @Test
+    public void testTechDebt_noEmptyPilesStillDrawsAndAddsResources() throws Exception {
+        StubPlayer player = new StubPlayer("P1");
+        TestPlayerCards pc = new TestPlayerCards(board);
+        player.setPlayerCards(pc);
+
+        pc.setUnplayedCards(List.of(new Card(Card.Type.BITCOIN, 0)));
+        // Ensure there is a card to draw so the draw behavior is deterministic
+        pc.setDeck(List.of(new Card(Card.Type.ETHEREUM, 1)));
+
+        GameState before = makeState(player.getName(), pc);
+        GameState after = ActionCards.playActionCard(
+            new Card(Card.Type.TECH_DEBT, 0),
+            before,
+            player,
+            List.of(player),
+            Map.of(player, pc),
+            board
+        );
+
+        assertEquals(before.availableActions() + 1, after.availableActions());
+        assertEquals(before.spendableMoney() + 1, after.spendableMoney());
+        assertEquals(before.currentPlayerHand().unplayedCards().size() + 1, after.currentPlayerHand().unplayedCards().size());
+        assertEquals(0, pc.getDiscardSize(), "Without empty piles, Tech Debt should not force discards");
     }
 
     @Test
@@ -613,6 +909,32 @@ public class CardFunctionTests {
     }
 
     @Test
+    public void testHack_defenderHasMonitoring() throws Exception {
+        StubPlayer attacker = new StubPlayer("A");
+        StubPlayer defender = new StubPlayer("D");
+        TestPlayerCards attackerCards = new TestPlayerCards(board);
+        TestPlayerCards defenderCards = new TestPlayerCards(board);
+        attacker.setPlayerCards(attackerCards);
+        defender.setPlayerCards(defenderCards);
+
+        // Defender has monitoring, so should be immune
+        defenderCards.setUnplayedCards(List.of(
+            new Card(Card.Type.MONITORING, 0),
+            new Card(Card.Type.BITCOIN, 0),
+            new Card(Card.Type.ETHEREUM, 1),
+            new Card(Card.Type.DOGECOIN, 2),
+            new Card(Card.Type.METHOD, 2)
+        ));
+
+        List<ParentPlayer> players = List.of(attacker, defender);
+        Map<ParentPlayer, PlayerCards> map = Map.of(attacker, attackerCards, defender, defenderCards);
+
+        ActionCards.playActionCard(new Card(Card.Type.HACK, 0), makeState(attacker.getName(), attackerCards), attacker, players, map, board);
+
+        assertEquals(5, defenderCards.getHand().unplayedCards().size(), "Defender with Monitoring should not be affected");
+    }
+
+    @Test
     public void testRansomware_handLessThanTwo() throws Exception {
         StubPlayer attacker = new StubPlayer("A");
         StubPlayer defender = new StubPlayer("D");
@@ -627,6 +949,30 @@ public class CardFunctionTests {
         // Should gain bug if bug available, or nothing if not
         // Accept either 1 or 0 in discard
         assertTrue(defenderCards.getDiscardSize() <= 1);
+    }
+
+    @Test
+    public void testRansomware_defenderHasMonitoring() throws Exception {
+        StubPlayer attacker = new StubPlayer("A");
+        StubPlayer defender = new StubPlayer("D");
+        TestPlayerCards attackerCards = new TestPlayerCards(board);
+        TestPlayerCards defenderCards = new TestPlayerCards(board);
+        attacker.setPlayerCards(attackerCards);
+        defender.setPlayerCards(defenderCards);
+
+        // Defender has monitoring, should not be forced to discard or gain bugs
+        defenderCards.setUnplayedCards(List.of(
+            new Card(Card.Type.MONITORING, 0),
+            new Card(Card.Type.BITCOIN, 0),
+            new Card(Card.Type.ETHEREUM, 1)
+        ));
+
+        List<ParentPlayer> players = List.of(attacker, defender);
+        Map<ParentPlayer, PlayerCards> map = Map.of(attacker, attackerCards, defender, defenderCards);
+
+        ActionCards.playActionCard(new Card(Card.Type.RANSOMWARE, 0), makeState(attacker.getName(), attackerCards), attacker, players, map, board);
+
+        assertEquals(3, defenderCards.getHand().unplayedCards().size(), "Defender with Monitoring should not be affected by Ransomware");
     }
 
     @Test

@@ -1,0 +1,271 @@
+static Map<Card.Type, Float> actionCardValues = new HashMap<>();
+    static{
+        actionCardValues.put(Card.Type.BACKLOG, 0.06f);
+        actionCardValues.put(Card.Type.CODE_REVIEW, 0.06f);
+        actionCardValues.put(Card.Type.SPRINT_PLANNING, 0.06f);
+        actionCardValues.put(Card.Type.UNIT_TEST, 0.06f);
+        actionCardValues.put(Card.Type.HACK, 0.06f);
+        actionCardValues.put(Card.Type.TECH_DEBT, 0.06f);
+        actionCardValues.put(Card.Type.REFACTOR, 0.06f);
+        actionCardValues.put(Card.Type.PARALLELIZATION, 0.06f);
+        actionCardValues.put(Card.Type.MERGE_CONFLICT, 0.02f);
+        actionCardValues.put(Card.Type.MONITORING, 0.06f);
+        actionCardValues.put(Card.Type.IPO, 0.08f);
+        actionCardValues.put(Card.Type.DEPLOYMENT_PIPELINE, 0.02f);
+        actionCardValues.put(Card.Type.EVERGREEN_TEST, 0.08f);
+        actionCardValues.put(Card.Type.DAILY_SCRUM, 0.06f);
+        actionCardValues.put(Card.Type.RANSOMWARE, 0.06f);
+    }
+    
+
+=== Raw Tournament Summary === 76%
+Games simulated: 500
+=== Additional Metrics ===  
+Raw win counts (ties count as win for each top-ranked player):
+- Strategy-V3#1: 384
+- BigMoney#1: 150
+
+Games simulated: 500
+=== Additional Metrics === 53%
+Raw win counts (ties count as win for each top-ranked player):
+- Strategy-V2#1: 335
+- Strategy-V3#1: 268
+
+********************************************************************************
+
+Generation 5: 62 wins out of 100
+Current Values: {SPRINT_PLANNING=0.054586757, 
+TECH_DEBT=0.06249496, DAILY_SCRUM=0.050031956, MERGE_CONFLICT=0.07576652, 
+HACK=0.046170384, BACKLOG=0.055410244, MONITORING=0.074948475, REFACTOR=0.053192444, 
+RANSOMWARE=0.079027906, PARALLELIZATION=0.068295024, EVERGREEN_TEST=0.06278915, 
+IPO=0.05973854, UNIT_TEST=0.0759633, CODE_REVIEW=0.08721036, DEPLOYMENT_PIPELINE=0.046066232}
+
+Games simulated: 500
+=== Additional Metrics === 66%
+Raw win counts (ties count as win for each top-ranked player):
+- V3StrategyPlayer: 330
+- BigMoney#1: 189
+
+=== Additional Metrics === 54%
+Raw win counts (ties count as win for each top-ranked player):
+- Strategy-V2#1: 328
+- V3StrategyPlayer: 271
+
+********************************************************************************
+- made optimization better hopefully
+
+
+Generation 5: 102 wins out of 200
+Current Values: {SPRINT_PLANNING=0.08081619, TECH_DEBT=0.063572705, 
+DAILY_SCRUM=0.058889166, MERGE_CONFLICT=0.07599581, HACK=0.06631774, 
+BACKLOG=0.079543866, MONITORING=0.05511725, REFACTOR=0.06911887, 
+RANSOMWARE=0.04716821, PARALLELIZATION=0.057405695, EVERGREEN_TEST=0.0413261, 
+IPO=0.05773876, UNIT_TEST=0.05354262, CODE_REVIEW=0.05971048, DEPLOYMENT_PIPELINE=0.065097325}
+
+Games simulated: 500
+=== Additional Metrics === 65%
+Raw win counts (ties count as win for each top-ranked player):
+- V3StrategyPlayer: 327
+- BigMoney#1: 176
+
+Games simulated: 500
+=== Additional Metrics === 45%
+Raw win counts (ties count as win for each top-ranked player):
+- Strategy-V2#1: 278
+- V3StrategyPlayer: 227
+
+******************************************************************************
+- optimization bug fixes
+
+
+Generation 10: 145 wins out of 200
+Current Values: {SPRINT_PLANNING=0.061523024, 
+TECH_DEBT=0.06798965, DAILY_SCRUM=0.06996027, 
+MERGE_CONFLICT=0.06288095, HACK=0.045420203, 
+BACKLOG=0.078518316, MONITORING=0.081336275, 
+REFACTOR=0.069327734, RANSOMWARE=0.0644322, PARALLELIZATION=0.051746637, 
+EVERGREEN_TEST=0.06818454, IPO=0.0764132, UNIT_TEST=0.06261024, 
+CODE_REVIEW=0.085127205, DEPLOYMENT_PIPELINE=0.07447285}
+
+*****************************************************************************
+-optimization bug fixes
+
+Generation 10: [0.215, 0.52, 0.615, 0.53, 0.58, 0.535, 0.605, 0.63, 0.69, 0.545] wins out of 200
+Current Values: {EVERGREEN_TEST=0.06875176, CODE_REVIEW=0.04748228, 
+UNIT_TEST=0.03643331, MONITORING=0.06349045, PARALLELIZATION=0.0329031, 
+IPO=0.055521503, RANSOMWARE=0.056227595, DEPLOYMENT_PIPELINE=0.028668378, 
+REFACTOR=0.04258575, DAILY_SCRUM=0.07362922, SPRINT_PLANNING=0.07282303, 
+MERGE_CONFLICT=0.072261736, BACKLOG=0.051919483, HACK=0.033267815, TECH_DEBT=0.055900864}
+
+=== Raw Tournament Summary === 71%
+Games simulated: 500
+=== Additional Metrics === 
+Raw win counts (ties count as win for each top-ranked player):
+- Strategy-V3#1: 358
+- BigMoney#1: 150
+
+=== Raw Tournament Summary === 50%
+Games simulated: 500
+=== Additional Metrics ===
+Raw win counts (ties count as win for each top-ranked player):
+- Strategy-V2#1: 262
+- Strategy-V3#1: 253
+
+********************************************************************************
+- optimized optimization lol
+
+Generation 10: [0.0, 0.575, 0.185, 0.52, 0.25, 0.605, 0.38, 0.255, 0.705, 0.365, 0.72] wins out of 200
+Current Values: {SPRINT_PLANNING=0.069808796, TECH_DEBT=0.06949393, DAILY_SCRUM=0.06428671, 
+MERGE_CONFLICT=0.050456613, HACK=0.06325751, BACKLOG=0.06694727, MONITORING=0.052708067, 
+REFACTOR=0.05164312, RANSOMWARE=0.060037762, PARALLELIZATION=0.058073618, 
+EVERGREEN_TEST=0.06242019, IPO=0.06791994, UNIT_TEST=0.06037967, CODE_REVIEW=0.057443887, 
+DEPLOYMENT_PIPELINE=0.06810153}
+
+=== Raw Tournament Summary === 66%
+Games simulated: 500
+=== Additional Metrics ===
+Raw win counts (ties count as win for each top-ranked player):
+- Strategy-V3#1: 334
+- BigMoney#1: 176
+
+=== Raw Tournament Summary === 46%
+Games simulated: 500
+=== Additional Metrics ===
+Raw win counts (ties count as win for each top-ranked player):
+- Strategy-V2#1: 273
+- Strategy-V3#1: 233
+
+****************************************************************************************
+- using normalization 
+
+Generation 10: [0.0, 0.675, 0.785, 0.675, 0.465, 0.425, 0.74, 0.4, 0.65, 0.695, 0.785] wins out of 200
+Current Values: {SPRINT_PLANNING=0.066, TECH_DEBT=0.062, 
+DAILY_SCRUM=0.063, MERGE_CONFLICT=0.062, HACK=0.067, BACKLOG=0.075,
+ MONITORING=0.076, REFACTOR=0.062, RANSOMWARE=0.065, PARALLELIZATION=0.066, 
+ EVERGREEN_TEST=0.07, IPO=0.07, UNIT_TEST=0.064, CODE_REVIEW=0.07, DEPLOYMENT_PIPELINE=0.062}
+
+ === Raw Tournament Summary === 66%
+Games simulated: 500
+=== Additional Metrics ===
+Raw win counts (ties count as win for each top-ranked player):
+- Strategy-V3#1: 330
+- BigMoney#1: 219
+
+=== Raw Tournament Summary === 49%
+Games simulated: 500
+=== Additional Metrics ===
+Raw win counts (ties count as win for each top-ranked player):
+- Strategy-V2#1: 356
+- Strategy-V3#1: 245
+
+***************************************************************************************
+- fixed integer division bug
+
+Generation 10: [0.0, 0.625, 0.55, 0.335, 0.385, 0.665, 0.315, 0.425, 0.825, 0.455, 0.75] wins out of 200
+Current Values: {EVERGREEN_TEST=0.081, CODE_REVIEW=0.073, 
+UNIT_TEST=0.058, MONITORING=0.069, PARALLELIZATION=0.06, IPO=0.072, 
+RANSOMWARE=0.059, DEPLOYMENT_PIPELINE=0.065, REFACTOR=0.056, DAILY_SCRUM=0.072, 
+SPRINT_PLANNING=0.063, MERGE_CONFLICT=0.066, BACKLOG=0.069, HACK=0.069, TECH_DEBT=0.067}
+
+=== Raw Tournament Summary ===
+Games simulated: 500
+=== Additional Metrics === 93%
+Raw win counts (ties count as win for each top-ranked player):
+- Strategy-V3#1: 469
+- BigMoney#1: 66
+
+=== Raw Tournament Summary === 78%
+Games simulated: 500
+=== Additional Metrics ===
+Raw win counts (ties count as win for each top-ranked player):
+- Strategy-V3#1: 394
+- Strategy-V2#1: 247
+
+***************************************************************************************
+
+Generation 10: [0.0, 0.725, 0.825, 0.705, 0.81, 0.83, 0.625, 0.84, 0.715, 0.81, 0.845] wins out of 200
+Current Values: {EVERGREEN_TEST=0.085, CODE_REVIEW=0.076, UNIT_TEST=0.059, 
+MONITORING=0.065, PARALLELIZATION=0.061, IPO=0.074, RANSOMWARE=0.071, 
+DEPLOYMENT_PIPELINE=0.06, REFACTOR=0.06, DAILY_SCRUM=0.077, SPRINT_PLANNING=0.067, 
+MERGE_CONFLICT=0.065, BACKLOG=0.061, HACK=0.062, TECH_DEBT=0.057}
+
+=== Raw Tournament Summary ===
+Games simulated: 500
+=== Additional Metrics === 90%
+Raw win counts (ties count as win for each top-ranked player):
+- Strategy-V3#1: 453
+- BigMoney#1: 64
+
+=== Raw Tournament Summary === 70%
+Games simulated: 500
+=== Additional Metrics ===
+Raw win counts (ties count as win for each top-ranked player):
+- Strategy-V3#1: 353
+- Strategy-V2#1: 252
+
+***************************************************************************************
+
+Generation 10: [0.0, 0.65, 0.655, 0.255, 0.865, 0.665, 0.375, 0.645, 0.635, 0.315, 0.68] wins out of 200
+Current Values: {EVERGREEN_TEST=0.087, CODE_REVIEW=0.071, UNIT_TEST=0.059, MONITORING=0.068, 
+PARALLELIZATION=0.069, IPO=0.067, RANSOMWARE=0.07, DEPLOYMENT_PIPELINE=0.056, 
+REFACTOR=0.058, DAILY_SCRUM=0.086, SPRINT_PLANNING=0.063, MERGE_CONFLICT=0.068, 
+BACKLOG=0.061, HACK=0.067, TECH_DEBT=0.052}
+
+=== Raw Tournament Summary ===
+Games simulated: 1000
+=== Additional Metrics === 78%
+Raw win counts (ties count as win for each top-ranked player):
+- Strategy-V3#1: 786
+- BigMoney#1: 243
+
+=== Raw Tournament Summary === 63%
+Games simulated: 1000
+=== Additional Metrics ===
+Raw win counts (ties count as win for each top-ranked player):
+- Strategy-V3#1: 637
+- Strategy-V2#1: 588
+
+***************************************************************************
+
+Generation 10: [0.0, 0.47, 0.46, 0.435, 0.84, 0.805, 0.735, 0.83, 0.395, 0.39, 0.695] wins out of 200
+Current Values: {EVERGREEN_TEST=0.082, CODE_REVIEW=0.08, UNIT_TEST=0.058, MONITORING=0.075,
+ PARALLELIZATION=0.057, IPO=0.068, RANSOMWARE=0.056, DEPLOYMENT_PIPELINE=0.064,
+  REFACTOR=0.053, DAILY_SCRUM=0.068, SPRINT_PLANNING=0.069, MERGE_CONFLICT=0.062,
+   BACKLOG=0.074, HACK=0.072, TECH_DEBT=0.063}
+
+   === Raw Tournament Summary === 92.7%
+Games simulated: 1000
+=== Additional Metrics === 
+Raw win counts (ties count as win for each top-ranked player):
+- Strategy-V3#1: 927
+- BigMoney#1: 127
+
+=== Raw Tournament Summary === 74.8%
+Games simulated: 1000
+=== Additional Metrics === 
+Raw win counts (ties count as win for each top-ranked player):
+- Strategy-V3#1: 748
+- Strategy-V2#1: 545
+
+****************************************************************************************
+
+Generation 10: [0.0, 0.845, 0.815, 0.8, 0.66, 0.755, 0.845, 0.695, 0.86, 0.82, 0.71] wins out of 200
+Current Values: {EVERGREEN_TEST=0.076, CODE_REVIEW=0.085, UNIT_TEST=0.054,
+ MONITORING=0.077, PARALLELIZATION=0.055, IPO=0.064, RANSOMWARE=0.055,
+ DEPLOYMENT_PIPELINE=0.063, REFACTOR=0.047, DAILY_SCRUM=0.067, 
+ SPRINT_PLANNING=0.081, MERGE_CONFLICT=0.069, BACKLOG=0.077, 
+ HACK=0.07, TECH_DEBT=0.06}
+
+=== Raw Tournament Summary === 95.6%
+Games simulated: 1000
+=== Additional Metrics === 
+Raw win counts (ties count as win for each top-ranked player):
+- Strategy-V3#1: 956
+- BigMoney#1: 95
+
+=== Raw Tournament Summary === 81.6%
+Games simulated: 1000
+=== Additional Metrics ===
+Raw win counts (ties count as win for each top-ranked player):
+- Strategy-V3#1: 816
+- Strategy-V2#1: 443

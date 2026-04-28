@@ -5,7 +5,6 @@ import edu.brandeis.cosi.atg.engine.PlayerViolationException;
 import edu.brandeis.cosi.atg.state.GameResult;
 import edu.brandeis.cosi.atg.state.PlayerResult;
 import edu.brandeis.cosi103a.groupb.engine.Engine;
-import edu.brandeis.cosi103a.groupb.WeightedPlayer3;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -71,13 +70,9 @@ public class GameHarness {
                 players.add(new BigMoneyPlayer("BigMoney Player"));
             } else if (choice == 3) {
                 players.add(new StrategyPlayer("Strategy Player"));
-            } else if (choice == 4) {
-                players.add(new WeightedPlayer("Weighted Player"));
             } else if (choice == 5) {
                 String uuid = java.util.UUID.randomUUID().toString();
                 players.add(new PlayerClient("Remote Player", uuid, "http://localhost:8080"));
-            } else if (choice == 6) {
-                players.add(new WeightedPlayer3("WeightedPlayer3"));
             }
         }
 

@@ -27,9 +27,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 
-public class V2StrategyPlayer extends ParentPlayer {
+public class V3StrategyPlayer extends ParentPlayer {
 
     private static final AtomicInteger COUNTER = new AtomicInteger(1);
     String playerName = "";
@@ -52,23 +53,41 @@ public class V2StrategyPlayer extends ParentPlayer {
     int permutation_cap = 5;
     int end_game_threshold = 5;
 
+    static Map<Card.Type, Float> actionCardValues = new HashMap<>();
+    static Map<Card.Type, Float> actionCardValuesDefault = new HashMap<>();
 
-
+     static{
+        actionCardValuesDefault.put(Card.Type.BACKLOG, 0.077f);
+        actionCardValuesDefault.put(Card.Type.CODE_REVIEW, 0.085f);
+        actionCardValuesDefault.put(Card.Type.SPRINT_PLANNING, 0.081f);
+        actionCardValuesDefault.put(Card.Type.UNIT_TEST, 0.054f);
+        actionCardValuesDefault.put(Card.Type.HACK, 0.07f);
+        actionCardValuesDefault.put(Card.Type.TECH_DEBT, 0.06f);
+        actionCardValuesDefault.put(Card.Type.REFACTOR, 0.047f);
+        actionCardValuesDefault.put(Card.Type.PARALLELIZATION, 0.055f);
+        actionCardValuesDefault.put(Card.Type.MERGE_CONFLICT, 0.069f);
+        actionCardValuesDefault.put(Card.Type.MONITORING, 0.077f);
+        actionCardValuesDefault.put(Card.Type.IPO, 0.064f);
+        actionCardValuesDefault.put(Card.Type.DEPLOYMENT_PIPELINE, 0.063f);
+        actionCardValuesDefault.put(Card.Type.EVERGREEN_TEST, 0.076f);
+        actionCardValuesDefault.put(Card.Type.DAILY_SCRUM, 0.067f);
+        actionCardValuesDefault.put(Card.Type.RANSOMWARE, 0.055f);
+    }
     
 
-    public V2StrategyPlayer() {
-        super("StrategyPlayer-" + COUNTER.getAndIncrement());
+
+    public V3StrategyPlayer() {
+        super("V3StrategyPlayer-" + COUNTER.getAndIncrement());
         for(int i = 0; i < 7; i++) {
             deck.add(Card.Type.BITCOIN);
             if (i < 3) {
                 deck.add(Card.Type.METHOD);
             }
         };
-
-        
+        V3StrategyPlayer.actionCardValues = actionCardValuesDefault;
     }
 
-    public V2StrategyPlayer(String name) {
+     public V3StrategyPlayer(String name, Map<Card.Type, Float> actionCardValues) {
         super(name);
         for(int i = 0; i < 7; i++) {
             deck.add(Card.Type.BITCOIN);
@@ -76,9 +95,10 @@ public class V2StrategyPlayer extends ParentPlayer {
                 deck.add(Card.Type.METHOD);
             }
         };
+        V3StrategyPlayer.actionCardValues = actionCardValues;
     }
 
-    public V2StrategyPlayer(String name, PrintStream out) {
+    public V3StrategyPlayer(String name) {
         super(name);
         for(int i = 0; i < 7; i++) {
             deck.add(Card.Type.BITCOIN);
@@ -86,6 +106,18 @@ public class V2StrategyPlayer extends ParentPlayer {
                 deck.add(Card.Type.METHOD);
             }
         };
+        V3StrategyPlayer.actionCardValues = actionCardValuesDefault;
+    }
+
+    public V3StrategyPlayer(String name, PrintStream out) {
+        super(name);
+        for(int i = 0; i < 7; i++) {
+            deck.add(Card.Type.BITCOIN);
+            if (i < 3) {
+                deck.add(Card.Type.METHOD);
+            }
+        };
+        V3StrategyPlayer.actionCardValues = actionCardValuesDefault;
     }
 
    @Override
@@ -318,39 +350,48 @@ public class V2StrategyPlayer extends ParentPlayer {
         categoryOrder.sort((a, b) -> Float.compare(diffs.get(b), diffs.get(a))); // reverse order
 
         for (String category : categoryOrder) {
-            //PlayCardDecision pcd = null;
 
             if("action".equals(category)){
                 BuyDecision best = null;
-                int degree = 0;
-                for (Decision d : options) {
-                    if (d instanceof BuyDecision) {
-                        Card.Type type = ((BuyDecision) d).cardType();
-                        if (type == Card.Type.IPO || type == Card.Type.EVERGREEN_TEST || type == Card.Type.MONITORING ) {
-                            if (degree == 0 || degree > 1) {
-                                degree = 1;
-                                best = (BuyDecision) d;
-                            }
-                        } else if (type == Card.Type.CODE_REVIEW || type == Card.Type.RANSOMWARE || type == Card.Type.REFACTOR || type == Card.Type.PARALLELIZATION) {
-                            if (degree == 0 || degree > 2) {
-                                degree = 2;
-                                best = (BuyDecision) d;
-                            }
-                        } else if (type == Card.Type.SPRINT_PLANNING || type == Card.Type.HACK || type == Card.Type.BACKLOG || type == Card.Type.DAILY_SCRUM || type == Card.Type.UNIT_TEST ) {
-                            if (degree == 0 || degree > 3) {
-                                degree = 3;
-                                best = (BuyDecision) d;
-                            }
-                        }
-                        
+                int deckSize = deck.size();
+                Map<Card.Type, Float> currentCardValues = new HashMap<>();
+                for (Map.Entry<Card.Type, Float> item : actionCardValues.entrySet()) {
+                    Card.Type type = item.getKey();
+                    float baseValue = item.getValue();
+                    if(deck.contains(type)){
+                        float value = baseValue - Collections.frequency(deck, type) / deckSize;
+                        currentCardValues.put(type, value);
+                    } else{
+                        currentCardValues.put(type, baseValue - 0.0f);
                     }
-                    
                 }
 
-                if (best != null) {
-                    deck.add(best.cardType());
-                    return best;
+
+                List<Map.Entry<Card.Type, Float>> sortedEntries = currentCardValues.entrySet()
+                    .stream()
+                    .sorted(Map.Entry.comparingByValue(Collections.reverseOrder()))
+                    .collect(Collectors.toList());
+                
+                for (Map.Entry<Card.Type, Float> entry : sortedEntries) {
+                    Card.Type cardType = entry.getKey();
+                    
+                    for (Decision d : options) {
+                        if (d instanceof BuyDecision) {
+                            BuyDecision bd = (BuyDecision) d;
+                            if(bd.cardType() == cardType) {
+                                best = bd;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (best != null) {
+                        deck.add(best.cardType());
+                        return best;
+                    }
+                            
                 }
+                
 
             } else if("money".equals(category)){
                 BuyDecision best = null;

@@ -307,6 +307,11 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
             for (Card card : unplayedCards) {
                 Card.Type.Category category = getCardCategory(card);
                 if (category.equals(Card.Type.Category.ACTION)) {
+                    if (card.type().equals(Card.Type.MERGE_CONFLICT) || card.type().equals(Card.Type.REFACTOR) || card.type().equals(Card.Type.PARALLELIZATION)) {
+                        if(unplayedCards.size() ==1){
+                            continue; //skip since these cards require at least 1 other card
+                        }
+                    } 
                     optionsBuilder.add(new PlayCardDecision(card));
                 }
             }

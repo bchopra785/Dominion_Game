@@ -145,4 +145,46 @@ public class BoardCardsTest {
         int after = boardCards.getCardStacks().get(Card.Type.METHOD);
         assertEquals(before - 1, after);
     }
+
+    @Test
+    public void testBugPileScalesWithPlayerCount() {
+        BoardCards onePlayerBoard = new BoardCards(1);
+        BoardCards fourPlayerBoard = new BoardCards(4);
+
+        assertEquals(10, onePlayerBoard.getCardStacks().get(Card.Type.BUG));
+        assertEquals(40, fourPlayerBoard.getCardStacks().get(Card.Type.BUG));
+    }
+
+    @Test
+    public void testDrawDeckCardOnExhaustedPileReturnsNullAndKeepsCountAtZero() {
+        while (boardCards.drawDeckCard(Card.Type.METHOD) != null) {
+            // drain pile
+        }
+
+        assertEquals(0, boardCards.getCardStacks().get(Card.Type.METHOD));
+        assertNull(boardCards.drawDeckCard(Card.Type.METHOD));
+        assertEquals(0, boardCards.getCardStacks().get(Card.Type.METHOD));
+    }
+
+    @Test
+    public void testGetPlayableCardsWithNegativeBudgetReturnsNone() {
+        CardStacks playableCards = boardCards.getPlayableCards(-1);
+        assertTrue(playableCards.getCardTypes().isEmpty());
+    }
+
+    @Test
+    public void testDrawDeckCardWithNullTypeReturnsNull() {
+        assertNull(boardCards.drawDeckCard(null));
+    }
+
+    @Test
+    public void testGetCardStacksSnapshotDoesNotChangeAfterDraw() {
+        Map<Card.Type, Integer> snapshotBeforeDraw = boardCards.getCardStacks();
+        int before = snapshotBeforeDraw.get(Card.Type.MODULE);
+
+        boardCards.drawDeckCard(Card.Type.MODULE);
+
+        assertEquals(before, snapshotBeforeDraw.get(Card.Type.MODULE));
+        assertEquals(before - 1, boardCards.getCardStacks().get(Card.Type.MODULE));
+    }
 }

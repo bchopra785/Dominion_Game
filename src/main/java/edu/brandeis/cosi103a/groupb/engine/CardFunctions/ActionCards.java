@@ -1,6 +1,5 @@
 package edu.brandeis.cosi103a.groupb.engine.CardFunctions;
 
-import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 
@@ -644,6 +643,7 @@ public final class ActionCards {
     }
 
     private static boolean hasMonitoring(PlayerCards playerCards) {
+        // MONITORING acts as a reaction shield against attack-style action effects.
         for (Card c : playerCards.getUnplayedCards()) {
             if (c.type().name().equals("MONITORING")) {
                 return true;
@@ -652,18 +652,7 @@ public final class ActionCards {
         return false;
     }
 
-    @SuppressWarnings("unchecked")
     private static void discardCard(PlayerCards playerCards, Card card) throws Exception {
-        Field unplayedField = PlayerCards.class.getDeclaredField("unplayedCards");
-        unplayedField.setAccessible(true);
-        List<Card> unplayed = (List<Card>) unplayedField.get(playerCards);
-
-        if (unplayed.contains(card)) {
-            unplayed.remove(card);
-            Field discardField = PlayerCards.class.getDeclaredField("discard");
-            discardField.setAccessible(true);
-            List<Card> discard = (List<Card>) discardField.get(playerCards);
-            discard.add(card);
-        }
+        playerCards.discardCard(card);
     }
 }

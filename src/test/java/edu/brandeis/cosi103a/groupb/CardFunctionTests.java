@@ -333,15 +333,17 @@ public class CardFunctionTests {
         player.setPlayerCards(pc);
 
         int before = pc.getHand().unplayedCards().size();
+        GameState beforeState = makeState(player.getName(), pc);
         GameState after = ActionCards.playActionCard(
             new Card(Card.Type.MONITORING, 0),
-            makeState(player.getName(), pc),
+            beforeState,
             player,
             List.of(player),
             Map.of(player, pc),
             board
         );
         assertEquals(before + 2, after.currentPlayerHand().unplayedCards().size());
+        assertEquals(beforeState.phase(), after.phase(), "Monitoring should preserve current phase");
     }
 
     @Test

@@ -135,7 +135,7 @@
                   <mainClass>edu.brandeis.cosi103a.groupb.PlayerServer</mainClass>
                 </transformer>
               </transformers>
-              <finalName>BigMoney_GroupB</finalName>
+              <finalName>GroupB</finalName>
             </configuration>
           </execution>
         </executions>

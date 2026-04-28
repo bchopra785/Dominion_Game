@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.Objects;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -140,7 +141,9 @@ public class BoardCards {
     public ImmutableMap<Card.Type, Integer> getCardStacks() {
         ImmutableMap.Builder<Card.Type, Integer> builder = ImmutableMap.builder();
         for (Map.Entry<Card.Type, List<Card>> entry : cardMap.entrySet()) {
-            builder.put(entry.getKey(), entry.getValue().size());
+            Card.Type cardType = Objects.requireNonNull(entry.getKey());
+            Integer count = entry.getValue().size();
+            builder.put(cardType, count);
         }
         return builder.build();
     }
@@ -148,7 +151,9 @@ public class BoardCards {
     public CardStacks getCardsLeft() {
         ImmutableMap.Builder<Card.Type, Integer> builder = ImmutableMap.builder();
         for (Map.Entry<Card.Type, List<Card>> entry : cardMap.entrySet()) {
-            builder.put(entry.getKey(), entry.getValue().size());
+            Card.Type cardType = Objects.requireNonNull(entry.getKey());
+            Integer count = entry.getValue().size();
+            builder.put(cardType, count);
         }
         return new CardStacks(builder.build());
     }
@@ -177,11 +182,20 @@ public class BoardCards {
         
         for(Card.Type t: cardStacks.keySet()){
             // Need to have the card and have enough cost in hand to play it
-            if ((cardStacks.get(t) > 0) && (costInHand >= t.cost())) {
-                playableCardsBuilder.put(t, cardStacks.get(t));
+            Integer count = cardStacks.get(t);
+            if ((count != null) && (count > 0) && (costInHand >= t.cost())) {
+                playableCardsBuilder.put(t, count);
             }
         }
         return new CardStacks(playableCardsBuilder.build());
+    }
+
+    /**
+     * Backwards-compatible alias used by older code/tests.
+     * Returns the set of card types that are affordable/playable given current money.
+     */
+    public CardStacks getPlayableCards(int costInHand) {
+        return getAffordableCards(costInHand);
     }
 
 }

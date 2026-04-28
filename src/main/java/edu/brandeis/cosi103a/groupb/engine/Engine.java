@@ -1,18 +1,19 @@
 package edu.brandeis.cosi103a.groupb.engine;
 
-import edu.brandeis.cosi.atg.cards.*;
-import edu.brandeis.cosi.atg.decisions.*;
-import edu.brandeis.cosi.atg.engine.*;
+import edu.brandeis.cosi.atg.cards.Card;
+import edu.brandeis.cosi.atg.decisions.BuyDecision;
+import edu.brandeis.cosi.atg.decisions.Decision;
+import edu.brandeis.cosi.atg.decisions.EndPhaseDecision;
+import edu.brandeis.cosi.atg.decisions.PlayCardDecision;
+import edu.brandeis.cosi.atg.engine.PlayerViolationException;
 import edu.brandeis.cosi.atg.event.EndTurnEvent;
 import edu.brandeis.cosi.atg.event.Event;
 import edu.brandeis.cosi.atg.event.GainCardEvent;
 import edu.brandeis.cosi.atg.event.PlayCardEvent;
-import edu.brandeis.cosi.atg.state.*;
+import edu.brandeis.cosi.atg.state.GameResult;
+import edu.brandeis.cosi.atg.state.GameState;
+import edu.brandeis.cosi.atg.state.PlayerResult;
 import edu.brandeis.cosi103a.groupb.ParentPlayer;
-import edu.brandeis.cosi103a.groupb.ConsolePlayer;
-import edu.brandeis.cosi103a.groupb.engine.CardFunctions.ActionCards;
-import java.util.UUID;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,20 +28,14 @@ import com.google.common.collect.ImmutableList;
 //client
 public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
-    //initialize players and board cards
     private final List<ParentPlayer> players;
     private final BoardCards boardCards;
     private final Map<ParentPlayer, PlayerCards> playerCardsMap;
-    
-    //initialize values for game state
-    private String playerName;
-    private Hand handObject;
-    private GameState.TurnPhase phase;
-    private int availableActions;
-    private int spendableMoney;
-    private int availableBuys;
-    private CardStacks buyableCards;
-    private boolean costReductionActive; // for DeploymentPipeline
+    private final ActionCardHandler actionCardHandler;
+
+    // Mutable state is internal only; external API still exposes immutable GameState snapshots.
+    private MutableGameState mutableState;
+    private boolean costReductionActive;
     private Optional<Event> latestEventReason;
 
     public Engine(List<ParentPlayer> players) {
@@ -63,6 +58,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         if (players.size() > 4) {
             throw new IllegalArgumentException("Engine supports at most 4 players");
         }
+
         this.players = players;
         this.costReductionActive = false;
 
@@ -73,91 +69,54 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
             this.boardCards = new BoardCards(players.size());
         }
         this.playerCardsMap = new HashMap<>();
+        this.actionCardHandler = new ActionCardHandler(players, playerCardsMap, boardCards);
         this.latestEventReason = Optional.empty();
 
         for (ParentPlayer player : players) {
             PlayerCards playerCards = new PlayerCards(boardCards);
-            playerCards.refreshHand(); // draw initial hand of 5 cards
+            playerCards.refreshHand();
             playerCardsMap.put(player, playerCards);
         }
-
     }
 
     public GameState getState() {
-        return new GameState(
-            playerName,
-            handObject,
-            phase,
-            availableActions,
-            spendableMoney,
-            availableBuys,
-            buyableCards
-        );
+        if (mutableState == null) {
+            throw new IllegalStateException("Game has not started yet");
+        }
+        return mutableState.toGameState();
     }
 
-      private void updateState(GameState newState) {
-        this.playerName = newState.currentPlayerName();
-        this.handObject = newState.currentPlayerHand();
-        this.phase = newState.phase();
-        this.availableActions = newState.availableActions();
-        this.spendableMoney = newState.spendableMoney();
-        this.availableBuys = newState.availableBuys();
-        this.buyableCards = newState.buyableCards();
+    private void updateState(GameState newState) {
+        this.mutableState = new MutableGameState(newState);
     }
 
     public GameResult play() throws PlayerViolationException {
-        
         boolean gameOver = false;
         while (!gameOver) {
-
-            //loop through each player
             for (ParentPlayer player : players) {
-                this.playerName = player.getName();
-                this.costReductionActive = false; // reset cost reduction each turn
-                this.handObject = playerCardsMap.get(player).getHand();
-                this.availableActions = 1;
-                this.spendableMoney = 0;
-                this.availableBuys = 1;
-                this.buyableCards = boardCards.getCardsLeft();
+                // Initialize per-turn mutable snapshot
+                startTurn(player);
 
-                
-                //ACTION PHASE
-                this.phase = GameState.TurnPhase.ACTION;
-                GameState actionState = getState();
-                Decision actionDecision = actionDecision(actionState);
-                while (!(actionDecision instanceof EndPhaseDecision && ((EndPhaseDecision) actionDecision).phase().equals(GameState.TurnPhase.ACTION))) {
-                    actionState = actionPhase(actionState, actionDecision);
-                    actionDecision = actionDecision(actionState);
-                }
+                // ACTION phase
+                mutableState.setPhase(GameState.TurnPhase.ACTION);
+                GameState actionState = runActionPhase();
 
-                //MONEY PHASE
-                this.phase = GameState.TurnPhase.MONEY;
-                GameState moneyState = actionState;
-                Decision moneyDecision = moneyDecision(moneyState);
-                while (!(moneyDecision instanceof EndPhaseDecision && ((EndPhaseDecision) moneyDecision).phase().equals(GameState.TurnPhase.MONEY))) {
-                    moneyState = moneyPhase(moneyState, moneyDecision);
-                    moneyDecision = moneyDecision(moneyState);
-                }
+                // MONEY phase
+                mutableState.setPhase(GameState.TurnPhase.MONEY);
+                GameState moneyState = runMoneyPhase(actionState);
 
-                //BUY PHASE
-                this.phase = GameState.TurnPhase.BUY;
-                GameState buyState = moneyState;
-                Decision buyDecision = buyDecision(buyState);
-                while (!(buyDecision instanceof EndPhaseDecision && ((EndPhaseDecision) buyDecision).phase().equals(GameState.TurnPhase.BUY))) {
-                    buyState = buyPhase(buyState, buyDecision);
-                    buyDecision = buyDecision(buyState);
+                // BUY phase
+                mutableState.setPhase(GameState.TurnPhase.BUY);
+                runBuyPhase(moneyState);
 
-                }
-
-                //CLEANUP PHASE
-                this.phase = GameState.TurnPhase.CLEANUP;
+                // CLEANUP
+                mutableState.setPhase(GameState.TurnPhase.CLEANUP);
                 cleanupPhase(player);
                 publishEvent(new EndTurnEvent());
-
-            }   
+            }
 
             gameOver = !boardCards.frameworksLeft();
-        }   
+        }
 
         List<PlayerResult> resultsList = new ArrayList<>();
         for (ParentPlayer player : players) {
@@ -166,24 +125,70 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
             PlayerResult result = new PlayerResult(player.getName(), playerCards.getScore(), allCards);
             resultsList.add(result);
         }
-        
-        // Sort in descending order by score
+
         resultsList.sort((a, b) -> Integer.compare(b.score(), a.score()));
-        
         ImmutableList<PlayerResult> playerResults = ImmutableList.copyOf(resultsList);
         return new GameResult(playerResults);
     }
 
-   
+    private void startTurn(ParentPlayer player) {
+        this.costReductionActive = false;
+        // Start from a fresh per-turn snapshot; all later mutations stay inside MutableGameState.
+        this.mutableState = new MutableGameState(
+            player.getName(),
+            playerCardsMap.get(player).getHand(),
+            GameState.TurnPhase.ACTION,
+            1,
+            0,
+            1,
+            boardCards.getPlayableCards(0)
+        );
+    }
 
-    private GameState cleanupPhase(ParentPlayer currentPlayer){
+    private GameState runActionPhase() {
+        GameState state = getState();
+        Decision decision = actionDecision(state);
+        // Keep consuming actions until the player explicitly ends the ACTION phase.
+        while (!isEndPhaseDecision(decision, GameState.TurnPhase.ACTION)) {
+            state = actionPhase(state, decision);
+            decision = actionDecision(state);
+        }
+        return state;
+    }
+
+    private GameState runMoneyPhase(GameState state) {
+        Decision decision = moneyDecision(state);
+        // MONEY phase mirrors ACTION: resolve plays until EndPhaseDecision(MONEY).
+        while (!isEndPhaseDecision(decision, GameState.TurnPhase.MONEY)) {
+            state = moneyPhase(state, decision);
+            decision = moneyDecision(state);
+        }
+        return state;
+    }
+
+    private GameState runBuyPhase(GameState state) {
+        Decision decision = buyDecision(state);
+        // BUY phase resolves one buy decision at a time until the player ends the phase.
+        while (!isEndPhaseDecision(decision, GameState.TurnPhase.BUY)) {
+            state = buyPhase(state, decision);
+            decision = buyDecision(state);
+        }
+        return state;
+    }
+
+    private boolean isEndPhaseDecision(Decision decision, GameState.TurnPhase expectedPhase) {
+        return decision instanceof EndPhaseDecision && ((EndPhaseDecision) decision).phase().equals(expectedPhase);
+    }
+
+    private GameState cleanupPhase(ParentPlayer currentPlayer) {
         PlayerCards playerCards = playerCardsMap.get(currentPlayer);
-        playerCards.refreshHand(); 
-        this.handObject = playerCards.getHand();  
-        this.availableActions = 1;
-        this.spendableMoney = 0;
-        this.availableBuys = 1;
-        this.buyableCards = boardCards.getCardsLeft();    
+        playerCards.refreshHand();
+
+        mutableState.setCurrentPlayerHand(playerCards.getHand());
+        mutableState.setAvailableActions(1);
+        mutableState.setSpendableMoney(0);
+        mutableState.setAvailableBuys(1);
+        mutableState.setBuyableCards(boardCards.getPlayableCards(0));
 
         return getState();
     }
@@ -197,13 +202,11 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
     }
 
     private Decision moneyDecision(GameState oldState) {
-
-        ParentPlayer currentPlayer = getPlayerByName(this.playerName);
+        ParentPlayer currentPlayer = getPlayerByName(mutableState.getCurrentPlayerName());
 
         ImmutableCollection<Card> unplayedCards = playerCardsMap.get(currentPlayer).getUnplayedCards();
         ImmutableList.Builder<Decision> optionsBuilder = new ImmutableList.Builder<>();
 
-        // End phase first so console input index 0 can always skip MONEY phase
         optionsBuilder.add(new EndPhaseDecision(GameState.TurnPhase.MONEY));
 
         for (Card card : unplayedCards) {
@@ -214,43 +217,36 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
         ImmutableList<Decision> options = optionsBuilder.build();
 
-        while(true) {
+        while (true) {
             Decision decision = currentPlayer.makeDecision(getState(), options, latestEventReason);
             if (checkDecision(decision, options)) {
                 return decision;
-            } else {
-                System.out.println("Invalid decision. Please choose a valid option.");
             }
+            System.out.println("Invalid decision. Please choose a valid option.");
         }
     }
 
-
     private GameState moneyPhase(GameState oldState, Decision decision) {
-
-        ParentPlayer currentPlayer = getPlayerByName(this.playerName);
+        ParentPlayer currentPlayer = getPlayerByName(mutableState.getCurrentPlayerName());
 
         if (decision instanceof PlayCardDecision) {
             Card playedCard = ((PlayCardDecision) decision).card();
             playerCardsMap.get(currentPlayer).playCard(playedCard);
             publishEvent(new PlayCardEvent(playedCard, currentPlayer.getName()));
-
-            this.spendableMoney += playedCard.value();
-            this.handObject = playerCardsMap.get(currentPlayer).getHand();
-            this.buyableCards = boardCards.getCardsLeft();
+            mutableState.setSpendableMoney(mutableState.getSpendableMoney() + playedCard.value());
+            mutableState.setCurrentPlayerHand(playerCardsMap.get(currentPlayer).getHand());
+            mutableState.setBuyableCards(boardCards.getPlayableCards(mutableState.getSpendableMoney()));
         }
 
         return getState();
     }
 
     private Decision buyDecision(GameState oldState) {
+        ParentPlayer currentPlayer = getPlayerByName(mutableState.getCurrentPlayerName());
 
-        ParentPlayer currentPlayer = getPlayerByName(this.playerName);
-
-        // Create a list of BuyDecision for each card type available
         ImmutableList.Builder<Decision> optionsBuilder = new ImmutableList.Builder<>();
-        CardStacks affordableCards = boardCards.getAffordableCards(this.spendableMoney);
-        if (this.availableBuys > 0) {
-            for (Card.Type cardType : affordableCards.getCardTypes()) {
+        if (mutableState.getAvailableBuys() > 0) {
+            for (Card.Type cardType : mutableState.getBuyableCards().getCardTypes()) {
                 optionsBuilder.add(new BuyDecision(cardType));
             }
         }
@@ -258,52 +254,42 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         optionsBuilder.add(new EndPhaseDecision(GameState.TurnPhase.BUY));
         ImmutableList<Decision> options = optionsBuilder.build();
 
-        //continue prompting until valid decision is made
-        while(true) {
+        while (true) {
             Decision decision = currentPlayer.makeDecision(getState(), options, latestEventReason);
             if (checkDecision(decision, options)) {
                 return decision;
-            } else {
-                System.out.println("Invalid decision. Please choose a valid option.");
             }
+            System.out.println("Invalid decision. Please choose a valid option.");
         }
     }
 
-
     private GameState buyPhase(GameState oldState, Decision decision) {
-
-        ParentPlayer currentPlayer = getPlayerByName(this.playerName);
+        ParentPlayer currentPlayer = getPlayerByName(mutableState.getCurrentPlayerName());
 
         Card.Type cardTypeToBuy = null;
         if (decision instanceof BuyDecision) {
             cardTypeToBuy = ((BuyDecision) decision).cardType();
         }
         if (cardTypeToBuy != null) {
-            // Gain the card
             Card gainedCard = boardCards.drawDeckCard(cardTypeToBuy);
             playerCardsMap.get(currentPlayer).gainCard(gainedCard);
             publishEvent(new GainCardEvent(cardTypeToBuy, currentPlayer.getName()));
-
-            this.spendableMoney -= gainedCard.cost() - (costReductionActive ? 1 : 0);
-            this.availableBuys -= 1;
-            this.buyableCards = boardCards.getCardsLeft();
+            mutableState.setSpendableMoney(mutableState.getSpendableMoney() - (gainedCard.cost() - (costReductionActive ? 1 : 0)));
+            mutableState.setAvailableBuys(mutableState.getAvailableBuys() - 1);
+            mutableState.setBuyableCards(boardCards.getPlayableCards(mutableState.getSpendableMoney()));
             
         }
 
         return getState();
     }
-    
-    
-    private Decision actionDecision(GameState oldState){
 
-        ParentPlayer currentPlayer = getPlayerByName(this.playerName);
+    private Decision actionDecision(GameState oldState) {
+        ParentPlayer currentPlayer = getPlayerByName(mutableState.getCurrentPlayerName());
 
-        //get all cards from hand and create options list
         ImmutableCollection<Card> unplayedCards = playerCardsMap.get(currentPlayer).getUnplayedCards();
         ImmutableList.Builder<Decision> optionsBuilder = new ImmutableList.Builder<>();
 
-        //determine actionDecisions if actions available
-        if (availableActions > 0) {
+        if (mutableState.getAvailableActions() > 0) {
             for (Card card : unplayedCards) {
                 Card.Type.Category category = getCardCategory(card);
                 if (category.equals(Card.Type.Category.ACTION)) {
@@ -317,51 +303,47 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
             }
         }
 
-        //add option to end action phase
         optionsBuilder.add(new EndPhaseDecision(GameState.TurnPhase.ACTION));
-
         ImmutableList<Decision> options = optionsBuilder.build();
 
-        //continue prompting until valid decision is made
-        while(true) {
+        while (true) {
             Decision decision = currentPlayer.makeDecision(getState(), options, latestEventReason);
             if (checkDecision(decision, options)) {
                 return decision;
-            } else {
-                System.out.println("Invalid decision. Please choose a valid option.");
             }
+            System.out.println("Invalid decision. Please choose a valid option.");
         }
     }
 
+    private GameState actionPhase(GameState oldState, Decision decision) {
+        ParentPlayer currentPlayer = getPlayerByName(mutableState.getCurrentPlayerName());
 
-    private GameState actionPhase(GameState oldState, Decision decision){
-
-        ParentPlayer currentPlayer = getPlayerByName(this.playerName);
-
-        this.availableActions--; //action has been played
+        // The action being resolved always consumes one available action.
+        mutableState.setAvailableActions(mutableState.getAvailableActions() - 1);
 
         Card playedCard = null;
         if (decision instanceof PlayCardDecision) {
             playedCard = ((PlayCardDecision) decision).card();
-            playerCardsMap.get(currentPlayer).playCard(playedCard); //move card from hand to play area
+            playerCardsMap.get(currentPlayer).playCard(playedCard);
             publishEvent(new PlayCardEvent(playedCard, currentPlayer.getName()));
         }
-        handObject = playerCardsMap.get(currentPlayer).getHand(); //create new record class hand after playing card
+
+        mutableState.setCurrentPlayerHand(playerCardsMap.get(currentPlayer).getHand());
 
         GameState newState = null;
         if (playedCard != null) {
-            newState = ActionCards.playActionCard(playedCard, getState(), currentPlayer, players, playerCardsMap, boardCards);
-            if (ActionCards.activatesCostReduction(playedCard)) {
-                this.costReductionActive = true; // activate cost reduction for this turn
+            // Action-card effects are delegated to keep Engine focused on phase orchestration.
+            newState = actionCardHandler.execute(playedCard, getState(), currentPlayer);
+            if (actionCardHandler.activatesCostReduction(playedCard)) {
+                this.costReductionActive = true;
             }
         }
 
         if (newState == null) {
             throw new IllegalStateException("Card function not implemented for card: " + playedCard);
-        } else{
-            updateState(newState);
         }
-        
+
+        updateState(newState);
         return getState();
     }
 
@@ -372,10 +354,7 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
             }
         }
         return false;
-
     }
-
-
 
     private ParentPlayer getPlayerByName(String playerName) {
         for (ParentPlayer player : players) {
@@ -385,7 +364,8 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         }
         throw new IllegalStateException("Current player not found: " + playerName);
     }
+
     private Card.Type.Category getCardCategory(Card card) {
-           return card.type().category();
+        return card.type().category();
     }
 }

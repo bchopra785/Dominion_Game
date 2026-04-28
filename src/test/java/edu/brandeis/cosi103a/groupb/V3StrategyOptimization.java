@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -46,7 +47,7 @@ public class V3StrategyOptimization {
         generationWins.add(0.0f); // Initial win rate for generation 0
     }
     
-
+    @Disabled("This is a long-running optimization test, not a unit test")
     @Test
     public void runSimulation(){
 

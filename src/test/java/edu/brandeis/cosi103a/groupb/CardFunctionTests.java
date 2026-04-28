@@ -103,7 +103,7 @@ public class CardFunctionTests {
         int actions = 1;
         int money = playerCards.getCostInHand();
         int buys = 1;
-        CardStacks buyable = board.getPlayableCards(money);
+        CardStacks buyable = board.getCardsLeft();
         return new GameState(playerName, hand, GameState.TurnPhase.ACTION, actions, money, buys, buyable);
     }
 

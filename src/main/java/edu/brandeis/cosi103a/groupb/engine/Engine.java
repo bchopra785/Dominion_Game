@@ -21,7 +21,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
+
+
+//client
 public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
     private final List<ParentPlayer> players;
@@ -35,6 +41,19 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
     private Optional<Event> latestEventReason;
 
     public Engine(List<ParentPlayer> players) {
+        this(players, null);
+    }
+
+    /**
+     * Create an Engine with optional forced board card exclusions.
+     * Used for optimization where specific cards must be excluded from the board.
+     * 
+     * @param players List of players
+     * @param forcedExcludeCards Set of card types to exclude from board (null for random selection)
+     */
+    public Engine(List<ParentPlayer> players, Set<Card.Type> forcedExcludeCards) {
+        
+        //check for valid number of players
         if (players == null) {
             throw new IllegalArgumentException("Players list cannot be null");
         }
@@ -44,7 +63,13 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
         this.players = players;
         this.costReductionActive = false;
-        this.boardCards = new BoardCards(players.size());
+
+        //initialize board cards and player cards
+        if (forcedExcludeCards != null) {
+            this.boardCards = new BoardCards(players.size(), forcedExcludeCards);
+        } else {
+            this.boardCards = new BoardCards(players.size());
+        }
         this.playerCardsMap = new HashMap<>();
         this.actionCardHandler = new ActionCardHandler(players, playerCardsMap, boardCards);
         this.latestEventReason = Optional.empty();
@@ -68,21 +93,49 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
     }
 
     public GameResult play() throws PlayerViolationException {
+        
         boolean gameOver = false;
         while (!gameOver) {
             for (ParentPlayer player : players) {
-                startTurn(player);
+                this.playerName = player.getName();
+                this.costReductionActive = false; // reset cost reduction each turn
+                this.handObject = playerCardsMap.get(player).getHand();
+                this.availableActions = 1;
+                this.spendableMoney = 0;
+                this.availableBuys = 1;
+                this.buyableCards = boardCards.getCardsLeft();
 
-                mutableState.setPhase(GameState.TurnPhase.ACTION);
-                GameState actionState = runActionPhase();
+                
+                //ACTION PHASE
+                this.phase = GameState.TurnPhase.ACTION;
+                GameState actionState = getState();
+                Decision actionDecision = actionDecision(actionState);
+                while (!(actionDecision instanceof EndPhaseDecision && ((EndPhaseDecision) actionDecision).phase().equals(GameState.TurnPhase.ACTION))) {
+                    actionState = actionPhase(actionState, actionDecision);
+                    actionDecision = actionDecision(actionState);
+                }
 
-                mutableState.setPhase(GameState.TurnPhase.MONEY);
-                GameState moneyState = runMoneyPhase(actionState);
+                //MONEY PHASE
+                this.phase = GameState.TurnPhase.MONEY;
+                GameState moneyState = actionState;
+                Decision moneyDecision = moneyDecision(moneyState);
+                while (!(moneyDecision instanceof EndPhaseDecision && ((EndPhaseDecision) moneyDecision).phase().equals(GameState.TurnPhase.MONEY))) {
+                    moneyState = moneyPhase(moneyState, moneyDecision);
+                    moneyDecision = moneyDecision(moneyState);
+                }
 
-                mutableState.setPhase(GameState.TurnPhase.BUY);
-                runBuyPhase(moneyState);
+                //BUY PHASE
+                this.phase = GameState.TurnPhase.BUY;
+                GameState buyState = moneyState;
+                Decision buyDecision = buyDecision(buyState);
+                while (!(buyDecision instanceof EndPhaseDecision && ((EndPhaseDecision) buyDecision).phase().equals(GameState.TurnPhase.BUY))) {
+                    buyState = buyPhase(buyState, buyDecision);
+                    buyDecision = buyDecision(buyState);
 
-                mutableState.setPhase(GameState.TurnPhase.CLEANUP);
+                }
+
+                //CLEANUP PHASE
+                this.phase = GameState.TurnPhase.CLEANUP;
                 cleanupPhase(player);
                 publishEvent(new EndTurnEvent());
             }
@@ -154,13 +207,12 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
 
     private GameState cleanupPhase(ParentPlayer currentPlayer) {
         PlayerCards playerCards = playerCardsMap.get(currentPlayer);
-        playerCards.refreshHand();
-
-        mutableState.setCurrentPlayerHand(playerCards.getHand());
-        mutableState.setAvailableActions(1);
-        mutableState.setSpendableMoney(0);
-        mutableState.setAvailableBuys(1);
-        mutableState.setBuyableCards(boardCards.getPlayableCards(0));
+        playerCards.refreshHand(); 
+        this.handObject = playerCards.getHand();  
+        this.availableActions = 1;
+        this.spendableMoney = 0;
+        this.availableBuys = 1;
+        this.buyableCards = boardCards.getCardsLeft();    
 
         return getState();
     }
@@ -206,9 +258,9 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
             playerCardsMap.get(currentPlayer).playCard(playedCard);
             publishEvent(new PlayCardEvent(playedCard, currentPlayer.getName()));
 
-            mutableState.setSpendableMoney(mutableState.getSpendableMoney() + playedCard.value());
-            mutableState.setCurrentPlayerHand(playerCardsMap.get(currentPlayer).getHand());
-            mutableState.setBuyableCards(boardCards.getPlayableCards(mutableState.getSpendableMoney()));
+            this.spendableMoney += playedCard.value();
+            this.handObject = playerCardsMap.get(currentPlayer).getHand();
+            this.buyableCards = boardCards.getCardsLeft();
         }
 
         return getState();
@@ -218,8 +270,9 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
         ParentPlayer currentPlayer = getPlayerByName(mutableState.getCurrentPlayerName());
 
         ImmutableList.Builder<Decision> optionsBuilder = new ImmutableList.Builder<>();
-        if (mutableState.getAvailableBuys() > 0) {
-            for (Card.Type cardType : mutableState.getBuyableCards().getCardTypes()) {
+        CardStacks affordableCards = boardCards.getAffordableCards(this.spendableMoney);
+        if (this.availableBuys > 0) {
+            for (Card.Type cardType : affordableCards.getCardTypes()) {
                 optionsBuilder.add(new BuyDecision(cardType));
             }
         }
@@ -248,9 +301,10 @@ public class Engine implements edu.brandeis.cosi.atg.engine.Engine {
             playerCardsMap.get(currentPlayer).gainCard(gainedCard);
             publishEvent(new GainCardEvent(cardTypeToBuy, currentPlayer.getName()));
 
-            mutableState.setSpendableMoney(mutableState.getSpendableMoney() - (gainedCard.cost() - (costReductionActive ? 1 : 0)));
-            mutableState.setAvailableBuys(mutableState.getAvailableBuys() - 1);
-            mutableState.setBuyableCards(boardCards.getPlayableCards(mutableState.getSpendableMoney()));
+            this.spendableMoney -= gainedCard.cost() - (costReductionActive ? 1 : 0);
+            this.availableBuys -= 1;
+            this.buyableCards = boardCards.getCardsLeft();
+            
         }
 
         return getState();

@@ -1,9 +1,11 @@
 package edu.brandeis.cosi103a.groupb.engine;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Set;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -28,10 +30,14 @@ public class BoardCards {
     /**
      * Creates board card piles for a game with the given number of players.
      * The BUG pile is sized at 10 × numPlayers per the v2 API specification.
+     * Foundational cards (money and victory) are always present.
+     * Exactly 10 out of 15 action cards are randomly selected.
      */
     public BoardCards(int numPlayers) {
         // build each pile via the helper and stash in a single map
         cardMap = new HashMap<>();
+        
+        // Always include foundational cards: money and victory
         cardMap.put(Card.Type.METHOD, createStack(Card.Type.METHOD, 14));
         cardMap.put(Card.Type.MODULE, createStack(Card.Type.MODULE, 8));
         cardMap.put(Card.Type.FRAMEWORK, createStack(Card.Type.FRAMEWORK, 8));
@@ -40,12 +46,85 @@ public class BoardCards {
         cardMap.put(Card.Type.ETHEREUM, createStack(Card.Type.ETHEREUM, 40));
         cardMap.put(Card.Type.DOGECOIN, createStack(Card.Type.DOGECOIN, 30));
 
-        cardMap.put(Card.Type.REFACTOR, createStack(Card.Type.REFACTOR, 10));
-        cardMap.put(Card.Type.EVERGREEN_TEST, createStack(Card.Type.EVERGREEN_TEST, 10));
-        cardMap.put(Card.Type.CODE_REVIEW, createStack(Card.Type.CODE_REVIEW, 10));
         // BUG pile: 10 cards per player as per API v2 specification
         cardMap.put(Card.Type.BUG, createStack(Card.Type.BUG, 10 * numPlayers));
+        
+        // Randomly select 10 out of 15 action cards
+        List<Card.Type> actionCards = new ArrayList<>();
+        actionCards.add(Card.Type.REFACTOR);
+        actionCards.add(Card.Type.EVERGREEN_TEST);
+        actionCards.add(Card.Type.CODE_REVIEW);
+        actionCards.add(Card.Type.BACKLOG);
+        actionCards.add(Card.Type.MONITORING);
+        actionCards.add(Card.Type.MERGE_CONFLICT);
+        actionCards.add(Card.Type.TECH_DEBT);
+        actionCards.add(Card.Type.IPO);
+        actionCards.add(Card.Type.PARALLELIZATION);
+        actionCards.add(Card.Type.DEPLOYMENT_PIPELINE);
+        actionCards.add(Card.Type.DAILY_SCRUM);
+        actionCards.add(Card.Type.UNIT_TEST);
+        actionCards.add(Card.Type.HACK);
+        actionCards.add(Card.Type.RANSOMWARE);
+        actionCards.add(Card.Type.SPRINT_PLANNING);
+        
+        // Shuffle and select first 10
+        Collections.shuffle(actionCards);
+        for (int i = 0; i < 10; i++) {
+            Card.Type cardType = actionCards.get(i);
+            cardMap.put(cardType, createStack(cardType, 10));
+        }
+    }
 
+    /**
+     * Creates board card piles with specific cards excluded.
+     * Used for optimization where certain board configurations need to be tested.
+     * 
+     * @param numPlayers Number of players
+     * @param excludeCards Set of card types to exclude from the board action cards
+     */
+    public BoardCards(int numPlayers, Set<Card.Type> excludeCards) {
+        // build each pile via the helper and stash in a single map
+        cardMap = new HashMap<>();
+        
+        // Always include foundational cards: money and victory
+        cardMap.put(Card.Type.METHOD, createStack(Card.Type.METHOD, 14));
+        cardMap.put(Card.Type.MODULE, createStack(Card.Type.MODULE, 8));
+        cardMap.put(Card.Type.FRAMEWORK, createStack(Card.Type.FRAMEWORK, 8));
+
+        cardMap.put(Card.Type.BITCOIN, createStack(Card.Type.BITCOIN, 60));
+        cardMap.put(Card.Type.ETHEREUM, createStack(Card.Type.ETHEREUM, 40));
+        cardMap.put(Card.Type.DOGECOIN, createStack(Card.Type.DOGECOIN, 30));
+
+        // BUG pile: 10 cards per player as per API v2 specification
+        cardMap.put(Card.Type.BUG, createStack(Card.Type.BUG, 10 * numPlayers));
+        
+        // All 15 action cards available
+        List<Card.Type> actionCards = new ArrayList<>();
+        actionCards.add(Card.Type.REFACTOR);
+        actionCards.add(Card.Type.EVERGREEN_TEST);
+        actionCards.add(Card.Type.CODE_REVIEW);
+        actionCards.add(Card.Type.BACKLOG);
+        actionCards.add(Card.Type.MONITORING);
+        actionCards.add(Card.Type.MERGE_CONFLICT);
+        actionCards.add(Card.Type.TECH_DEBT);
+        actionCards.add(Card.Type.IPO);
+        actionCards.add(Card.Type.PARALLELIZATION);
+        actionCards.add(Card.Type.DEPLOYMENT_PIPELINE);
+        actionCards.add(Card.Type.DAILY_SCRUM);
+        actionCards.add(Card.Type.UNIT_TEST);
+        actionCards.add(Card.Type.HACK);
+        actionCards.add(Card.Type.RANSOMWARE);
+        actionCards.add(Card.Type.SPRINT_PLANNING);
+        
+        // Remove excluded cards
+        if (excludeCards != null) {
+            actionCards.removeAll(excludeCards);
+        }
+        
+        // Add all remaining action cards (should be exactly 10 if 5 excluded, but be flexible)
+        for (Card.Type cardType : actionCards) {
+            cardMap.put(cardType, createStack(cardType, 10));
+        }
     }
 
     // Only method that should create cards
@@ -66,6 +145,14 @@ public class BoardCards {
         return builder.build();
     }
 
+    public CardStacks getCardsLeft() {
+        ImmutableMap.Builder<Card.Type, Integer> builder = ImmutableMap.builder();
+        for (Map.Entry<Card.Type, List<Card>> entry : cardMap.entrySet()) {
+            builder.put(entry.getKey(), entry.getValue().size());
+        }
+        return new CardStacks(builder.build());
+    }
+
     // Draws a card, should be returned to engine
     public Card drawDeckCard(Card.Type t){
         List<Card> stack = cardMap.get(t);
@@ -82,7 +169,7 @@ public class BoardCards {
 
 
     //shouldn't this be called buyablecards?
-    public CardStacks getPlayableCards(int costInHand) {
+    public CardStacks getAffordableCards(int costInHand) {
         // For now, all cards in hand are playable, but this can be changed to check for action cards and other conditions
         ImmutableMap<Card.Type, Integer> cardStacks = getCardStacks();
 
@@ -90,7 +177,7 @@ public class BoardCards {
         
         for(Card.Type t: cardStacks.keySet()){
             // Need to have the card and have enough cost in hand to play it
-            if ((cardStacks.get(t) > 0) & (costInHand >= t.cost())) {
+            if ((cardStacks.get(t) > 0) && (costInHand >= t.cost())) {
                 playableCardsBuilder.put(t, cardStacks.get(t));
             }
         }

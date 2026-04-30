@@ -3,6 +3,7 @@ package edu.brandeis.cosi103a.groupb;
 import java.util.List;
 
 import org.springframework.boot.SpringApplication;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,33 +20,10 @@ import edu.brandeis.cosi103a.groupb.network.LogEventRequest;
 @RestController
 public class PlayerServer {
 
-    private static ParentPlayer strategyPlayer;
+    private ParentPlayer strategyPlayer;
 
-    public static void main(String[] args) {
-        // Determine which strategy to use from environment variable
-        String strategy = System.getenv("PLAYER_STRATEGY");
-        if (strategy == null || strategy.isEmpty()) {
-            strategy = "V3"; // default to V3
-        }
-
-        System.out.println("Initializing PlayerServer with strategy: " + strategy);
-
-        switch (strategy.toUpperCase()) {
-            case "V2":
-                strategyPlayer = new V2StrategyPlayer("V2StrategyPlayer");
-                break;
-            case "V3":
-                strategyPlayer = new V3StrategyPlayer("V3StrategyPlayer");
-                break;
-            case "BIGMONEY":
-                strategyPlayer = new BigMoneyPlayer("BigMoneyPlayer");
-                break;
-            default:
-                System.out.println("Unknown strategy: " + strategy + ". Defaulting to V3.");
-                strategyPlayer = new V3StrategyPlayer("V3StrategyPlayer");
-        }
-
-        SpringApplication.run(PlayerServer.class, args);
+    public PlayerServer(ParentPlayer strategyPlayer) {
+        this.strategyPlayer = strategyPlayer;
     }
 
 @PostMapping(value = "/decide", consumes = "application/json", produces = "application/json") 

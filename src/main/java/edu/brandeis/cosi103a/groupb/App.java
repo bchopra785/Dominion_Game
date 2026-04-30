@@ -23,4 +23,27 @@ public class App {
     public Module guavaModule() {
         return new GuavaModule();
     }
+
+    @Bean
+    public ParentPlayer strategyPlayerBean() {
+        // Determine which strategy to use from environment variable
+        String strategy = System.getenv("PLAYER_STRATEGY");
+        if (strategy == null || strategy.isEmpty()) {
+            strategy = "V3"; // default to V3
+        }
+
+        System.out.println("Initializing PlayerServer with strategy: " + strategy);
+
+        switch (strategy.toUpperCase()) {
+            case "V2":
+                return new V2StrategyPlayer("V2StrategyPlayer");
+            case "V3":
+                return new V3StrategyPlayer("V3StrategyPlayer");
+            case "BIGMONEY":
+                return new BigMoneyPlayer("BigMoneyPlayer");
+            default:
+                System.out.println("Unknown strategy: " + strategy + ". Defaulting to V3.");
+                return new V3StrategyPlayer("V3StrategyPlayer");
+        }
+    }
 }

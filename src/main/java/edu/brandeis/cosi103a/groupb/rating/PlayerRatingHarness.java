@@ -207,21 +207,23 @@ public class PlayerRatingHarness {
         out.println("=== Additional Metrics ===");
 
         Map<String, Integer> wins = new LinkedHashMap<>();
-        Map<String, Integer> moneyTotals = new LinkedHashMap<>();
-        Map<String, Integer> actionCardTotals = new LinkedHashMap<>();
+        Map<String, Integer> scoreTotals = new LinkedHashMap<>();
+        Map<String, Integer> rankTotals = new LinkedHashMap<>();
         Map<String, Integer> gameCounts = new LinkedHashMap<>();
         
         for (GameRecord game : rawResults) {
             for (GameRecord.PlayerRecord playerResult : game.playerResults()) {
                 String name = playerResult.playerName();
                 wins.putIfAbsent(name, 0);
-                moneyTotals.putIfAbsent(name, 0);
-                actionCardTotals.putIfAbsent(name, 0);
+                scoreTotals.putIfAbsent(name, 0);
+                rankTotals.putIfAbsent(name, 0);
                 gameCounts.putIfAbsent(name, 0);
                 
                 if (playerResult.winner()) {
                     wins.put(name, wins.get(name) + 1);
                 }
+                scoreTotals.put(name, scoreTotals.get(name) + playerResult.score());
+                rankTotals.put(name, rankTotals.get(name) + playerResult.rank());
                 gameCounts.put(name, gameCounts.get(name) + 1);
             }
         }
@@ -239,9 +241,9 @@ public class PlayerRatingHarness {
         for (Map.Entry<String, Integer> entry : sortedWins) {
             String playerName = entry.getKey();
             int gameCount = gameCounts.get(playerName);
-            double avgMoney = gameCount > 0 ? (double) moneyTotals.get(playerName) / gameCount : 0;
-            double avgActionCards = gameCount > 0 ? (double) actionCardTotals.get(playerName) / gameCount : 0;
-            out.printf("- %s: %.1f money, %.1f action cards%n", playerName, avgMoney, avgActionCards);
+            double avgScore = gameCount > 0 ? (double) scoreTotals.get(playerName) / gameCount : 0;
+            double avgRank = gameCount > 0 ? (double) rankTotals.get(playerName) / gameCount : 0;
+            out.printf("- %s: %.1f average score, %.1f average rank%n", playerName, avgScore, avgRank);
         }
         out.println();
     }

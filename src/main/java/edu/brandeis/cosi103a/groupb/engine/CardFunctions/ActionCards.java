@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import edu.brandeis.cosi.atg.cards.Card;
+import edu.brandeis.cosi.atg.decisions.ChooseEffectDecision;
 import edu.brandeis.cosi.atg.decisions.Decision;
 import edu.brandeis.cosi.atg.decisions.DiscardCardDecision;
 import edu.brandeis.cosi.atg.decisions.EndPhaseDecision;
@@ -147,13 +148,13 @@ public final class ActionCards {
 
         handObject = playerCards.getHand();
 
-        ImmutableList.Builder<TrashCardDecision> trashOptionsBuilder = new ImmutableList.Builder<>();
+        ImmutableList.Builder<Decision> trashOptionsBuilder = new ImmutableList.Builder<>();
         for (Card card : handObject.unplayedCards()) {
             trashOptionsBuilder.add(new TrashCardDecision(card));
         }
 
-        ImmutableList<TrashCardDecision> trashOptions = trashOptionsBuilder.build();
-        Decision trashDecision = player.makeDecision(state, ImmutableList.copyOf(trashOptions));
+        ImmutableList<Decision> trashOptions = trashOptionsBuilder.build();
+        Decision trashDecision = player.makeDecision(state, trashOptions);
 
         Card cardToTrash = ((TrashCardDecision) trashDecision).card();
         int trashedValue = cardToTrash.value() + 2;
@@ -379,27 +380,36 @@ public final class ActionCards {
         int availableBuys = state.availableBuys();
         CardStacks buyableCards = state.buyableCards();
 
+        // UNIT_TEST is a choice card, so resolve exactly one decision and apply only the selected branch.
         ImmutableList<Decision> options = ImmutableList.of(
-            new EndPhaseDecision(GameState.TurnPhase.ACTION),
-            new EndPhaseDecision(GameState.TurnPhase.BUY),
-            new EndPhaseDecision(GameState.TurnPhase.CLEANUP)
+            new ChooseEffectDecision(ChooseEffectDecision.Effect.UNIT_TEST_PLUS_TWO_ACTIONS),
+            new ChooseEffectDecision(ChooseEffectDecision.Effect.UNIT_TEST_PLUS_TWO_MONEY),
+            new ChooseEffectDecision(ChooseEffectDecision.Effect.UNIT_TEST_PLUS_TWO_CARDS)
         );
 
         Decision decision = player.makeDecision(state, options);
-        int index = options.indexOf(decision);
-
-        if (index == 0) {
-            actionAmt += 2;
-        } else if (index == 1) {
-            totalMoney += 2;
-            buyableCards = boardCards.getCardsLeft();
-        } else if (index == 2) {
-            playerCards.drawToHand();
-            playerCards.drawToHand();
-            handObject = playerCards.getHand();
-            totalMoney = playerCards.getCostInHand();
-            buyableCards = boardCards.getCardsLeft();
+        if (!(decision instanceof ChooseEffectDecision)) {
+            throw new IllegalStateException("Invalid UNIT_TEST decision: " + decision);
         }
+
+        switch (((ChooseEffectDecision) decision).effect()) {
+            case UNIT_TEST_PLUS_TWO_ACTIONS:
+                actionAmt += 2;
+                break;
+            case UNIT_TEST_PLUS_TWO_MONEY:
+                totalMoney += 2;
+                break;
+            case UNIT_TEST_PLUS_TWO_CARDS:
+                playerCards.drawToHand();
+                playerCards.drawToHand();
+                handObject = playerCards.getHand();
+                totalMoney = playerCards.getCostInHand();
+                break;
+            default:
+                throw new IllegalStateException("Unsupported UNIT_TEST effect: " + decision);
+        }
+
+        buyableCards = boardCards.getCardsLeft();
 
         return new GameState(playerName, handObject, phase, actionAmt, totalMoney, availableBuys, buyableCards);
     }

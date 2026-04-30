@@ -16,8 +16,10 @@ import org.junit.jupiter.api.Test;
 import com.google.common.collect.ImmutableList;
 
 import edu.brandeis.cosi.atg.cards.Card;
+import edu.brandeis.cosi.atg.decisions.ChooseEffectDecision;
 import edu.brandeis.cosi.atg.decisions.Decision;
 import edu.brandeis.cosi.atg.decisions.DiscardCardDecision;
+import edu.brandeis.cosi.atg.decisions.PlayCardDecision;
 import edu.brandeis.cosi.atg.decisions.TrashCardDecision;
 import edu.brandeis.cosi.atg.state.CardStacks;
 import edu.brandeis.cosi.atg.state.GameState;
@@ -719,26 +721,50 @@ public class CardFunctionTests {
 
     @Test
     public void testUnitTest_choiceBranchesWork() throws Exception {
+        GameState afterActions = runUnitTestChoice(ChooseEffectDecision.Effect.UNIT_TEST_PLUS_TWO_ACTIONS);
+        assertEquals(3, afterActions.availableActions());
+
+        GameState afterMoney = runUnitTestChoice(ChooseEffectDecision.Effect.UNIT_TEST_PLUS_TWO_MONEY);
+        assertEquals(2, afterMoney.spendableMoney());
+
+        GameState afterCards = runUnitTestChoice(ChooseEffectDecision.Effect.UNIT_TEST_PLUS_TWO_CARDS);
+        assertEquals(3, afterCards.currentPlayerHand().unplayedCards().size());
+    }
+
+    @Test
+    public void testUnitTest_rejectsInvalidDecision() throws Exception {
         StubPlayer player = new StubPlayer("P1");
         TestPlayerCards pc = new TestPlayerCards(board);
         player.setPlayerCards(pc);
+        pc.setUnplayedCards(List.of(new Card(Card.Type.UNIT_TEST, 0)));
+
+        player.queueDecision(new edu.brandeis.cosi.atg.decisions.EndPhaseDecision(GameState.TurnPhase.ACTION));
+
+        assertThrows(IllegalStateException.class, () -> ActionCards.playActionCard(
+            new Card(Card.Type.UNIT_TEST, 0),
+            makeState(player.getName(), pc),
+            player,
+            List.of(player),
+            Map.of(player, pc),
+            board
+        ));
+    }
+
+    private GameState runUnitTestChoice(ChooseEffectDecision.Effect effect) throws Exception {
+        StubPlayer player = new StubPlayer("P1");
+        TestPlayerCards pc = new TestPlayerCards(board);
+        player.setPlayerCards(pc);
+        pc.setDeck(List.of(
+            new Card(Card.Type.METHOD, 0),
+            new Card(Card.Type.MODULE, 0),
+            new Card(Card.Type.FRAMEWORK, 0)
+        ));
+        pc.setUnplayedCards(List.of(new Card(Card.Type.UNIT_TEST, 0)));
 
         GameState before = makeState(player.getName(), pc);
-        // Option 0: +2 Actions
-        player.queueDecision(new edu.brandeis.cosi.atg.decisions.EndPhaseDecision(GameState.TurnPhase.ACTION));
-        GameState after0 = ActionCards.playActionCard(
-            new Card(Card.Type.UNIT_TEST, 0),
-            before,
-            player,
-            List.of(player),
-            Map.of(player, pc),
-            board
-        );
-        assertEquals(before.availableActions() + 2, after0.availableActions());
+        player.queueDecision(new ChooseEffectDecision(effect));
 
-        // Option 1: +$2
-        player.queueDecision(new edu.brandeis.cosi.atg.decisions.EndPhaseDecision(GameState.TurnPhase.BUY));
-        GameState after1 = ActionCards.playActionCard(
+        return ActionCards.playActionCard(
             new Card(Card.Type.UNIT_TEST, 0),
             before,
             player,
@@ -746,19 +772,6 @@ public class CardFunctionTests {
             Map.of(player, pc),
             board
         );
-        assertEquals(before.spendableMoney() + 2, after1.spendableMoney());
-
-        // Option 2: +2 Cards
-        player.queueDecision(new edu.brandeis.cosi.atg.decisions.EndPhaseDecision(GameState.TurnPhase.CLEANUP));
-        GameState after2 = ActionCards.playActionCard(
-            new Card(Card.Type.UNIT_TEST, 0),
-            before,
-            player,
-            List.of(player),
-            Map.of(player, pc),
-            board
-        );
-        assertEquals(before.currentPlayerHand().unplayedCards().size() + 2, after2.currentPlayerHand().unplayedCards().size());
     }
 
     @Test
@@ -876,6 +889,187 @@ public class CardFunctionTests {
         ActionCards.playActionCard(new Card(Card.Type.EVERGREEN_TEST, 0), makeState(p1.getName(), pc1), p1, players, map, board);
         // Should not throw, discard remains 0
         assertEquals(0, pc2.getDiscardSize());
+    }
+
+    @Test
+    public void testEvergreenTest_threePlayersMixedMonitoringAndHandSizes() throws Exception {
+        StubPlayer attacker = new StubPlayer("A");
+        StubPlayer monitored = new StubPlayer("B");
+        StubPlayer unprotected = new StubPlayer("C");
+
+        TestPlayerCards attackerCards = new TestPlayerCards(board);
+        TestPlayerCards monitoredCards = new TestPlayerCards(board);
+        TestPlayerCards unprotectedCards = new TestPlayerCards(board);
+
+        attacker.setPlayerCards(attackerCards);
+        monitored.setPlayerCards(monitoredCards);
+        unprotected.setPlayerCards(unprotectedCards);
+
+        monitoredCards.setUnplayedCards(List.of(new Card(Card.Type.MONITORING, 0)));
+        unprotectedCards.setUnplayedCards(List.of(new Card(Card.Type.BITCOIN, 0), new Card(Card.Type.ETHEREUM, 1)));
+
+        List<ParentPlayer> players = List.of(attacker, monitored, unprotected);
+        Map<ParentPlayer, PlayerCards> map = Map.of(attacker, attackerCards, monitored, monitoredCards, unprotected, unprotectedCards);
+
+        ActionCards.playActionCard(new Card(Card.Type.EVERGREEN_TEST, 0), makeState(attacker.getName(), attackerCards), attacker, players, map, board);
+
+        assertEquals(0, monitoredCards.getDiscardSize(), "Monitoring should block Evergreen Test");
+        assertEquals(1, unprotectedCards.getDiscardSize(), "Unprotected player should gain exactly one bug");
+        assertEquals(0, attackerCards.getDiscardSize(), "Attacker should not discard anything");
+    }
+
+    @Test
+    public void testDailyScrum_threePlayersMixedHandsAndEmptyDecks() throws Exception {
+        StubPlayer p1 = new StubPlayer("P1");
+        StubPlayer p2 = new StubPlayer("P2");
+        StubPlayer p3 = new StubPlayer("P3");
+
+        TestPlayerCards pc1 = new TestPlayerCards(board);
+        TestPlayerCards pc2 = new TestPlayerCards(board);
+        TestPlayerCards pc3 = new TestPlayerCards(board);
+
+        p1.setPlayerCards(pc1);
+        p2.setPlayerCards(pc2);
+        p3.setPlayerCards(pc3);
+
+        pc1.setDeck(List.of(
+            new Card(Card.Type.BITCOIN, 0),
+            new Card(Card.Type.ETHEREUM, 1),
+            new Card(Card.Type.DOGECOIN, 2),
+            new Card(Card.Type.METHOD, 2)
+        ));
+        pc2.setDeck(List.of(new Card(Card.Type.BITCOIN, 0)));
+        pc3.setDeck(List.of());
+
+        pc2.setUnplayedCards(List.of());
+        pc3.setUnplayedCards(List.of());
+
+        List<ParentPlayer> players = List.of(p1, p2, p3);
+        Map<ParentPlayer, PlayerCards> map = Map.of(p1, pc1, p2, pc2, p3, pc3);
+
+        GameState after = ActionCards.playActionCard(new Card(Card.Type.DAILY_SCRUM, 0), makeState(p1.getName(), pc1), p1, players, map, board);
+
+        assertEquals(2, after.availableBuys(), "Daily Scrum should add one buy");
+        assertEquals(4, after.currentPlayerHand().unplayedCards().size(), "Current player draws four cards");
+        assertEquals(1, pc2.getHand().unplayedCards().size(), "Player with one-card deck should draw exactly one card");
+        assertEquals(0, pc3.getHand().unplayedCards().size(), "Empty deck should remain empty");
+        assertEquals(0, pc2.getDiscardSize(), "Daily Scrum should not discard cards");
+        assertEquals(0, pc3.getDiscardSize(), "Daily Scrum should not discard cards");
+    }
+
+    @Test
+    public void testHack_threePlayersMixedHandsAndMonitoring() throws Exception {
+        StubPlayer attacker = new StubPlayer("A");
+        StubPlayer monitored = new StubPlayer("B");
+        StubPlayer vulnerable = new StubPlayer("C");
+
+        TestPlayerCards attackerCards = new TestPlayerCards(board);
+        TestPlayerCards monitoredCards = new TestPlayerCards(board);
+        TestPlayerCards vulnerableCards = new TestPlayerCards(board);
+
+        attacker.setPlayerCards(attackerCards);
+        monitored.setPlayerCards(monitoredCards);
+        vulnerable.setPlayerCards(vulnerableCards);
+
+        monitoredCards.setUnplayedCards(List.of(
+            new Card(Card.Type.MONITORING, 0),
+            new Card(Card.Type.BITCOIN, 0),
+            new Card(Card.Type.ETHEREUM, 1),
+            new Card(Card.Type.DOGECOIN, 2),
+            new Card(Card.Type.METHOD, 2)
+        ));
+        vulnerableCards.setUnplayedCards(List.of(
+            new Card(Card.Type.BITCOIN, 0),
+            new Card(Card.Type.ETHEREUM, 1),
+            new Card(Card.Type.DOGECOIN, 2),
+            new Card(Card.Type.METHOD, 2),
+            new Card(Card.Type.MODULE, 3)
+        ));
+
+        vulnerable.queueDecision(new DiscardCardDecision(new Card(Card.Type.BITCOIN, 0)));
+        vulnerable.queueDecision(new DiscardCardDecision(new Card(Card.Type.ETHEREUM, 1)));
+
+        List<ParentPlayer> players = List.of(attacker, monitored, vulnerable);
+        Map<ParentPlayer, PlayerCards> map = Map.of(attacker, attackerCards, monitored, monitoredCards, vulnerable, vulnerableCards);
+
+        ActionCards.playActionCard(new Card(Card.Type.HACK, 0), makeState(attacker.getName(), attackerCards), attacker, players, map, board);
+
+        assertEquals(5, monitoredCards.getHand().unplayedCards().size(), "Monitoring should block Hack entirely");
+        assertEquals(3, vulnerableCards.getHand().unplayedCards().size(), "Vulnerable player should be reduced to three cards");
+    }
+
+    @Test
+    public void testRansomware_threePlayersMixedHandsAndMonitoring() throws Exception {
+        StubPlayer attacker = new StubPlayer("A");
+        StubPlayer monitored = new StubPlayer("B");
+        StubPlayer vulnerable = new StubPlayer("C");
+
+        TestPlayerCards attackerCards = new TestPlayerCards(board);
+        TestPlayerCards monitoredCards = new TestPlayerCards(board);
+        TestPlayerCards vulnerableCards = new TestPlayerCards(board);
+
+        attacker.setPlayerCards(attackerCards);
+        monitored.setPlayerCards(monitoredCards);
+        vulnerable.setPlayerCards(vulnerableCards);
+
+        monitoredCards.setUnplayedCards(List.of(
+            new Card(Card.Type.MONITORING, 0),
+            new Card(Card.Type.BITCOIN, 0),
+            new Card(Card.Type.ETHEREUM, 1)
+        ));
+        vulnerableCards.setUnplayedCards(List.of(
+            new Card(Card.Type.BITCOIN, 0),
+            new Card(Card.Type.ETHEREUM, 1),
+            new Card(Card.Type.DOGECOIN, 2),
+            new Card(Card.Type.METHOD, 2)
+        ));
+
+        vulnerable.queueDecision(new DiscardCardDecision(new Card(Card.Type.BITCOIN, 0)));
+        vulnerable.queueDecision(new DiscardCardDecision(new Card(Card.Type.ETHEREUM, 1)));
+
+        List<ParentPlayer> players = List.of(attacker, monitored, vulnerable);
+        Map<ParentPlayer, PlayerCards> map = Map.of(attacker, attackerCards, monitored, monitoredCards, vulnerable, vulnerableCards);
+
+        ActionCards.playActionCard(new Card(Card.Type.RANSOMWARE, 0), makeState(attacker.getName(), attackerCards), attacker, players, map, board);
+
+        assertEquals(3, monitoredCards.getHand().unplayedCards().size(), "Monitoring should block Ransomware entirely");
+        assertEquals(2, vulnerableCards.getHand().unplayedCards().size(), "Vulnerable player should discard exactly two cards");
+    }
+
+    @Test
+    public void testUnitTest_multipleSequentialPlaysRemainStable() throws Exception {
+        for (ChooseEffectDecision.Effect effect : List.of(
+            ChooseEffectDecision.Effect.UNIT_TEST_PLUS_TWO_ACTIONS,
+            ChooseEffectDecision.Effect.UNIT_TEST_PLUS_TWO_MONEY,
+            ChooseEffectDecision.Effect.UNIT_TEST_PLUS_TWO_CARDS
+        )) {
+            GameState result = runUnitTestChoice(effect);
+            assertNotNull(result);
+        }
+    }
+
+    @Test
+    public void testParallelization_repeatingWithPlayableActionsRemainsStable() throws Exception {
+        for (int i = 0; i < 3; i++) {
+            StubPlayer player = new StubPlayer("P" + i);
+            TestPlayerCards pc = new TestPlayerCards(board);
+            player.setPlayerCards(pc);
+            Card codeReview = new Card(Card.Type.CODE_REVIEW, i);
+            pc.setUnplayedCards(List.of(new Card(Card.Type.PARALLELIZATION, 0), codeReview));
+            player.queueDecision(new PlayCardDecision(new Card(Card.Type.PARALLELIZATION, 0)));
+            player.queueDecision(new PlayCardDecision(codeReview));
+            player.queueDecision(new PlayCardDecision(codeReview));
+            player.queueDecision(new edu.brandeis.cosi.atg.decisions.EndPhaseDecision(GameState.TurnPhase.ACTION));
+            GameState after = ActionCards.playActionCard(
+                new Card(Card.Type.PARALLELIZATION, 0),
+                makeState(player.getName(), pc),
+                player,
+                List.of(player),
+                Map.of(player, pc),
+                board
+            );
+            assertNotNull(after);
+        }
     }
 
     @Test

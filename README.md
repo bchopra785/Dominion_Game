@@ -1,85 +1,89 @@
 # group-b
-COSI 103 - Software Engineering Group
+This is a project for COSI 103a - Fundamentals of Software Engineering, taught in Spring 2026 by Joe Delfino
+
+COSI 103 - Software Engineering Group Members
 Ananya Dalal - ananyadalal@brandeis.edu
 Chloe Wahl-Dassule - cwahldassule@brandeis.edu
 Jaile Estell - jestell@brandeis.edu
 Bhoomika Chopra - bchopra@brandeis.edu
 
-https://www.javadoc.io/doc/io.github.brandeis-cosi-103a/atg-api/1.5.2/index.html/
+Using the API: https://www.javadoc.io/doc/io.github.brandeis-cosi-103a/atg-api/1.5.2/index.html/
 
 
-UNIT_TEST doesn't work
+**Project Structure**
 
-Phase: ACTION
-Actions Left: 1
-Money Left: 0
-Buys Left: 1
-Buyable Cards: BUG: 28, BITCOIN: 37, 
+- **Root files:** Top-level files include 
+        [CARD_REFERENCE.txt](CARD_REFERENCE.txt) (card reference)
+        [pom.xml](pom.xml) (Maven build file)
+        [README.md](README.md) (this file)
+        [STATUS.md](STATUS.md) (project status - bugs and current work in progress).
 
-ConsolePlayer-1, it's your turn!
-Choose one of the following options:
-[0] Play [Unit Test(id: 1)]
-[1] End phase: action
-Enter option index: 0
-[ConsolePlayer-1 | ACTION] PlayCardEvent[card=[Unit Test(id: 1)], playerName=ConsolePlayer-1]
-[ConsolePlayer-1 | ACTION] PlayCardEvent[card=[Unit Test(id: 1)], playerName=ConsolePlayer-1]
-[ConsolePlayer-1 | ACTION] PlayCardEvent[card=[Unit Test(id: 1)], playerName=ConsolePlayer-1]
+- **optimization_documentation/**: Contains optimization notes and metrics for  players
 
+- **src/**: Main source tree.
+	- **src/main/java/**: Java source packages under `edu.brandeis.cosi103a.groupb`, implementation code for the engine, network, rating, etc.
 
-------------------------------
-Current Player: ConsolePlayer-1
-Hand:   PLAYED: Unit Test, 
-        UNPLAYED: Bitcoin, Bitcoin, Bitcoin, Method, 
-Phase: ACTION
-Actions Left: 0
-Money Left: 0
-Buys Left: 1
-Buyable Cards: BUG: 28, BITCOIN: 37, 
+	- **src/test/java/**: Unit tests mirroring the main package structure.
 
-ConsolePlayer-1, it's your turn!
-Choose one of the following options:
-[0] End phase: action
-[1] End phase: buy
-[2] End phase: cleanup
-Enter option index: 
+- **target/**: Build output produced by Maven (compiled classes, generated sources, surefire test reports).
+	- **target/classes/**: Compiled classes used at runtime.
+	- **target/surefire-reports/**: Test results and XML reports from Maven Surefire.
 
 
+**Package Details**
 
+- **edu.brandeis.cosi103a.groupb (root package):** Application entrypoints and player-facing classes. Contains `App.java` (main entry), `GameHarness.java` (local runner), player implementations (`ConsolePlayer.java`, `FlexiblePlayer.java`, `StrategyPlayer.java`, `V2StrategyPlayer.java`, `V3StrategyPlayer.java`, `BigMoneyPlayer.java`, `ParentPlayer.java`), networking endpoints (`PlayerClient.java`, `PlayerServer.java`), and helpers such as `CardInfo.java` and `RecordingGameObserver.java`.
 
-------------------------------
-Current Player: ConsolePlayer-1
-Hand:   PLAYED: 
-        UNPLAYED: Bitcoin, Evergreen Test, Bitcoin, Unit Test, Bitcoin, 
-Phase: ACTION
-Actions Left: 1
-Money Left: 0
-Buys Left: 1
-Buyable Cards: BUG: 26, BITCOIN: 36, 
+- **engine:** Core game logic and mutable game state. Key classes:
+	- `Engine.java`: central game loop and rule orchestration.
+	- `MutableGameState.java`: in-memory representation of the current game state.
+	- `PlayerCards.java`, `BoardCards.java`: card collections for players and the shared board.
+	- `ActionCardHandler.java` and `CardFunctions/ActionCards.java`: implementations for action-type cards and their effects.
 
-ConsolePlayer-1, it's your turn!
-Choose one of the following options:
-[0] Play [Evergreen Test(id: 0)]
-[1] Play [Unit Test(id: 1)]
-[2] End phase: action
-Enter option index: 1
-[ConsolePlayer-1 | ACTION] PlayCardEvent[card=[Unit Test(id: 1)], playerName=ConsolePlayer-1]
-[ConsolePlayer-1 | ACTION] PlayCardEvent[card=[Unit Test(id: 1)], playerName=ConsolePlayer-1]
-[ConsolePlayer-1 | ACTION] PlayCardEvent[card=[Unit Test(id: 1)], playerName=ConsolePlayer-1]
+        Introduced in Milestones 0 and 1
 
+- **network:** Lightweight request/response types used for client-server interactions and logging (`DecisionRequest.java`, `DecisionResponse.java`, `LogEventRequest.java`). These DTOs enable remote player decisioning and event forwarding.
+        Introduced in Milestone 2
 
-------------------------------
-Current Player: ConsolePlayer-1
-Hand:   PLAYED: Unit Test, 
-        UNPLAYED: Bitcoin, Evergreen Test, Bitcoin, Bitcoin, 
-Phase: ACTION
-Actions Left: 0
-Money Left: 0
-Buys Left: 1
-Buyable Cards: BUG: 26, BITCOIN: 36, 
+- **rating:** Utilities and harnesses for evaluating player performance and running tournaments. Includes `PlayerRatingHarness.java` (rating experiments), `GameRecord.java` (match/result persistence), `SelectedPlayer.java` (selected player metadata), and `TournamentScheduler.java` (scheduling round-robin or tournament runs).
 
-ConsolePlayer-1, it's your turn!
-Choose one of the following options:
-[0] End phase: action
-[1] End phase: buy
-[2] End phase: cleanup
-Enter option index: 
+        Introduced in Milestone 3
+
+**Source tree (trimmed)**
+
+```
+src/main/java/edu/brandeis/cosi103a/groupb/
+├─ App.java
+├─ BigMoneyPlayer.java
+├─ CardInfo.java
+├─ ConsolePlayer.java
+├─ FlexiblePlayer.java
+├─ GameHarness.java
+├─ ParentPlayer.java
+├─ PlayerClient.java
+├─ PlayerServer.java
+├─ RecordingGameObserver.java
+├─ StrategyPlayer.java
+├─ V2StrategyPlayer.java
+├─ V3StrategyPlayer.java
+├─ engine/
+│  ├─ ActionCardHandler.java
+│  ├─ BoardCards.java
+│  ├─ CardFunctions/
+│  │  └─ ActionCards.java
+│  ├─ Engine.java
+│  ├─ MutableGameState.java
+│  └─ PlayerCards.java
+├─ network/
+│  ├─ DecisionRequest.java
+│  ├─ DecisionResponse.java
+│  └─ LogEventRequest.java
+└─ rating/
+	 ├─ GameRecord.java
+	 ├─ PlayerRatingHarness.java
+	 ├─ SelectedPlayer.java
+	 └─ TournamentScheduler.java
+```
+
+The tree above is a concise snapshot of the primary source files and package subdirectories to help developers quickly find code responsibilities. For more detail, explore `src/main/java/edu/brandeis/cosi103a/groupb` for code and the corresponding tests in `src/test/java/edu/brandeis/cosi103a/groupb`.
+

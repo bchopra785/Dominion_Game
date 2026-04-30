@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -683,6 +684,42 @@ public class PlayerRatingHarnessMetricsTest {
         String printed = bytes.toString(StandardCharsets.UTF_8);
         assertTrue(printed.contains("CPR scale"));
         assertTrue(printed.contains("0.0000 to 1.0000, where 1.0000 is the best possible score"));
+    }
+
+    @Test
+    public void printRawSummary_usesRecordedScoreAndRankTotals() throws Exception {
+        List<GameRecord> rawResults = List.of(
+            new GameRecord(
+                1,
+                1,
+                List.of("A", "B"),
+                List.of(
+                    new GameRecord.PlayerRecord("A", 10, 1, true),
+                    new GameRecord.PlayerRecord("B", 4, 2, false)
+                )
+            ),
+            new GameRecord(
+                1,
+                2,
+                List.of("A", "B"),
+                List.of(
+                    new GameRecord.PlayerRecord("A", 6, 2, false),
+                    new GameRecord.PlayerRecord("B", 8, 1, true)
+                )
+            )
+        );
+
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(bytes, true, StandardCharsets.UTF_8);
+
+        Method method = PlayerRatingHarness.class.getDeclaredMethod("printRawSummary", List.class, PrintStream.class);
+        method.setAccessible(true);
+        method.invoke(null, rawResults, out);
+
+        String printed = bytes.toString(StandardCharsets.UTF_8);
+        assertTrue(printed.contains("=== Average Metrics Per Game ==="));
+        assertTrue(printed.contains("- A: 8.0 average score, 1.5 average rank"));
+        assertTrue(printed.contains("- B: 6.0 average score, 1.5 average rank"));
     }
 
     private static Map<String, PlayerRatingHarness.PlayerPerformance> indexByName(

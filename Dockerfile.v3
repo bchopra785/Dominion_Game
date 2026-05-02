@@ -1,0 +1,16 @@
+FROM openjdk:23-slim
+
+# Set working directory
+WORKDIR /app
+
+# Copy the fat JAR
+COPY target/GroupB.jar app.jar
+
+# Set the strategy to V3
+ENV PLAYER_STRATEGY=V3
+
+# Expose port 8080
+EXPOSE 8080
+
+# Run the application
+ENTRYPOINT ["java", "-jar", "app.jar"]

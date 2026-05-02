@@ -15,10 +15,13 @@ import edu.brandeis.cosi103a.groupb.network.DecisionRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import edu.brandeis.cosi.atg.cards.Card;
 
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -31,6 +34,9 @@ public class PlayerServerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockBean
+    private ParentPlayer strategyPlayer;
 
     // --- /log-event tests ---
 
@@ -74,6 +80,10 @@ public class PlayerServerTest {
         Decision refactor = new PlayCardDecision(new Card(Card.Type.REFACTOR, 1));
         ImmutableList<Decision> options = ImmutableList.of(refactor);
         request.setOptions(options);
+
+        // Mock the strategy player to return a decision
+        when(strategyPlayer.makeDecision(any(GameState.class), any(ImmutableList.class)))
+                .thenReturn(refactor);
 
         mockMvc.perform(post("/decide")
                 .contentType(MediaType.APPLICATION_JSON)

@@ -3,6 +3,7 @@ package edu.brandeis.cosi103a.groupb;
 import java.util.List;
 
 import org.springframework.boot.SpringApplication;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,8 +20,10 @@ import edu.brandeis.cosi103a.groupb.network.LogEventRequest;
 @RestController
 public class PlayerServer {
 
-    public static void main(String[] args) {
-        SpringApplication.run(PlayerServer.class, args);
+    private ParentPlayer strategyPlayer;
+
+    public PlayerServer(ParentPlayer strategyPlayer) {
+        this.strategyPlayer = strategyPlayer;
     }
 
 @PostMapping(value = "/decide", consumes = "application/json", produces = "application/json") 
@@ -34,11 +37,10 @@ public ResponseEntity<DecisionResponse> decide(@RequestBody DecisionRequest requ
         GameState state = request.getState();
         List<Decision> options = request.getOptions();
 
-        // Make decision using BigMoneyPlayer and return ResponseEntity<DecisionResponse>
-        BigMoneyPlayer player = new BigMoneyPlayer();
+        // Make decision using the selected strategy player and return ResponseEntity<DecisionResponse>
         ImmutableList<Decision> immutableOptions = ImmutableList.copyOf(options);
-        Decision chosenDecision = player.makeDecision(state, immutableOptions);
-        DecisionResponse responseBody = new DecisionResponse(chosenDecision, "Using BigMoneyPlayer strategy");
+        Decision chosenDecision = strategyPlayer.makeDecision(state, immutableOptions);
+        DecisionResponse responseBody = new DecisionResponse(chosenDecision, "Using " + strategyPlayer.getClass().getSimpleName() + " strategy");
         return ResponseEntity.ok(responseBody);
 
     } catch (IllegalArgumentException e) {

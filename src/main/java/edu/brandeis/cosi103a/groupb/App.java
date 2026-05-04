@@ -3,6 +3,7 @@ package edu.brandeis.cosi103a.groupb;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.web.bind.annotation.GetMapping;
 
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.databind.Module;
@@ -18,6 +19,12 @@ public class App {
 		System.out.println("Hi from the server!");
 		SpringApplication.run(App.class, args);
 	}
+
+    //PLEASE LIVE
+    @GetMapping("/")
+    public String health() {
+        return "ALIVE";
+    }
 
     @Bean
     public Module guavaModule() {

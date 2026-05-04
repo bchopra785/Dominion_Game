@@ -6,6 +6,7 @@ import edu.brandeis.cosi.atg.state.PlayerResult;
 import edu.brandeis.cosi103a.groupb.BigMoneyPlayer;
 import edu.brandeis.cosi103a.groupb.FlexiblePlayer;
 import edu.brandeis.cosi103a.groupb.ParentPlayer;
+import edu.brandeis.cosi103a.groupb.PlayerClient;
 import edu.brandeis.cosi103a.groupb.StrategyPlayer;
 import edu.brandeis.cosi103a.groupb.V2StrategyPlayer;
 import edu.brandeis.cosi103a.groupb.V3StrategyPlayer;
@@ -729,6 +730,11 @@ public class PlayerRatingHarness {
             "Strategy-V3", 
             "Version 3 of Strategy Player",
             V3StrategyPlayer::new
+        ));
+        templates.add(new Template(
+            "Remote Azure Player",
+            "V3 Strategy Player running on Azure",
+            name -> new PlayerClient(name, java.util.UUID.randomUUID().toString(), "https://my-container-app-4.thankfulcliff-3955cee6.eastus.azurecontainerapps.io")
         ));
 
         return templates;

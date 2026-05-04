@@ -72,7 +72,7 @@ public class GameHarness {
                 players.add(new StrategyPlayer("Strategy Player"));
             } else if (choice == 5) {
                 String uuid = java.util.UUID.randomUUID().toString();
-                players.add(new PlayerClient("Remote Player", uuid, "http://localhost:8080"));
+                players.add(new PlayerClient("Remote Player (Azure)", uuid, "https://my-container-app-4.thankfulcliff-3955cee6.eastus.azurecontainerapps.io"));
             }
         }
 

@@ -1,5 +1,4 @@
-FROM openjdk:23-slim
-
+FROM eclipse-temurin:24-jdk
 # Set working directory
 WORKDIR /app
 

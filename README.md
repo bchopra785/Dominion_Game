@@ -1,89 +1,110 @@
-# group-b
-This is a project for COSI 103a - Fundamentals of Software Engineering, taught in Spring 2026 by Joe Delfino
+# 
 
-COSI 103 - Software Engineering Group Members
-Ananya Dalal - ananyadalal@brandeis.edu
-Chloe Wahl-Dassule - cwahldassule@brandeis.edu
-Jaile Estell - jestell@brandeis.edu
-Bhoomika Chopra - bchopra@brandeis.edu
+This project was developed for **COSI 103a – Fundamentals of Software Engineering (Spring 2026)** at Brandeis University, taught by Joe Delfino.
 
-Using the API: https://www.javadoc.io/doc/io.github.brandeis-cosi-103a/atg-api/1.5.2/index.html/
+It is a group software engineering project focused on building and extending a Java-based game engine with networking, player AI implementations, and rating/tournament infrastructure.
 
+---
 
-**Project Structure**
+## API Reference
 
-- **Root files:** Top-level files include 
-        [CARD_REFERENCE.txt](CARD_REFERENCE.txt) (card reference)
-        [pom.xml](pom.xml) (Maven build file)
-        [README.md](README.md) (this file)
-        [STATUS.md](STATUS.md) (project status - bugs and current work in progress).
+https://www.javadoc.io/doc/io.github.brandeis-cosi-103a/atg-api/1.5.2/index.html/
 
-- **optimization_documentation/**: Contains optimization notes and metrics for  players
+---
 
-- **src/**: Main source tree.
-	- **src/main/java/**: Java source packages under `edu.brandeis.cosi103a.groupb`, implementation code for the engine, network, rating, etc.
+## Group Members
 
-	- **src/test/java/**: Unit tests mirroring the main package structure.
+- Ananya Dalal — ananyadalal@brandeis.edu  
+- Chloe Wahl-Dassule — cwahldassule@brandeis.edu  
+- Jaile Estell — jestell@brandeis.edu  
+- Bhoomika Chopra — bchopra@brandeis.edu  
 
-- **target/**: Build output produced by Maven (compiled classes, generated sources, surefire test reports).
-	- **target/classes/**: Compiled classes used at runtime.
-	- **target/surefire-reports/**: Test results and XML reports from Maven Surefire.
+---
 
+## Project Structure
 
-**Package Details**
+### Root Files
+- `CARD_REFERENCE.txt` — card reference documentation  
+- `pom.xml` — Maven build configuration  
+- `README.md` — project documentation  
+- `STATUS.md` — current bugs and development status  
 
-- **edu.brandeis.cosi103a.groupb (root package):** Application entrypoints and player-facing classes. Contains `App.java` (main entry), `GameHarness.java` (local runner), player implementations (`ConsolePlayer.java`, `FlexiblePlayer.java`, `StrategyPlayer.java`, `V2StrategyPlayer.java`, `V3StrategyPlayer.java`, `BigMoneyPlayer.java`, `ParentPlayer.java`), networking endpoints (`PlayerClient.java`, `PlayerServer.java`), and helpers such as `CardInfo.java` and `RecordingGameObserver.java`.
+---
 
-- **engine:** Core game logic and mutable game state. Key classes:
-	- `Engine.java`: central game loop and rule orchestration.
-	- `MutableGameState.java`: in-memory representation of the current game state.
-	- `PlayerCards.java`, `BoardCards.java`: card collections for players and the shared board.
-	- `ActionCardHandler.java` and `CardFunctions/ActionCards.java`: implementations for action-type cards and their effects.
+### Source Code
 
-        Introduced in Milestones 0 and 1
+#### `src/main/java/`
+Main application source code under package `edu.brandeis.cosi103a.groupb`.
 
-- **network:** Lightweight request/response types used for client-server interactions and logging (`DecisionRequest.java`, `DecisionResponse.java`, `LogEventRequest.java`). These DTOs enable remote player decisioning and event forwarding.
-        Introduced in Milestone 2
+#### `src/test/java/`
+Unit tests mirroring the main package structure.
 
-- **rating:** Utilities and harnesses for evaluating player performance and running tournaments. Includes `PlayerRatingHarness.java` (rating experiments), `GameRecord.java` (match/result persistence), `SelectedPlayer.java` (selected player metadata), and `TournamentScheduler.java` (scheduling round-robin or tournament runs).
+---
 
-        Introduced in Milestone 3
+### Key Modules
 
-**Source tree (trimmed)**
+#### `engine`
+Core game engine and state management:
+- `Engine.java` — main game loop and rule logic  
+- `MutableGameState.java` — in-memory game state  
+- `PlayerCards.java`, `BoardCards.java` — card management  
+- `ActionCardHandler.java` + `CardFunctions/ActionCards.java` — action card logic  
 
-```
+#### `network`
+Client-server communication layer:
+- `DecisionRequest.java`
+- `DecisionResponse.java`
+- `LogEventRequest.java`
+
+Used for remote player interactions and logging.
+
+#### `rating`
+Evaluation and tournament system:
+- `PlayerRatingHarness.java` — performance evaluation  
+- `GameRecord.java` — match tracking  
+- `SelectedPlayer.java` — player metadata  
+- `TournamentScheduler.java` — tournament execution  
+
+---
+
+## Source Tree (Simplified)
 src/main/java/edu/brandeis/cosi103a/groupb/
-├─ App.java
-├─ BigMoneyPlayer.java
-├─ CardInfo.java
-├─ ConsolePlayer.java
-├─ FlexiblePlayer.java
-├─ GameHarness.java
-├─ ParentPlayer.java
-├─ PlayerClient.java
-├─ PlayerServer.java
-├─ RecordingGameObserver.java
-├─ StrategyPlayer.java
-├─ V2StrategyPlayer.java
-├─ V3StrategyPlayer.java
-├─ engine/
-│  ├─ ActionCardHandler.java
-│  ├─ BoardCards.java
-│  ├─ CardFunctions/
-│  │  └─ ActionCards.java
-│  ├─ Engine.java
-│  ├─ MutableGameState.java
-│  └─ PlayerCards.java
-├─ network/
-│  ├─ DecisionRequest.java
-│  ├─ DecisionResponse.java
-│  └─ LogEventRequest.java
-└─ rating/
-	 ├─ GameRecord.java
-	 ├─ PlayerRatingHarness.java
-	 ├─ SelectedPlayer.java
-	 └─ TournamentScheduler.java
-```
+├── App.java
+├── BigMoneyPlayer.java
+├── CardInfo.java
+├── ConsolePlayer.java
+├── FlexiblePlayer.java
+├── GameHarness.java
+├── ParentPlayer.java
+├── PlayerClient.java
+├── PlayerServer.java
+├── RecordingGameObserver.java
+├── StrategyPlayer.java
+├── V2StrategyPlayer.java
+├── V3StrategyPlayer.java
+│
+├── engine/
+│ ├── ActionCardHandler.java
+│ ├── BoardCards.java
+│ ├── CardFunctions/
+│ │ └── ActionCards.java
+│ ├── Engine.java
+│ ├── MutableGameState.java
+│ └── PlayerCards.java
+│
+├── network/
+│ ├── DecisionRequest.java
+│ ├── DecisionResponse.java
+│ └── LogEventRequest.java
+│
+└── rating/
+├── GameRecord.java
+├── PlayerRatingHarness.java
+├── SelectedPlayer.java
+└── TournamentScheduler.java
 
-The tree above is a concise snapshot of the primary source files and package subdirectories to help developers quickly find code responsibilities. For more detail, explore `src/main/java/edu/brandeis/cosi103a/groupb` for code and the corresponding tests in `src/test/java/edu/brandeis/cosi103a/groupb`.
+---
 
+## Notes
+
+This repository reflects a collaborative group project and includes contributions from all team members. It has been organized for clarity and ease of navigation.

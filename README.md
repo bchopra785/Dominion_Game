@@ -1,4 +1,4 @@
-# 
+# Inspired by the Dominion Card Game
 
 This project was developed for **COSI 103a – Fundamentals of Software Engineering (Spring 2026)** at Brandeis University, taught by Joe Delfino.
 
@@ -14,10 +14,10 @@ https://www.javadoc.io/doc/io.github.brandeis-cosi-103a/atg-api/1.5.2/index.html
 
 ## Group Members
 
-- Ananya Dalal — ananyadalal@brandeis.edu  
-- Chloe Wahl-Dassule — cwahldassule@brandeis.edu  
-- Jaile Estell — jestell@brandeis.edu  
-- Bhoomika Chopra — bchopra@brandeis.edu  
+- Ananya Dalal 
+- Chloe Wahl-Dassule  
+- Jaile Estell 
+- Bhoomika Chopra  
 
 ---
 
@@ -68,6 +68,8 @@ Evaluation and tournament system:
 ---
 
 ## Source Tree (Simplified)
+
+```
 src/main/java/edu/brandeis/cosi103a/groupb/
 ├── App.java
 ├── BigMoneyPlayer.java
@@ -84,24 +86,25 @@ src/main/java/edu/brandeis/cosi103a/groupb/
 ├── V3StrategyPlayer.java
 │
 ├── engine/
-│ ├── ActionCardHandler.java
-│ ├── BoardCards.java
-│ ├── CardFunctions/
-│ │ └── ActionCards.java
-│ ├── Engine.java
-│ ├── MutableGameState.java
-│ └── PlayerCards.java
+│   ├── ActionCardHandler.java
+│   ├── BoardCards.java
+│   ├── CardFunctions/
+│   │   └── ActionCards.java
+│   ├── Engine.java
+│   ├── MutableGameState.java
+│   └── PlayerCards.java
 │
 ├── network/
-│ ├── DecisionRequest.java
-│ ├── DecisionResponse.java
-│ └── LogEventRequest.java
+│   ├── DecisionRequest.java
+│   ├── DecisionResponse.java
+│   └── LogEventRequest.java
 │
 └── rating/
-├── GameRecord.java
-├── PlayerRatingHarness.java
-├── SelectedPlayer.java
-└── TournamentScheduler.java
+    ├── GameRecord.java
+    ├── PlayerRatingHarness.java
+    ├── SelectedPlayer.java
+    └── TournamentScheduler.java
+```
 
 ---
 
